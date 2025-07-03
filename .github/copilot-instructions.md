@@ -58,6 +58,7 @@ Diese Datei enthält Richtlinien, um GitHub Copilot optimal in diesem Projekt zu
 - Für jedes Issue, das durch Copilot umgesetzt wird, muss immer ein neuer Branch angelegt werden.
 - Der Branch wird immer auf GitHub (remote) erzeugt, niemals lokal. Grund: Es soll immer der neueste Stand aus dem Haupt-Repository verwendet werden, um Merge-Konflikte zu minimieren.
 - Die Erstellung des Branches erfolgt per GitHub CLI (`gh`), z. B. mit `gh pr checkout -b <branchname>` oder `gh api`.
+- Nach dem Anlegen des Branches auf GitHub muss der Branch lokal ausgecheckt werden, damit Änderungen nicht versehentlich auf `main` erfolgen.
 
 ---
 
