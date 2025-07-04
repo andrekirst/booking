@@ -1,6 +1,6 @@
-# Copilot Instructions
+# Claude Instructions
 
-Diese Datei enthält Richtlinien, um GitHub Copilot optimal in diesem Projekt zu nutzen.
+Diese Datei enthält Richtlinien und Projektinformationen für Claude AI-Sessions, um optimal in diesem Projekt zu arbeiten.
 
 ## Projekt-Übersicht
 
@@ -32,7 +32,7 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Keine ORM-Frameworks, direkte SQL-Verwendung
 
 ## 1. Anforderungen aus requirements.md nutzen
-- Copilot soll die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen verwenden.
+- Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.
 - Neue Issues, Features oder Tasks werden auf Basis der Anforderungen in `requirements.md` erstellt.
 - Bei der Umsetzung von Anforderungen prüfe regelmäßig, ob sie vollständig und korrekt umgesetzt wurden.
 
