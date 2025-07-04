@@ -56,16 +56,39 @@ else
     exit 1
 fi
 
+# Apply seed data if requested
+if [ "$1" = "--with-seed" ] || [ "$1" = "-s" ]; then
+    SEED_FILE="$PROJECT_ROOT/database/seed.sql"
+    if [ -f "$SEED_FILE" ]; then
+        echo -e "${YELLOW}Applying seed data...${NC}"
+        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$SEED_FILE"
+        echo -e "${GREEN}Seed data applied successfully!${NC}"
+    else
+        echo -e "${RED}Warning: Seed file not found at $SEED_FILE${NC}"
+    fi
+fi
+
 # Verify tables were created
 echo -e "${YELLOW}Verifying database setup...${NC}"
-TABLE_COUNT=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'bookings';" | xargs)
+EXPECTED_TABLES=("users" "rooms" "bookings" "permissions")
+CREATED_TABLES=()
 
-if [ "$TABLE_COUNT" -eq "1" ]; then
+for table in "${EXPECTED_TABLES[@]}"; do
+    TABLE_EXISTS=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table';" | xargs)
+    if [ "$TABLE_EXISTS" -eq "1" ]; then
+        CREATED_TABLES+=("$table")
+        echo -e "${GREEN}✓ Table '$table' created successfully${NC}"
+    else
+        echo -e "${RED}✗ Table '$table' not found${NC}"
+    fi
+done
+
+if [ ${#CREATED_TABLES[@]} -eq ${#EXPECTED_TABLES[@]} ]; then
     echo -e "${GREEN}✓ Database initialization completed successfully!${NC}"
-    echo -e "${GREEN}✓ Tables created: bookings${NC}"
+    echo -e "${GREEN}✓ All ${#CREATED_TABLES[@]} tables created: ${CREATED_TABLES[*]}${NC}"
     echo -e "${GREEN}✓ Database is ready for use.${NC}"
 else
-    echo -e "${RED}✗ Database initialization failed. Expected 1 table, found $TABLE_COUNT.${NC}"
+    echo -e "${RED}✗ Database initialization failed. Expected ${#EXPECTED_TABLES[@]} tables, found ${#CREATED_TABLES[@]}.${NC}"
     exit 1
 fi
 

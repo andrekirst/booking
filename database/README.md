@@ -9,34 +9,61 @@ This directory contains the PostgreSQL database schema and setup scripts for the
 
 ## Database Schema
 
-The database includes the following table:
+The database includes the following tables designed for the family garden booking system:
+
+### users
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL PRIMARY KEY | Unique identifier for each user |
+| name | VARCHAR(255) NOT NULL | Full name of the user |
+| email | VARCHAR(255) UNIQUE NOT NULL | Email address (unique) |
+| password_hash | VARCHAR(255) NOT NULL | Hashed password |
+| role | VARCHAR(50) NOT NULL | User role (ADMIN or MEMBER) |
+| registration_date | TIMESTAMP DEFAULT CURRENT_TIMESTAMP | When user registered |
+
+### rooms
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL PRIMARY KEY | Unique identifier for each room |
+| name | VARCHAR(100) NOT NULL | Name of the room |
+| capacity | INT NOT NULL | Maximum number of people |
+| extra_beds | INT DEFAULT 0 | Number of additional beds available |
+| is_tent_allowed | BOOLEAN DEFAULT FALSE | Whether tent camping is allowed |
 
 ### bookings
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | SERIAL PRIMARY KEY | Unique identifier for each booking |
-| customer_name | VARCHAR(255) NOT NULL | Name of the customer |
-| customer_email | VARCHAR(255) NOT NULL | Email address of the customer |
-| service_type | VARCHAR(100) NOT NULL | Type of service being booked |
-| booking_date | TIMESTAMP NOT NULL | Date of the booking |
-| start_time | TIMESTAMP NOT NULL | Start time of the booking |
-| end_time | TIMESTAMP NOT NULL | End time of the booking |
-| status | VARCHAR(50) NOT NULL DEFAULT 'pending' | Status of the booking |
-| notes | TEXT | Additional notes |
-| created_at | TIMESTAMP DEFAULT CURRENT_TIMESTAMP | When the record was created |
-| updated_at | TIMESTAMP DEFAULT CURRENT_TIMESTAMP | When the record was last updated |
+| user_id | INT REFERENCES users(id) | User who made the booking |
+| room_id | INT REFERENCES rooms(id) | Room that was booked |
+| booking_date | DATE NOT NULL | Start date of the booking |
+| number_of_nights | INT NOT NULL | Number of nights booked |
+| number_of_people | INT NOT NULL | Number of people for the booking |
+| status | VARCHAR(50) NOT NULL DEFAULT 'pending' | Booking status |
+| created_at | TIMESTAMP DEFAULT CURRENT_TIMESTAMP | When booking was created |
+| updated_at | TIMESTAMP DEFAULT CURRENT_TIMESTAMP | When booking was last updated |
+
+### permissions
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL PRIMARY KEY | Unique identifier |
+| user_id | INT REFERENCES users(id) | User this permission applies to |
+| can_book | BOOLEAN DEFAULT FALSE | Whether user can make bookings |
 
 ### Indexes
 
-- `idx_bookings_customer_email` - Index on customer_email for fast lookups
+- `idx_users_email` - Index on email for fast user lookups
+- `idx_bookings_user_id` - Index on user_id for user's bookings
 - `idx_bookings_booking_date` - Index on booking_date for date range queries
-- `idx_bookings_status` - Index on status for filtering by status
-- `idx_bookings_service_type` - Index on service_type for filtering by service
+- `idx_rooms_name` - Index on room name for fast room lookups
 
 ### Triggers
 
-- `update_bookings_updated_at` - Automatically updates the `updated_at` timestamp when a record is modified
+- `update_bookings_updated_at` - Automatically updates the `updated_at` timestamp when a booking is modified
 
 ## Setup Instructions
 
