@@ -53,8 +53,69 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Nach jedem Schritt erfolgt ein Commit und Push.
 
 ## 5. Tests
-- Schreibe zu neuem Code immer passende Tests.
-- Bevorzuge Test-Frameworks, die im Projekt bereits verwendet werden.
+### 5.1 Test-Strategie
+- **Zu jedem Feature** müssen sowohl **positive als auch negative Tests** erstellt werden
+- **Positive Tests**: Verifizieren, dass das System bei korrekten Eingaben ordnungsgemäß funktioniert
+- **Negative Tests**: Verifizieren, dass das System bei fehlerhaften Eingaben angemessen reagiert (Fehlerbehandlung)
+- **Edge Cases**: Teste Grenzwerte und ungewöhnliche Szenarien
+
+### 5.2 Test-Typen
+#### Unit Tests
+- Teste einzelne Funktionen/Methoden isoliert
+- Positive Tests: Korrekte Parameter → Erwartetes Ergebnis
+- Negative Tests: Falsche Parameter → Erwartete Exceptions/Fehler
+
+#### Integration Tests
+- Teste Zusammenspiel zwischen Komponenten
+- Datenbankoperationen (CRUD-Tests)
+- API-Endpoint Tests
+- Positive: Gültige Requests → Korrekte Responses
+- Negative: Ungültige Requests → Fehler-Responses
+
+#### Schema/Database Tests
+- Teste Datenbank-Constraints und -Validierungen
+- Positive: Gültige Daten → Erfolgreiche Speicherung
+- Negative: Constraint-Verletzungen → Erwartete Datenbankfehler
+
+### 5.3 Test-Datei-Struktur
+```
+tests/
+├── unit/
+│   ├── database/
+│   │   ├── schema_positive_tests.sql
+│   │   ├── schema_negative_tests.sql
+│   │   └── constraints_tests.sql
+│   ├── services/
+│   └── models/
+├── integration/
+│   ├── api/
+│   └── database/
+└── scripts/
+    ├── run_all_tests.sh
+    └── test_database.sh
+```
+
+### 5.4 Test-Beispiele
+#### Positive Test
+```sql
+-- Test: Gültiger Benutzer kann erstellt werden
+INSERT INTO users (name, email, password_hash, role) 
+VALUES ('Test User', 'test@example.com', 'hash123', 'MEMBER');
+```
+
+#### Negative Test
+```sql
+-- Test: Ungültige Rolle wird abgelehnt
+-- Erwartung: Constraint-Violation
+INSERT INTO users (name, email, password_hash, role) 
+VALUES ('Test User', 'test@example.com', 'hash123', 'INVALID_ROLE');
+```
+
+### 5.5 Test-Ausführung
+- Alle Tests müssen automatisiert ausführbar sein
+- Test-Scripts sollen sowohl Erfolgs- als auch Fehler-Szenarien prüfen
+- Aufräumen nach Tests (Cleanup) ist obligatorisch
+- Tests müssen isoliert und wiederholbar sein
 
 ## 6. Dokumentation
 - Dokumentiere neue Funktionen und wichtige Änderungen im Code und in der README.md.
