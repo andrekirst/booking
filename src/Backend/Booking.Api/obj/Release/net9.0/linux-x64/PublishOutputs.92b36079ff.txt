@@ -1,0 +1,3 @@
+/home/andrekirst/git/github/andrekirst/booking/src/Backend/Booking.Api/bin/Release/net9.0/linux-x64/publish/appsettings.Development.json
+/home/andrekirst/git/github/andrekirst/booking/src/Backend/Booking.Api/bin/Release/net9.0/linux-x64/publish/appsettings.json
+/home/andrekirst/git/github/andrekirst/booking/src/Backend/Booking.Api/bin/Release/net9.0/linux-x64/publish/Booking.Api
