@@ -53,8 +53,38 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Nach jedem Schritt erfolgt ein Commit und Push.
 
 ## 5. Tests
-- Schreibe zu neuem Code immer passende Tests.
-- Bevorzuge Test-Frameworks, die im Projekt bereits verwendet werden.
+
+### 5.1 Test-Frameworks und Tools
+#### Backend/API
+- **Test-Framework**: xUnit
+- **Mocking**: NSubstitute (für Isolierung von Dependencies)
+- **Test-Daten**: AutoFixture (für automatische Test-Daten-Generierung)
+- **Assertions**: FluentAssertions
+- **Integration Tests**: Testcontainers für PostgreSQL
+
+#### Frontend
+- **Unit/Component Tests**: Jest
+- **E2E Tests**: Playwright
+- **Test-Utilities**: React Testing Library (für Next.js)
+
+### 5.2 Zu erstellende Testarten
+1. **Unit Tests**: Isolierte Tests einzelner Funktionen/Methoden
+2. **Funktionstests**: Tests von Features und Geschäftslogik
+3. **Komponententests**: Tests einzelner UI-Komponenten (Frontend)
+4. **Integrationstests**: Tests des Zusammenspiels mehrerer Komponenten
+5. **Performance Tests**: Lasttests und Performance-Messungen
+6. **Akzeptanztests**: Tests gegen Akzeptanzkriterien der User Stories
+7. **End-to-End-Tests**: Vollständige Durchläufe durch die Anwendung
+8. **Smoke Tests**: Grundlegende Tests der wichtigsten Funktionen
+
+### 5.3 Best Practices
+- **Testpyramide**: Viele Unit Tests, weniger Integration Tests, noch weniger E2E-Tests
+- **Test-Daten**: Builder-Pattern mit AutoFixture verwenden
+- **Page Object Model**: Für Playwright E2E-Tests
+- **AAA-Pattern**: Arrange, Act, Assert für klare Teststruktur
+- **Test-Isolation**: Jeder Test soll unabhängig ausführbar sein
+- **Naming**: Beschreibende Test-Namen (When_Condition_Then_ExpectedResult)
+- **Coverage**: Mindestens 80% Code-Coverage anstreben
 
 ## 6. Dokumentation
 - Dokumentiere neue Funktionen und wichtige Änderungen im Code und in der README.md.
