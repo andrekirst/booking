@@ -42,5 +42,5 @@ Da der Raspberry hinter einer Fritzbox steht, soll Sicherheit ganz oben stehen u
 
 * Platform: Raspberry PI Zero 2 W
 * Backend: .net 9 Native AOT
-* Frontend: Plain HTML/JS - Javascript generiert durch Typescript
+* Frontend: Next.js mit TypeScript und Tailwind CSS
 * Datenbank: PostgreSQL

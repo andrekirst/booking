@@ -22,7 +22,7 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 ### Technologie-Stack
 - **Platform**: Raspberry PI Zero 2 W
 - **Backend**: .NET 9 Native AOT (maximale Performance)
-- **Frontend**: Plain HTML/JS mit TypeScript
+- **Frontend**: Next.js mit TypeScript und Tailwind CSS
 - **Datenbank**: PostgreSQL
 - **Datenzugriff**: Direkte SQL-Statements (kein EF Core)
 
