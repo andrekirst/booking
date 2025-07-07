@@ -24,12 +24,12 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - **Backend**: .NET 9 Native AOT (maximale Performance)
 - **Frontend**: Next.js mit TypeScript und Tailwind CSS
 - **Datenbank**: PostgreSQL
-- **Datenzugriff**: Direkte SQL-Statements (kein EF Core)
+- **Datenzugriff**: Entity Framework Core
 
 ### Besondere Anforderungen
 - Maximale Performance für Raspberry PI Zero 2 W
 - Hohe Sicherheitsstandards (Gerät hinter Fritzbox)
-- Keine ORM-Frameworks, direkte SQL-Verwendung
+- Entity Framework Core für Datenbankzugriff
 
 ## 1. Anforderungen aus requirements.md nutzen
 - Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.

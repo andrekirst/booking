@@ -33,8 +33,8 @@ Ein Familienmitglied kann ein oder mehrere Nächte übernachten
 
 ## Technische Anfoderungen
 
-Die Software soll mindestens auf einem Raspberry PI Zero 2 W laufen. Das heißt, die Software muss maximal performant sein.
-Dies bedeutet auch, dass kein EF Core eingesetzt wird, sondern einfache SQL-Statements genutzt werden.
+Die Software soll mindestens auf einem Raspberry PI Zero 2 W laufen. Das heißt, die Software muss performant sein.
+Die Datenbankzugriffe werden über Entity Framework Core realisiert.
 
 Da der Raspberry hinter einer Fritzbox steht, soll Sicherheit ganz oben stehen und viele Sicherehritsmerkmale aufweisen.
 
