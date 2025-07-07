@@ -41,7 +41,7 @@ export default function LoginPage() {
         setMessage(data.message || 'Anmeldung fehlgeschlagen');
         setMessageType('error');
       }
-    } catch (error) {
+    } catch {
       setMessage('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
       setMessageType('error');
     } finally {

@@ -49,7 +49,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponse>
 
             return new LoginResponse(true, token, null);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception here in a real application
             return new LoginResponse(false, null, "An error occurred during login");
