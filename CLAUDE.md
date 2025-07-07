@@ -51,6 +51,9 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Vor der Umsetzung eines Issues erstellt Copilot einen kurzen Umsetzungsplan (Schritte/Tasks).
 - Die Umsetzung erfolgt Schritt für Schritt entlang dieses Plans.
 - Nach jedem Schritt erfolgt ein Commit und Push.
+- Bei Issues mit Markdown-Checkboxen ([ ]) müssen erledigte Aufgaben abgehakt werden ([x]).
+  - Nutze `gh issue edit` oder `gh issue comment` um Checkboxen zu aktualisieren
+  - Dies gibt einen klaren Überblick über den Fortschritt
 
 ## 5. Tests
 - Schreibe zu neuem Code immer passende Tests.
