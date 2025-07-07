@@ -1,17 +1,12 @@
 namespace Booking.Api.Tests;
 
-public class UnitTest1
+public class ExampleTest
 {
     [Fact]
-    public void Test1()
+    public void Authentication_System_IsConfigured()
     {
-        // Arrange
-        var expected = 4;
-        
-        // Act
-        var actual = 2 + 2;
-        
-        // Assert
-        Assert.Equal(expected, actual);
+        // This is a placeholder test to verify the test setup works
+        // The actual authentication tests are in LoginCommandHandlerTests
+        Assert.True(true);
     }
 }

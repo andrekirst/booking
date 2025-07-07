@@ -23,6 +23,21 @@ export default function Home() {
                 <li>Administratorverwaltung</li>
               </ul>
             </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h2 className="text-xl font-semibold text-green-900 mb-2">
+                Anmeldung
+              </h2>
+              <p className="text-green-800 mb-4">
+                Melden Sie sich an, um das Buchungssystem zu nutzen.
+              </p>
+              <a
+                href="/login"
+                className="inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+              >
+                Zur Anmeldung
+              </a>
+            </div>
           </div>
         </div>
       </div>
