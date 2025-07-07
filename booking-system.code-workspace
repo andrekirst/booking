@@ -1,0 +1,80 @@
+{
+  "folders": [
+    {
+      "name": "Root",
+      "path": "."
+    },
+    {
+      "name": "Backend",
+      "path": "./src/backend"
+    },
+    {
+      "name": "Frontend",
+      "path": "./src/frontend"
+    }
+  ],
+  "settings": {
+    "dotnet.defaultSolution": "src/backend/BookingSystem.sln",
+    "omnisharp.enableEditorConfigSupport": true,
+    "omnisharp.enableImportCompletion": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-dotnettools.csharp",
+      "ms-dotnettools.vscode-dotnet-runtime",
+      "bradlc.vscode-tailwindcss",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "ms-azuretools.vscode-docker",
+      "formulahendry.auto-rename-tag",
+      "christian-kohler.path-intellisense"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Launch Backend + PostgreSQL",
+        "type": "coreclr",
+        "request": "launch",
+        "preLaunchTask": "start-postgres",
+        "program": "${workspaceFolder}/src/backend/Booking.Api/bin/Debug/net9.0/Booking.Api.dll",
+        "args": [],
+        "cwd": "${workspaceFolder}/src/backend/Booking.Api",
+        "console": "internalConsole",
+        "stopAtEntry": false,
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "ASPNETCORE_URLS": "http://localhost:5000"
+        },
+        "serverReadyAction": {
+          "action": "openExternally",
+          "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+          "uriFormat": "%s/swagger"
+        }
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Full Development Setup",
+        "dependsOrder": "sequence",
+        "dependsOn": [
+          "start-postgres",
+          "install-frontend",
+          "build-backend"
+        ],
+        "group": "build"
+      }
+    ]
+  }
+}

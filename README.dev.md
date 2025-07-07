@@ -7,7 +7,26 @@
 - Node.js 20+ (für lokale Frontend-Entwicklung)
 - Visual Studio, Rider oder VS Code
 
-## Schnellstart mit Docker
+## Entwicklungsoptionen
+
+### Option 1: Nur PostgreSQL mit Docker (Empfohlen für IDE-Entwicklung)
+
+1. **PostgreSQL starten:**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Backend in IDE starten:**
+   - Profile auswählen: "Development" oder "Docker-PostgreSQL"
+   - F5 oder "Start Debugging"
+
+3. **Frontend separat starten:**
+   ```bash
+   cd src/frontend
+   npm install && npm run dev
+   ```
+
+### Option 2: Vollständige Docker-Entwicklung
 
 1. **Alle Services starten:**
    ```bash
@@ -17,7 +36,7 @@
 2. **Services einzeln starten:**
    ```bash
    # Nur Datenbank
-   docker-compose -f docker-compose.dev.yml up postgres -d
+   docker-compose up postgres -d
    
    # Backend und Datenbank
    docker-compose -f docker-compose.dev.yml up postgres backend -d
@@ -26,6 +45,8 @@
 3. **Services stoppen:**
    ```bash
    docker-compose -f docker-compose.dev.yml down
+   # oder für nur PostgreSQL:
+   docker-compose down
    ```
 
 ## Lokale Entwicklung (ohne Docker)
