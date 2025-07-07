@@ -40,5 +40,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             
         builder.Property(u => u.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            
+        builder.Property(u => u.ChangedAt)
+            .IsRequired(false);
+            
+        // Global Query Filter for soft delete
+        builder.HasQueryFilter(u => u.IsActive);
     }
 }

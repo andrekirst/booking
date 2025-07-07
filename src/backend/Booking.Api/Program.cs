@@ -1,5 +1,6 @@
 using System.Text;
 using Booking.Api.Data;
+using Booking.Api.Data.Interceptors;
 using Booking.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,8 @@ public class Program
         
         // Configure Entity Framework Core with PostgreSQL
         builder.Services.AddDbContext<BookingDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+                   .AddInterceptors(new AuditInterceptor()));
         
         // Configure MediatR for CQS pattern
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
