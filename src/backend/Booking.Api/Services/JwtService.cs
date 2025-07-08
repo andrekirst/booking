@@ -6,18 +6,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Booking.Api.Services;
 
-public class JwtService : IJwtService
+public class JwtService(IConfiguration configuration) : IJwtService
 {
-    private readonly IConfiguration _configuration;
-
-    public JwtService(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
-
     public string GenerateToken(User user)
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
+        var jwtSettings = configuration.GetSection("JwtSettings");
         var secret = jwtSettings["Secret"];
         var issuer = jwtSettings["Issuer"];
         var audience = jwtSettings["Audience"];
@@ -50,7 +43,7 @@ public class JwtService : IJwtService
     {
         try
         {
-            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var jwtSettings = configuration.GetSection("JwtSettings");
             var secret = jwtSettings["Secret"];
             var issuer = jwtSettings["Issuer"];
             var audience = jwtSettings["Audience"];

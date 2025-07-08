@@ -1,9 +1,13 @@
+using System.Net;
 using System.Text;
 using Booking.Api.Configuration;
+using Booking.Api.Controllers;
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
 using Booking.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -16,7 +20,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add<AuthorizeFilter>();
+            options.Filters.Add(new ProducesResponseTypeAttribute<ErrorResponse>((int)HttpStatusCode.Unauthorized));
+        });
         
         // Configure Entity Framework Core with PostgreSQL
         builder.Services.AddDbContext<BookingDbContext>(options =>

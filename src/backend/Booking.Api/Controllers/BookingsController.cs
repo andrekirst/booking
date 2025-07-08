@@ -6,19 +6,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Booking.Api.Controllers;
 
 [Authorize]
-public class BookingsController : BaseApiController
+public class BookingsController(BookingDbContext context) : BaseApiController
 {
-    private readonly BookingDbContext _context;
-
-    public BookingsController(BookingDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<BookingsResponse>> GetBookings()
     {
-        var bookings = await _context.Bookings
+        var bookings = await context.Bookings
+            .AsNoTracking()
             .OrderByDescending(b => b.CreatedAt)
             .Take(100) // Limit for performance
             .Select(b => new BookingDto(
@@ -28,7 +22,7 @@ public class BookingsController : BaseApiController
             ))
             .ToListAsync();
 
-        return Ok(new BookingsResponse(bookings, bookings.Count()));
+        return Ok(new BookingsResponse(bookings, bookings.Count));
     }
 }
 
