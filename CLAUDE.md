@@ -96,6 +96,12 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 
 ## 8. Sicherheit
 - Achte auf sichere Programmierpraktiken (z. B. Validierung von Benutzereingaben, Vermeidung von SQL-Injektionen).
+- **WICHTIG: Secrets und sensible Daten**:
+  - NIEMALS Secrets (wie JWT-Secrets, Datenbankpasswörter, API-Keys) in appsettings.json oder anderen Konfigurationsdateien im Repository speichern
+  - Für die lokale Entwicklung: .NET User Secrets verwenden (`dotnet user-secrets`)
+  - Für Docker/Production: Umgebungsvariablen verwenden, die aus .env-Dateien oder einem Secret-Management-System kommen
+  - .env-Dateien müssen in .gitignore eingetragen sein und dürfen NIEMALS ins Repository committet werden
+  - Beispiel für appsettings.json: `"JwtSettings": { "Secret": "" }` - der Wert wird über User Secrets oder Umgebungsvariablen überschrieben
 
 ## 9. Zusammenarbeit mit Copilot
 - Schreibe präzise Kommentare und TODOs, um Copilot gezielt einzusetzen.
