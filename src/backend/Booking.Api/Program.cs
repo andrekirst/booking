@@ -99,10 +99,10 @@ public class Program
         }
 
         // CORS must be called before UseHttpsRedirection
-        var corsSettings = app.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>();
-        if (corsSettings != null && corsSettings.AllowedOrigins.Any())
+        var appCorsSettings = app.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>();
+        if (appCorsSettings != null && appCorsSettings.AllowedOrigins.Any())
         {
-            app.UseCors(corsSettings.PolicyName);
+            app.UseCors(appCorsSettings.PolicyName);
         }
 
         app.UseHttpsRedirection();
