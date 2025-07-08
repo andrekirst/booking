@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -57,7 +58,7 @@ export default function LoginPage() {
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-100/20 border border-white/20 p-8">
           {/* Back to Home Button */}
           <div className="mb-6">
-            <a
+            <Link
               href="/"
               className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors"
             >
@@ -65,7 +66,7 @@ export default function LoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Zurück zur Startseite
-            </a>
+            </Link>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
