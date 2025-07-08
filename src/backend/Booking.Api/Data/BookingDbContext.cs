@@ -1,3 +1,4 @@
+using Booking.Api.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Data;
@@ -8,6 +9,8 @@ public class BookingDbContext : DbContext
         : base(options)
     {
     }
+
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

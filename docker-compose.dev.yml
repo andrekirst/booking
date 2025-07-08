@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: booking-postgres-dev
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - booking-network
+
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: booking-api-dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=booking_dev;Username=booking_user;Password=booking_password"
+      JwtSettings__Secret: "development-jwt-secret-key-for-local-testing-only-256-bits-minimum"
+      JwtSettings__Issuer: "BookingApi"
+      JwtSettings__Audience: "BookingApp"
+      JwtSettings__ExpirationMinutes: "480"
+    ports:
+      - "5000:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/backend:/app/src:ro
+    networks:
+      - booking-network
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    container_name: booking-frontend-dev
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src/frontend:/app:cached
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - booking-network
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  booking-network:
+    driver: bridge
