@@ -40,6 +40,8 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Folge den in diesem Projekt üblichen Code-Konventionen (z. B. Benennung, Einrückung, Kommentare).
 - Schreibe klaren, gut dokumentierten und wartbaren Code.
 - Nutze, wenn möglich, bestehende Funktionen und Module wieder.
+- **Allgemeine Code-Hinweise**:
+  - Benutze primary constructor wenn möglich
 
 ## 3. Commit-Nachrichten
 - Verwende beschreibende Commit-Nachrichten auf Englisch oder Deutsch.
