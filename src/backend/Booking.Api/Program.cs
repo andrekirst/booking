@@ -1,4 +1,5 @@
 using System.Text;
+using Booking.Api.Configuration;
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
 using Booking.Api.Services;
@@ -53,17 +54,25 @@ public class Program
 
         builder.Services.AddAuthorization();
         
-        // Configure CORS for development
-        builder.Services.AddCors(options =>
+        // Configure CORS from settings
+        var corsSettings = builder.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>();
+        if (corsSettings != null && corsSettings.AllowedOrigins.Any())
         {
-            options.AddPolicy("Development", policy =>
+            builder.Services.AddCors(options =>
             {
-                policy.WithOrigins("http://localhost:3000")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+                options.AddPolicy(corsSettings.PolicyName, policy =>
+                {
+                    policy.WithOrigins(corsSettings.AllowedOrigins.ToArray())
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                    
+                    if (corsSettings.AllowCredentials)
+                    {
+                        policy.AllowCredentials();
+                    }
+                });
             });
-        });
+        }
         
         // Configure OpenAPI/Swagger
         builder.Services.AddEndpointsApiExplorer();
@@ -87,7 +96,13 @@ public class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
-            app.UseCors("Development");
+        }
+
+        // CORS must be called before UseHttpsRedirection
+        var corsSettings = app.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>();
+        if (corsSettings != null && corsSettings.AllowedOrigins.Any())
+        {
+            app.UseCors(corsSettings.PolicyName);
         }
 
         app.UseHttpsRedirection();
