@@ -25,11 +25,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             
         builder.Property(u => u.FirstName)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(256);
             
         builder.Property(u => u.LastName)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(256);
             
         builder.Property(u => u.Role)
             .HasConversion<string>()
