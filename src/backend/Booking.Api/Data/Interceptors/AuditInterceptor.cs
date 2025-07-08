@@ -27,7 +27,7 @@ public class AuditInterceptor : SaveChangesInterceptor
 
         var entries = context.ChangeTracker
             .Entries<IAuditableEntity>()
-            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+            .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
         foreach (var entry in entries)
         {
