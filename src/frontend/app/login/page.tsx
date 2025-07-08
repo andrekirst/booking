@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,9 +37,10 @@ export default function LoginPage() {
         setMessage('Anmeldung erfolgreich');
         setMessageType('success');
         
-        // Reset form
-        setEmail('');
-        setPassword('');
+        // Redirect to bookings page after successful login
+        setTimeout(() => {
+          router.push('/bookings');
+        }, 1000);
       } else {
         setMessage(data.message || 'Anmeldung fehlgeschlagen');
         setMessageType('error');
