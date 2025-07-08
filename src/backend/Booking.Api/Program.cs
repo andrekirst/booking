@@ -38,14 +38,14 @@ public class Program
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IJwtService, JwtService>();
         
+        // Configure JwtSettings with Options pattern
+        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+        
         // Configure JWT Authentication
-        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-        var secret = jwtSettings["Secret"];
-        var issuer = jwtSettings["Issuer"];
-        var audience = jwtSettings["Audience"];
-
+        var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
+        
         // Ensure JWT secret is configured
-        if (string.IsNullOrEmpty(secret))
+        if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Secret))
         {
             throw new InvalidOperationException("JWT Secret is not configured. Please set the JwtSettings:Secret in user secrets or environment variables.");
         }
@@ -56,11 +56,11 @@ public class Program
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                     ValidateIssuer = true,
-                    ValidIssuer = issuer,
+                    ValidIssuer = jwtSettings.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = audience,
+                    ValidAudience = jwtSettings.Audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };

@@ -1,10 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Booking.Api.Configuration;
 using Booking.Api.Domain.Entities;
 using Booking.Api.Services;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
 
@@ -12,7 +13,7 @@ namespace Booking.Api.Tests.Unit.Services;
 
 public class JwtServiceTests
 {
-    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IOptions<JwtSettings>> _jwtSettingsMock;
     private readonly JwtService _jwtService;
     private const string TestSecret = "ThisIsATestSecretThatIsAtLeast32CharactersLong!";
     private const string TestIssuer = "TestIssuer";
@@ -20,18 +21,20 @@ public class JwtServiceTests
     
     public JwtServiceTests()
     {
-        _configurationMock = new Mock<IConfiguration>();
+        _jwtSettingsMock = new Mock<IOptions<JwtSettings>>();
         
-        // Setup configuration
-        var jwtSection = new Mock<IConfigurationSection>();
-        jwtSection.Setup(x => x["Secret"]).Returns(TestSecret);
-        jwtSection.Setup(x => x["Issuer"]).Returns(TestIssuer);
-        jwtSection.Setup(x => x["Audience"]).Returns(TestAudience);
-        jwtSection.Setup(x => x["ExpirationMinutes"]).Returns("60");
+        // Setup JwtSettings
+        var jwtSettings = new JwtSettings
+        {
+            Secret = TestSecret,
+            Issuer = TestIssuer,
+            Audience = TestAudience,
+            ExpirationMinutes = 60
+        };
         
-        _configurationMock.Setup(x => x.GetSection("JwtSettings")).Returns(jwtSection.Object);
+        _jwtSettingsMock.Setup(x => x.Value).Returns(jwtSettings);
         
-        _jwtService = new JwtService(_configurationMock.Object);
+        _jwtService = new JwtService(_jwtSettingsMock.Object);
     }
     
     [Fact]
