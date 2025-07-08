@@ -125,6 +125,9 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Die Erstellung des Branches erfolgt per GitHub CLI (`gh`), z. B. mit `gh pr checkout -b <branchname>` oder `gh api`.
 - Nach dem Anlegen des Branches auf GitHub muss der Branch lokal ausgecheckt werden, damit Änderungen nicht versehentlich auf `main` erfolgen.
 
+## Entwicklungs-Erinnerungen
+- Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
+
 ---
 
 Diese Datei kann bei Bedarf erweitert oder angepasst werden.
