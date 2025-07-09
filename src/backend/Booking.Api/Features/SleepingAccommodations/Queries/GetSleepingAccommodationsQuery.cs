@@ -10,14 +10,20 @@ public record GetSleepingAccommodationsQuery : IRequest<List<SleepingAccommodati
     public bool IncludeInactive { get; init; } = false;
 }
 
-public class GetSleepingAccommodationsQueryHandler(BookingDbContext context) 
-    : IRequestHandler<GetSleepingAccommodationsQuery, List<SleepingAccommodationDto>>
+public class GetSleepingAccommodationsQueryHandler : IRequestHandler<GetSleepingAccommodationsQuery, List<SleepingAccommodationDto>>
 {
+    private readonly BookingDbContext _context;
+
+    public GetSleepingAccommodationsQueryHandler(BookingDbContext context)
+    {
+        _context = context;
+    }
+
     public async Task<List<SleepingAccommodationDto>> Handle(
         GetSleepingAccommodationsQuery request, 
         CancellationToken cancellationToken)
     {
-        var query = context.SleepingAccommodations.AsQueryable();
+        var query = _context.SleepingAccommodationReadModels.AsQueryable();
         
         if (!request.IncludeInactive)
         {

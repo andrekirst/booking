@@ -1,6 +1,6 @@
-using Booking.Api.Data;
-using Booking.Api.Domain.Entities;
+using Booking.Api.Domain.Aggregates;
 using Booking.Api.Features.SleepingAccommodations.DTOs;
+using Booking.Api.Features.SleepingAccommodations.Repositories;
 using MediatR;
 
 namespace Booking.Api.Features.SleepingAccommodations.Commands;
@@ -8,33 +8,37 @@ namespace Booking.Api.Features.SleepingAccommodations.Commands;
 public record CreateSleepingAccommodationCommand(CreateSleepingAccommodationDto Dto) 
     : IRequest<SleepingAccommodationDto>;
 
-public class CreateSleepingAccommodationCommandHandler(BookingDbContext context)
-    : IRequestHandler<CreateSleepingAccommodationCommand, SleepingAccommodationDto>
+public class CreateSleepingAccommodationCommandHandler : IRequestHandler<CreateSleepingAccommodationCommand, SleepingAccommodationDto>
 {
+    private readonly ISleepingAccommodationRepository _repository;
+
+    public CreateSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository)
+    {
+        _repository = repository;
+    }
+
     public async Task<SleepingAccommodationDto> Handle(
         CreateSleepingAccommodationCommand request,
         CancellationToken cancellationToken)
     {
-        var accommodation = new SleepingAccommodation
-        {
-            Name = request.Dto.Name,
-            Type = request.Dto.Type,
-            MaxCapacity = request.Dto.MaxCapacity,
-            IsActive = true
-        };
+        var id = Guid.NewGuid();
+        var aggregate = SleepingAccommodationAggregate.Create(
+            id,
+            request.Dto.Name,
+            request.Dto.Type,
+            request.Dto.MaxCapacity);
         
-        context.SleepingAccommodations.Add(accommodation);
-        await context.SaveChangesAsync(cancellationToken);
+        await _repository.SaveAsync(aggregate);
         
         return new SleepingAccommodationDto
         {
-            Id = accommodation.Id,
-            Name = accommodation.Name,
-            Type = accommodation.Type,
-            MaxCapacity = accommodation.MaxCapacity,
-            IsActive = accommodation.IsActive,
-            CreatedAt = accommodation.CreatedAt,
-            ChangedAt = accommodation.ChangedAt
+            Id = aggregate.Id,
+            Name = aggregate.Name,
+            Type = aggregate.Type,
+            MaxCapacity = aggregate.MaxCapacity,
+            IsActive = aggregate.IsActive,
+            CreatedAt = aggregate.CreatedAt,
+            ChangedAt = aggregate.ChangedAt
         };
     }
 }

@@ -7,14 +7,20 @@ namespace Booking.Api.Features.SleepingAccommodations.Queries;
 
 public record GetSleepingAccommodationByIdQuery(Guid Id) : IRequest<SleepingAccommodationDto?>;
 
-public class GetSleepingAccommodationByIdQueryHandler(BookingDbContext context)
-    : IRequestHandler<GetSleepingAccommodationByIdQuery, SleepingAccommodationDto?>
+public class GetSleepingAccommodationByIdQueryHandler : IRequestHandler<GetSleepingAccommodationByIdQuery, SleepingAccommodationDto?>
 {
+    private readonly BookingDbContext _context;
+
+    public GetSleepingAccommodationByIdQueryHandler(BookingDbContext context)
+    {
+        _context = context;
+    }
+
     public async Task<SleepingAccommodationDto?> Handle(
         GetSleepingAccommodationByIdQuery request,
         CancellationToken cancellationToken)
     {
-        return await context.SleepingAccommodations
+        return await _context.SleepingAccommodationReadModels
             .Where(sa => sa.Id == request.Id)
             .Select(sa => new SleepingAccommodationDto
             {

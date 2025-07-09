@@ -4,7 +4,10 @@ using Booking.Api.Configuration;
 using Booking.Api.Controllers;
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
+using Booking.Api.Domain.Aggregates;
+using Booking.Api.Features.SleepingAccommodations.Repositories;
 using Booking.Api.Services;
+using Booking.Api.Services.EventSourcing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -37,6 +40,13 @@ public class Program
         // Register custom services
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IJwtService, JwtService>();
+        
+        // Register Event Sourcing services
+        builder.Services.AddScoped<IEventStore, EventStore>();
+        builder.Services.AddScoped<IEventSerializer, EventSerializer>();
+        builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
+        builder.Services.AddScoped<IEventSourcedRepository<SleepingAccommodationAggregate>, EventSourcedRepository<SleepingAccommodationAggregate>>();
+        builder.Services.AddScoped<ISleepingAccommodationRepository, SleepingAccommodationRepository>();
         
         // Configure JwtSettings with Options pattern
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
