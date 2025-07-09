@@ -21,7 +21,7 @@ public class AuditInterceptorTests : IDisposable
     }
 
     [Fact]
-    public async Task SaveChanges_WhenAddingEntity_ShouldSetCreatedAt()
+    public async Task SaveChanges_WhenAddingEntity_ShouldSetCreatedAtAndChangedAt()
     {
         // Arrange
         var user = new User
@@ -39,7 +39,8 @@ public class AuditInterceptorTests : IDisposable
 
         // Assert
         user.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        user.ChangedAt.Should().BeNull();
+        user.ChangedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        user.CreatedAt.Should().Be(user.ChangedAt);
     }
 
     [Fact]

@@ -12,6 +12,7 @@ public class BookingDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Domain.Entities.Booking> Bookings { get; set; }
+    public DbSet<SleepingAccommodation> SleepingAccommodations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
