@@ -153,31 +153,25 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
 
       {/* Menüband für Aktionen */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg px-6 py-4 mb-8">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Aktionen für diese Schlafmöglichkeit
-          </div>
-          
-          <button
-            type="button"
-            onClick={handleToggleActiveWrapper}
-            className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
-              accommodation.isActive
-                ? 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-md'
-                : 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500 shadow-md'
-            }`}
-            aria-label={`${accommodation.name} ${accommodation.isActive ? 'deaktivieren' : 'aktivieren'}`}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              {accommodation.isActive ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h6a2 2 0 012 2v4a2 2 0 01-2 2h-6a2 2 0 01-2-2v-4a2 2 0 012-2z" />
-              )}
-            </svg>
-            {accommodation.isActive ? 'Deaktivieren' : 'Aktivieren'}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleToggleActiveWrapper}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
+            accommodation.isActive
+              ? 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-md'
+              : 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500 shadow-md'
+          }`}
+          aria-label={`${accommodation.name} ${accommodation.isActive ? 'deaktivieren' : 'aktivieren'}`}
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            {accommodation.isActive ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h6a2 2 0 012 2v4a2 2 0 01-2 2h-6a2 2 0 01-2-2v-4a2 2 0 012-2z" />
+            )}
+          </svg>
+          {accommodation.isActive ? 'Deaktivieren' : 'Aktivieren'}
+        </button>
       </div>
       
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 max-w-2xl">
