@@ -72,17 +72,27 @@ export default function SleepingAccommodationsTable({
                 <button
                   type="button"
                   onClick={() => onEdit(accommodation.id)}
-                  className="text-indigo-600 hover:text-indigo-900 mr-4"
+                  className="inline-flex items-center text-indigo-600 hover:text-indigo-900 mr-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md p-1"
+                  aria-label={`${accommodation.name} bearbeiten`}
+                  title={`${accommodation.name} bearbeiten`}
                 >
-                  Bearbeiten
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Bearbeiten</span>
                 </button>
                 {accommodation.isActive && (
                   <button
                     type="button"
                     onClick={() => onDelete(accommodation.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="inline-flex items-center text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded-md p-1"
+                    aria-label={`${accommodation.name} deaktivieren`}
+                    title={`${accommodation.name} deaktivieren`}
                   >
-                    Deaktivieren
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                    </svg>
+                    <span>Deaktivieren</span>
                   </button>
                 )}
               </td>

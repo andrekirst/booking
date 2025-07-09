@@ -161,4 +161,58 @@ describe('SleepingAccommodationsTable', () => {
     expect(screen.getByText('Raum')).toBeInTheDocument();
     expect(screen.getByText('Zelt')).toBeInTheDocument();
   });
+
+  it('has proper accessibility attributes for action buttons', () => {
+    render(
+      <SleepingAccommodationsTable
+        accommodations={mockAccommodations}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    // Check aria-label for edit button
+    const editButton = screen.getByLabelText('Schlafzimmer 1 bearbeiten');
+    expect(editButton).toBeInTheDocument();
+    expect(editButton).toHaveAttribute('title', 'Schlafzimmer 1 bearbeiten');
+
+    // Check aria-label for delete button
+    const deleteButton = screen.getByLabelText('Schlafzimmer 1 deaktivieren');
+    expect(deleteButton).toBeInTheDocument();
+    expect(deleteButton).toHaveAttribute('title', 'Schlafzimmer 1 deaktivieren');
+  });
+
+  it('has proper focus management for action buttons', () => {
+    render(
+      <SleepingAccommodationsTable
+        accommodations={mockAccommodations}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    const editButton = screen.getByLabelText('Schlafzimmer 1 bearbeiten');
+    const deleteButton = screen.getByLabelText('Schlafzimmer 1 deaktivieren');
+
+    // Check that buttons can receive focus
+    editButton.focus();
+    expect(editButton).toHaveFocus();
+
+    deleteButton.focus();
+    expect(deleteButton).toHaveFocus();
+  });
+
+  it('has icons that are hidden from screen readers', () => {
+    render(
+      <SleepingAccommodationsTable
+        accommodations={mockAccommodations}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    // Check that SVG icons have aria-hidden="true"
+    const svgIcons = document.querySelectorAll('svg[aria-hidden="true"]');
+    expect(svgIcons.length).toBeGreaterThan(0);
+  });
 });
