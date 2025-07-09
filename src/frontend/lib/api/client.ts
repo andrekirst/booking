@@ -37,10 +37,18 @@ export class HttpApiClient implements ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
     };
+
+    // Add existing headers if present
+    if (options.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          headers[key] = value;
+        }
+      });
+    }
 
     // Add auth token if available
     if (this.token) {

@@ -60,11 +60,11 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                         options.UseNpgsql(_postgres.GetConnectionString());
                     });
                     
-                    // Ensure database is created
+                    // Apply migrations
                     var sp = services.BuildServiceProvider();
                     using var scope = sp.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
-                    db.Database.EnsureCreated();
+                    db.Database.Migrate();
                 });
             });
             
