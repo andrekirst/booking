@@ -88,6 +88,22 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - **Naming**: Beschreibende Test-Namen (When_Condition_Then_ExpectedResult)
 - **Coverage**: Mindestens 80% Code-Coverage anstreben
 
+### 5.4 Komponententest-Richtlinien
+- **WICHTIG**: Bei jeder Erstellung oder Änderung von React-Komponenten MÜSSEN entsprechende Komponententests erstellt oder angepasst werden
+- **Test-Struktur**: Verwende `describe` Blöcke zur Gruppierung von Tests nach Funktionalität
+- **Test-Abdeckung**: Jede Komponente sollte mindestens folgende Tests haben:
+  - Rendering-Tests für alle Varianten/Props
+  - Event-Handler-Tests (onClick, onChange, etc.)
+  - Accessibility-Tests (Focus, ARIA-Attribute)
+  - Conditional Rendering-Tests
+  - Props-Validierung-Tests
+- **Test-Verzeichnis**: Tests gehören in `__tests__` Ordner neben der Komponente
+- **Test-Naming**: `ComponentName.test.tsx` für Komponententests
+- **Test-Commands**: 
+  - `npm test` - Einmalige Ausführung aller Tests
+  - `npm run test:watch` - Watch-Mode für Entwicklung
+  - `npm run test:coverage` - Coverage-Report generieren
+
 ## 6. Dokumentation
 - Dokumentiere neue Funktionen und wichtige Änderungen im Code und in der README.md.
 - Halte die Dokumentation aktuell.
