@@ -87,7 +87,7 @@ export default function BookingsPage() {
       <header className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-gray-900">Meine Buchungen</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Garten Buchungen</h1>
             <button
               onClick={handleLogout}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
@@ -130,7 +130,7 @@ export default function BookingsPage() {
                 Noch keine Buchungen vorhanden
               </h2>
               <p className="text-gray-600 text-lg max-w-md mx-auto leading-relaxed">
-                Sie haben noch keine Buchungen getätigt. Ihre zukünftigen Buchungen werden hier angezeigt.
+                Es sind noch keine Buchungen für den Garten vorhanden. Alle Buchungen werden hier angezeigt.
               </p>
             </div>
 
