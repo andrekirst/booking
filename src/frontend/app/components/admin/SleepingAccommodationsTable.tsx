@@ -69,32 +69,34 @@ export default function SleepingAccommodationsTable({
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  type="button"
-                  onClick={() => onEdit(accommodation.id)}
-                  className="inline-flex items-center text-indigo-600 hover:text-indigo-900 mr-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-md p-1"
-                  aria-label={`${accommodation.name} bearbeiten`}
-                  title={`${accommodation.name} bearbeiten`}
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>Bearbeiten</span>
-                </button>
-                {accommodation.isActive && (
+                <div className="flex justify-end space-x-2">
                   <button
                     type="button"
-                    onClick={() => onDelete(accommodation.id)}
-                    className="inline-flex items-center text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded-md p-1"
-                    aria-label={`${accommodation.name} deaktivieren`}
-                    title={`${accommodation.name} deaktivieren`}
+                    onClick={() => onEdit(accommodation.id)}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
+                    aria-label={`${accommodation.name} bearbeiten`}
+                    title={`${accommodation.name} bearbeiten`}
                   >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    <span>Deaktivieren</span>
+                    <span>Bearbeiten</span>
                   </button>
-                )}
+                  {accommodation.isActive && (
+                    <button
+                      type="button"
+                      onClick={() => onDelete(accommodation.id)}
+                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200"
+                      aria-label={`${accommodation.name} deaktivieren`}
+                      title={`${accommodation.name} deaktivieren`}
+                    >
+                      <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Deaktivieren</span>
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
