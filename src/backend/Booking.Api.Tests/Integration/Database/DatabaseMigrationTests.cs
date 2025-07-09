@@ -69,7 +69,7 @@ public class DatabaseMigrationTests : IntegrationTestBase
         columns.Should().Contain(c => c.ColumnName == "PasswordHash" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "FirstName" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "LastName" && c.DataType == "character varying");
-        columns.Should().Contain(c => c.ColumnName == "Role" && c.DataType == "integer");
+        columns.Should().Contain(c => c.ColumnName == "Role" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "IsActive" && c.DataType == "boolean");
         columns.Should().Contain(c => c.ColumnName == "CreatedAt" && c.DataType == "timestamp with time zone");
         columns.Should().Contain(c => c.ColumnName == "ChangedAt" && c.DataType == "timestamp with time zone");

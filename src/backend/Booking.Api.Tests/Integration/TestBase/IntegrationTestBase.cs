@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
+using System.Text;
 using Booking.Api.Configuration;
 using Booking.Api.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Testcontainers.PostgreSql;
 
 namespace Booking.Api.Tests.Integration.TestBase;
@@ -63,6 +66,31 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                     services.AddDbContext<BookingDbContext>(options =>
                     {
                         options.UseNpgsql(_postgres.GetConnectionString());
+                    });
+                    
+                    // Reconfigure JWT authentication with test settings
+                    services.Configure<JwtSettings>(options =>
+                    {
+                        options.Secret = TestJwtSecret;
+                        options.Issuer = "TestApi";
+                        options.Audience = "TestApp";
+                        options.ExpirationMinutes = 60;
+                    });
+                    
+                    // Reconfigure JWT Bearer authentication with test secret
+                    services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+                    {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtSecret)),
+                            ValidateIssuer = true,
+                            ValidIssuer = "TestApi",
+                            ValidateAudience = true,
+                            ValidAudience = "TestApp",
+                            ValidateLifetime = true,
+                            ClockSkew = TimeSpan.Zero
+                        };
                     });
                     
                     // Apply migrations

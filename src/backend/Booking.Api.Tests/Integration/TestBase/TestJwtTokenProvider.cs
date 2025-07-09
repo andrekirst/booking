@@ -53,7 +53,33 @@ public class TestJwtTokenProvider
     
     public string GenerateExpiredToken(int userId, string email)
     {
-        return GenerateToken(userId, email, "Member", -60); // Expired 60 minutes ago
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_secret);
+        
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Email, email),
+            new(ClaimTypes.Role, "Member"),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+        };
+        
+        var expiredTime = DateTime.UtcNow.AddMinutes(-60); // Expired 60 minutes ago
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = expiredTime,
+            NotBefore = expiredTime.AddMinutes(-1), // NotBefore should be before Expires
+            Issuer = _issuer,
+            Audience = _audience,
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key), 
+                SecurityAlgorithms.HmacSha256Signature)
+        };
+        
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
     
     public string GenerateInvalidToken()

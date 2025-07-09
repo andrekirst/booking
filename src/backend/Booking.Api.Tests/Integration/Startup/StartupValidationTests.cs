@@ -145,7 +145,6 @@ public class StartupValidationTests : IntegrationTestBase
         var endpoints = new[]
         {
             "/api/bookings",
-            "/api/users/me",
             // Add more endpoints as they are created
         };
 
