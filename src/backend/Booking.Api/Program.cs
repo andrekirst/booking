@@ -101,7 +101,7 @@ public class Program
             var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
             var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
             
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
             await DbSeeder.SeedAsync(context, passwordService);
         }
 
