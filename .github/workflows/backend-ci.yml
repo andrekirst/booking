@@ -56,6 +56,10 @@ jobs:
       run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
       env:
         ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=booking_test;Username=test_user;Password=test_password"
+        JwtSettings__Secret: "test-jwt-secret-key-for-ci-pipeline-minimum-32-characters-long-required"
+        JwtSettings__Issuer: "TestApi"
+        JwtSettings__Audience: "TestApp"
+        JwtSettings__ExpirationMinutes: "60"
     
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
