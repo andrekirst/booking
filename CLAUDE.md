@@ -53,6 +53,7 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Vor der Umsetzung eines Issues erstellt Copilot einen kurzen Umsetzungsplan (Schritte/Tasks).
 - Die Umsetzung erfolgt Schritt für Schritt entlang dieses Plans.
 - Nach jedem Schritt erfolgt ein Commit und Push.
+- **WICHTIG - Schrittweise Umsetzung**: Implementiere immer nur das, was explizit besprochen und geplant wurde. Vermeide es, zusätzliche Features oder Placeholder für zukünftige Funktionen zu erstellen, da dies die Issues zu groß macht und das Testen erschwert. Jedes Feature sollte vollständig und isoliert implementiert werden.
 
 ## 5. Tests
 
