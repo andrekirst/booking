@@ -10,7 +10,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:codegen": "playwright codegen"
+    "test:e2e:codegen": "playwright codegen",
+    "test:api": "playwright test --grep 'API Client Tests|Smoke Tests - API Abstraction'",
+    "test:api:ui": "playwright test --grep 'API Client Tests|Smoke Tests - API Abstraction' --ui",
+    "test:smoke": "playwright test --grep 'Smoke Tests - API Abstraction'"
   },
   "dependencies": {
     "next": "15.3.5",
