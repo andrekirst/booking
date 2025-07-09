@@ -123,6 +123,10 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        
+        // Add simple health check endpoint
+        app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+            .AllowAnonymous();
 
         app.Run();
     }
