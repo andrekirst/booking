@@ -31,7 +31,7 @@ public class SleepingAccommodationConfiguration : IEntityTypeConfiguration<Sleep
             .IsRequired();
             
         builder.Property(sa => sa.ChangedAt)
-            .IsRequired();
+            .IsRequired(false);
             
         // Index for active accommodations
         builder.HasIndex(sa => sa.IsActive);

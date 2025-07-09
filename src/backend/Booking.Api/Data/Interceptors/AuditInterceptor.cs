@@ -36,6 +36,7 @@ public class AuditInterceptor : SaveChangesInterceptor
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = utcNow;
+                entry.Entity.ChangedAt = utcNow;
             }
 
             if (entry.State == EntityState.Modified)
