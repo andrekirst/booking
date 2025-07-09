@@ -125,15 +125,58 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
     );
   }
 
+  const handleToggleActiveWrapper = async () => {
+    if (!accommodation?.id) return;
+
+    try {
+      await handleToggleActive(accommodation.id, !accommodation.isActive);
+    } catch {
+      // Error handling is done in handleToggleActive
+    }
+  };
+
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-900 mb-8">Schlafmöglichkeit bearbeiten</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Schlafmöglichkeit bearbeiten</h2>
+        
+        <div className="flex items-center space-x-4">
+          <span
+            className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+              accommodation.isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-gray-100 text-gray-800'
+            }`}
+          >
+            {accommodation.isActive ? 'Aktiv' : 'Inaktiv'}
+          </span>
+          
+          <button
+            type="button"
+            onClick={handleToggleActiveWrapper}
+            className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
+              accommodation.isActive
+                ? 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-md'
+                : 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500 shadow-md'
+            }`}
+            aria-label={`${accommodation.name} ${accommodation.isActive ? 'deaktivieren' : 'aktivieren'}`}
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              {accommodation.isActive ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h6a2 2 0 012 2v4a2 2 0 01-2 2h-6a2 2 0 01-2-2v-4a2 2 0 012-2z" />
+              )}
+            </svg>
+            {accommodation.isActive ? 'Deaktivieren' : 'Aktivieren'}
+          </button>
+        </div>
+      </div>
       
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 max-w-2xl">
         <SleepingAccommodationForm 
           accommodation={accommodation} 
           onSubmit={handleSubmit} 
-          onToggleActive={handleToggleActive}
           isEdit={true} 
         />
       </div>

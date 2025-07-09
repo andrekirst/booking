@@ -11,7 +11,6 @@ jest.mock('next/navigation', () => ({
 
 describe('SleepingAccommodationForm', () => {
   const mockOnSubmit = jest.fn();
-  const mockOnToggleActive = jest.fn();
 
   const mockAccommodation: SleepingAccommodation = {
     id: '1',
@@ -31,7 +30,6 @@ describe('SleepingAccommodationForm', () => {
     render(
       <SleepingAccommodationForm
         onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
         isEdit={false}
       />
     );
@@ -49,70 +47,20 @@ describe('SleepingAccommodationForm', () => {
     render(
       <SleepingAccommodationForm
         onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
         isEdit={false}
       />
     );
 
+    // Status handling is now moved to parent component
     expect(screen.queryByText('Status')).not.toBeInTheDocument();
   });
 
-  it('shows status section with active accommodation in edit mode', () => {
-    render(
-      <SleepingAccommodationForm
-        accommodation={mockAccommodation}
-        onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
-        isEdit={true}
-      />
-    );
-
-    expect(screen.getByText('Status')).toBeInTheDocument();
-    expect(screen.getByText('Aktiv')).toBeInTheDocument();
-    expect(screen.getByText('Deaktivieren')).toBeInTheDocument();
-  });
-
-  it('shows status section with inactive accommodation in edit mode', () => {
-    const inactiveAccommodation = { ...mockAccommodation, isActive: false };
-    
-    render(
-      <SleepingAccommodationForm
-        accommodation={inactiveAccommodation}
-        onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
-        isEdit={true}
-      />
-    );
-
-    expect(screen.getByText('Status')).toBeInTheDocument();
-    expect(screen.getByText('Inaktiv')).toBeInTheDocument();
-    expect(screen.getByText('Aktivieren')).toBeInTheDocument();
-  });
-
-  it('calls onToggleActive when toggle button is clicked', async () => {
-    render(
-      <SleepingAccommodationForm
-        accommodation={mockAccommodation}
-        onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
-        isEdit={true}
-      />
-    );
-
-    const toggleButton = screen.getByText('Deaktivieren');
-    fireEvent.click(toggleButton);
-
-    await waitFor(() => {
-      expect(mockOnToggleActive).toHaveBeenCalledWith('1', false);
-    });
-  });
 
   it('calls onSubmit with correct data when form is submitted', async () => {
     render(
       <SleepingAccommodationForm
         accommodation={mockAccommodation}
         onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
         isEdit={true}
       />
     );
@@ -137,35 +85,6 @@ describe('SleepingAccommodationForm', () => {
     });
   });
 
-  it('shows correct button styling for active accommodation', () => {
-    render(
-      <SleepingAccommodationForm
-        accommodation={mockAccommodation}
-        onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
-        isEdit={true}
-      />
-    );
-
-    const toggleButton = screen.getByText('Deaktivieren');
-    expect(toggleButton).toHaveClass('text-red-700', 'bg-red-50', 'border-red-200');
-  });
-
-  it('shows correct button styling for inactive accommodation', () => {
-    const inactiveAccommodation = { ...mockAccommodation, isActive: false };
-    
-    render(
-      <SleepingAccommodationForm
-        accommodation={inactiveAccommodation}
-        onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
-        isEdit={true}
-      />
-    );
-
-    const toggleButton = screen.getByText('Aktivieren');
-    expect(toggleButton).toHaveClass('text-green-700', 'bg-green-50', 'border-green-200');
-  });
 
   it('handles form submission error correctly', async () => {
     mockOnSubmit.mockRejectedValue(new Error('Submit failed'));
@@ -174,7 +93,6 @@ describe('SleepingAccommodationForm', () => {
       <SleepingAccommodationForm
         accommodation={mockAccommodation}
         onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
         isEdit={true}
       />
     );
@@ -192,7 +110,6 @@ describe('SleepingAccommodationForm', () => {
       <SleepingAccommodationForm
         accommodation={mockAccommodation}
         onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
         isEdit={true}
       />
     );
@@ -216,7 +133,6 @@ describe('SleepingAccommodationForm', () => {
       <SleepingAccommodationForm
         accommodation={mockAccommodation}
         onSubmit={mockOnSubmit}
-        onToggleActive={mockOnToggleActive}
         isEdit={true}
       />
     );
