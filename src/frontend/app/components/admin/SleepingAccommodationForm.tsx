@@ -60,7 +60,7 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
           required
           minLength={1}
           maxLength={100}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
           placeholder="z.B. Hauptschlafzimmer"
         />
       </div>
@@ -73,7 +73,7 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
           id="type"
           value={formData.type}
           onChange={(e) => setFormData({ ...formData, type: Number(e.target.value) })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
         >
           <option value={AccommodationType.Room}>Raum</option>
           <option value={AccommodationType.Tent}>Zelt</option>
@@ -92,7 +92,7 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
           required
           min={1}
           max={100}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
           placeholder="Anzahl Personen"
         />
       </div>
