@@ -144,8 +144,8 @@ public class StartupValidationTests : IntegrationTestBase
         // Act & Assert - Test various endpoints
         var endpoints = new[]
         {
-            "/bookings",
-            "/users/me",
+            "/api/bookings",
+            "/api/users/me",
             // Add more endpoints as they are created
         };
 

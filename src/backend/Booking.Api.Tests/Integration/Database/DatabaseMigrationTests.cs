@@ -64,13 +64,13 @@ public class DatabaseMigrationTests : IntegrationTestBase
         var columns = await GetTableColumnsAsync(context, "Users");
 
         // Assert - Verify all expected columns exist
-        columns.Should().Contain(c => c.ColumnName == "Id" && c.DataType == "uuid");
+        columns.Should().Contain(c => c.ColumnName == "Id" && c.DataType == "integer");
         columns.Should().Contain(c => c.ColumnName == "Email" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "PasswordHash" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "FirstName" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "LastName" && c.DataType == "character varying");
         columns.Should().Contain(c => c.ColumnName == "Role" && c.DataType == "integer");
-        columns.Should().Contain(c => c.ColumnName == "IsDeleted" && c.DataType == "boolean");
+        columns.Should().Contain(c => c.ColumnName == "IsActive" && c.DataType == "boolean");
         columns.Should().Contain(c => c.ColumnName == "CreatedAt" && c.DataType == "timestamp with time zone");
         columns.Should().Contain(c => c.ColumnName == "ChangedAt" && c.DataType == "timestamp with time zone");
     }

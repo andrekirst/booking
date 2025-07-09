@@ -17,7 +17,7 @@ public class BookingsControllerTests : IntegrationTestBase
         RemoveAuthorizationHeader();
         
         // Act
-        var response = await Client.GetAsync("/bookings");
+        var response = await Client.GetAsync("/api/bookings");
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -31,7 +31,7 @@ public class BookingsControllerTests : IntegrationTestBase
         AddAuthorizationHeader(invalidToken);
         
         // Act
-        var response = await Client.GetAsync("/bookings");
+        var response = await Client.GetAsync("/api/bookings");
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -45,7 +45,7 @@ public class BookingsControllerTests : IntegrationTestBase
         AddAuthorizationHeader(expiredToken);
         
         // Act
-        var response = await Client.GetAsync("/bookings");
+        var response = await Client.GetAsync("/api/bookings");
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -59,7 +59,7 @@ public class BookingsControllerTests : IntegrationTestBase
         AddAuthorizationHeader(validToken);
         
         // Act
-        var response = await Client.GetAsync("/bookings");
+        var response = await Client.GetAsync("/api/bookings");
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -90,7 +90,7 @@ public class BookingsControllerTests : IntegrationTestBase
         });
         
         // Act
-        var response = await Client.GetAsync("/bookings");
+        var response = await Client.GetAsync("/api/bookings");
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -109,7 +109,7 @@ public class BookingsControllerTests : IntegrationTestBase
         AddAuthorizationHeader(adminToken);
         
         // Act
-        var response = await Client.GetAsync("/bookings");
+        var response = await Client.GetAsync("/api/bookings");
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
