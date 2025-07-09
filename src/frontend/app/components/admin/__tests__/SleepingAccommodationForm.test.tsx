@@ -37,8 +37,10 @@ describe('SleepingAccommodationForm', () => {
     );
 
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Typ')).toBeInTheDocument();
-    expect(screen.getByLabelText('Maximale Kapazität')).toBeInTheDocument();
+    expect(screen.getByText('Typ')).toBeInTheDocument();
+    expect(screen.getByLabelText('Raum')).toBeInTheDocument();
+    expect(screen.getByLabelText('Zelt')).toBeInTheDocument();
+    expect(screen.getByText('Maximale Kapazität')).toBeInTheDocument();
     expect(screen.getByText('Speichern')).toBeInTheDocument();
     expect(screen.getByText('Abbrechen')).toBeInTheDocument();
   });
@@ -116,18 +118,20 @@ describe('SleepingAccommodationForm', () => {
     );
 
     const nameInput = screen.getByLabelText('Name');
-    const capacityInput = screen.getByLabelText('Maximale Kapazität');
+    const tentRadio = screen.getByLabelText('Zelt');
+    const incrementButton = screen.getByLabelText('Erhöhen');
     const submitButton = screen.getByText('Speichern');
 
     fireEvent.change(nameInput, { target: { value: 'Updated Room' } });
-    fireEvent.change(capacityInput, { target: { value: '6' } });
+    fireEvent.click(tentRadio);
+    fireEvent.click(incrementButton); // Increase capacity from 4 to 5
     fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
         name: 'Updated Room',
-        type: AccommodationType.Room,
-        maxCapacity: 6,
+        type: AccommodationType.Tent,
+        maxCapacity: 5,
         isActive: true,
       });
     });
@@ -181,5 +185,54 @@ describe('SleepingAccommodationForm', () => {
     await waitFor(() => {
       expect(screen.getByText('Submit failed')).toBeInTheDocument();
     });
+  });
+
+  it('uses radio buttons for type selection', () => {
+    render(
+      <SleepingAccommodationForm
+        accommodation={mockAccommodation}
+        onSubmit={mockOnSubmit}
+        onToggleActive={mockOnToggleActive}
+        isEdit={true}
+      />
+    );
+
+    const roomRadio = screen.getByLabelText('Raum');
+    const tentRadio = screen.getByLabelText('Zelt');
+
+    expect(roomRadio).toHaveAttribute('type', 'radio');
+    expect(tentRadio).toHaveAttribute('type', 'radio');
+    expect(roomRadio).toBeChecked(); // Room is default
+    expect(tentRadio).not.toBeChecked();
+
+    // Test changing selection
+    fireEvent.click(tentRadio);
+    expect(tentRadio).toBeChecked();
+    expect(roomRadio).not.toBeChecked();
+  });
+
+  it('uses NumberSpinner for capacity input', () => {
+    render(
+      <SleepingAccommodationForm
+        accommodation={mockAccommodation}
+        onSubmit={mockOnSubmit}
+        onToggleActive={mockOnToggleActive}
+        isEdit={true}
+      />
+    );
+
+    // Check if NumberSpinner is rendered (by checking for increment/decrement buttons)
+    expect(screen.getByLabelText('Erhöhen')).toBeInTheDocument();
+    expect(screen.getByLabelText('Verringern')).toBeInTheDocument();
+    
+    // Test that capacity value is displayed
+    expect(screen.getByDisplayValue('4')).toBeInTheDocument();
+    
+    // Test increment functionality
+    const incrementButton = screen.getByLabelText('Erhöhen');
+    fireEvent.click(incrementButton);
+    
+    // The NumberSpinner should handle the increment internally
+    // We don't test the final value change here as it's tested in NumberSpinner tests
   });
 });

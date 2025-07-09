@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AccommodationType, CreateSleepingAccommodationDto, UpdateSleepingAccommodationDto, SleepingAccommodation } from '@/lib/types/sleeping-accommodation';
+import NumberSpinner from '@/app/components/ui/NumberSpinner';
 
 interface SleepingAccommodationFormProps {
   accommodation?: SleepingAccommodation;
@@ -76,37 +77,44 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, onT
         />
       </div>
 
-      <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+      <fieldset>
+        <legend className="block text-sm font-medium text-gray-700 mb-2">
           Typ
-        </label>
-        <select
-          id="type"
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: Number(e.target.value) })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-        >
-          <option value={AccommodationType.Room}>Raum</option>
-          <option value={AccommodationType.Tent}>Zelt</option>
-        </select>
-      </div>
+        </legend>
+        <div className="flex space-x-6">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="type"
+              value={AccommodationType.Room}
+              checked={formData.type === AccommodationType.Room}
+              onChange={(e) => setFormData({ ...formData, type: Number(e.target.value) })}
+              className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-900">Raum</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="type"
+              value={AccommodationType.Tent}
+              checked={formData.type === AccommodationType.Tent}
+              onChange={(e) => setFormData({ ...formData, type: Number(e.target.value) })}
+              className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-900">Zelt</span>
+          </label>
+        </div>
+      </fieldset>
 
-      <div>
-        <label htmlFor="maxCapacity" className="block text-sm font-medium text-gray-700 mb-2">
-          Maximale Kapazität
-        </label>
-        <input
-          type="number"
-          id="maxCapacity"
-          value={formData.maxCapacity}
-          onChange={(e) => setFormData({ ...formData, maxCapacity: Number(e.target.value) })}
-          required
-          min={1}
-          max={100}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-          placeholder="Anzahl Personen"
-        />
-      </div>
+      <NumberSpinner
+        label="Maximale Kapazität"
+        value={formData.maxCapacity}
+        onChange={(value) => setFormData({ ...formData, maxCapacity: value })}
+        min={1}
+        max={100}
+        step={1}
+      />
 
       {isEdit && accommodation && (
         <div>
