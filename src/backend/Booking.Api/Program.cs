@@ -22,7 +22,7 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllers(options =>
         {
-            options.Filters.Add<AuthorizeFilter>();
+            options.Filters.Add(new AuthorizeFilter());
             options.Filters.Add(new ProducesResponseTypeAttribute<ErrorResponse>((int)HttpStatusCode.Unauthorized));
         });
         
