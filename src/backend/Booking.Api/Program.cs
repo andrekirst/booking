@@ -7,6 +7,7 @@ using Booking.Api.Data.Interceptors;
 using Booking.Api.Domain.Aggregates;
 using Booking.Api.Features.SleepingAccommodations.Repositories;
 using Booking.Api.Services;
+using Booking.Api.Services.DataMigration;
 using Booking.Api.Services.EventSourcing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,10 @@ public class Program
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
         builder.Services.AddScoped<IEventSourcedRepository<SleepingAccommodationAggregate>, EventSourcedRepository<SleepingAccommodationAggregate>>();
         builder.Services.AddScoped<ISleepingAccommodationRepository, SleepingAccommodationRepository>();
+        
+        // Register Data Migration services
+        builder.Services.AddScoped<IDataMigrationService, DataMigrationService>();
+        builder.Services.AddHostedService<DataMigrationBackgroundService>();
         
         // Configure JwtSettings with Options pattern
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
