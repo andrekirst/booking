@@ -1,9 +1,13 @@
+using System.Net;
 using System.Text;
 using Booking.Api.Configuration;
+using Booking.Api.Controllers;
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
 using Booking.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -16,7 +20,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add(new AuthorizeFilter());
+            options.Filters.Add(new ProducesResponseTypeAttribute<ErrorResponse>((int)HttpStatusCode.Unauthorized));
+        });
         
         // Configure Entity Framework Core with PostgreSQL
         builder.Services.AddDbContext<BookingDbContext>(options =>
@@ -30,11 +38,17 @@ public class Program
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IJwtService, JwtService>();
         
+        // Configure JwtSettings with Options pattern
+        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+        
         // Configure JWT Authentication
-        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-        var secret = jwtSettings["Secret"];
-        var issuer = jwtSettings["Issuer"];
-        var audience = jwtSettings["Audience"];
+        var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
+        
+        // Ensure JWT secret is configured
+        if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Secret))
+        {
+            throw new InvalidOperationException("JWT Secret is not configured. Please set the JwtSettings:Secret in user secrets or environment variables.");
+        }
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -42,11 +56,11 @@ public class Program
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                     ValidateIssuer = true,
-                    ValidIssuer = issuer,
+                    ValidIssuer = jwtSettings.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = audience,
+                    ValidAudience = jwtSettings.Audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
@@ -87,7 +101,7 @@ public class Program
             var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
             var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
             
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
             await DbSeeder.SeedAsync(context, passwordService);
         }
 
@@ -109,6 +123,10 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        
+        // Add simple health check endpoint
+        app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+            .AllowAnonymous();
 
         app.Run();
     }

@@ -40,6 +40,8 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Folge den in diesem Projekt üblichen Code-Konventionen (z. B. Benennung, Einrückung, Kommentare).
 - Schreibe klaren, gut dokumentierten und wartbaren Code.
 - Nutze, wenn möglich, bestehende Funktionen und Module wieder.
+- **Allgemeine Code-Hinweise**:
+  - Benutze primary constructor wenn möglich
 
 ## 3. Commit-Nachrichten
 - Verwende beschreibende Commit-Nachrichten auf Englisch oder Deutsch.
@@ -124,6 +126,9 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Der Branch wird immer auf GitHub (remote) erzeugt, niemals lokal. Grund: Es soll immer der neueste Stand aus dem Haupt-Repository verwendet werden, um Merge-Konflikte zu minimieren.
 - Die Erstellung des Branches erfolgt per GitHub CLI (`gh`), z. B. mit `gh pr checkout -b <branchname>` oder `gh api`.
 - Nach dem Anlegen des Branches auf GitHub muss der Branch lokal ausgecheckt werden, damit Änderungen nicht versehentlich auf `main` erfolgen.
+
+## Entwicklungs-Erinnerungen
+- Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
 
 ---
 

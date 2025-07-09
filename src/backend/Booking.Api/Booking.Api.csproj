@@ -21,4 +21,8 @@
     <PackageReference Include="BCrypt.Net-Next" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>

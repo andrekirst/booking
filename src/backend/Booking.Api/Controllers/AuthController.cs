@@ -1,4 +1,5 @@
 using Booking.Api.Application.Auth.Commands;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers;
@@ -6,6 +7,7 @@ namespace Booking.Api.Controllers;
 public class AuthController : BaseApiController
 {
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<ActionResult<LoginSuccessResponse>> Login([FromBody] LoginRequest request)
     {
         var command = new LoginCommand(request.Email, request.Password);
