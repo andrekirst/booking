@@ -137,19 +137,26 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-900">Schlafmöglichkeit bearbeiten</h2>
         
-        <div className="flex items-center space-x-4">
-          <span
-            className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-              accommodation.isActive
-                ? 'bg-green-100 text-green-800'
-                : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            {accommodation.isActive ? 'Aktiv' : 'Inaktiv'}
-          </span>
+        <span
+          className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+            accommodation.isActive
+              ? 'bg-green-100 text-green-800'
+              : 'bg-gray-100 text-gray-800'
+          }`}
+        >
+          {accommodation.isActive ? 'Aktiv' : 'Inaktiv'}
+        </span>
+      </div>
+
+      {/* Menüband für Aktionen */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg px-6 py-4 mb-8">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Aktionen für diese Schlafmöglichkeit
+          </div>
           
           <button
             type="button"
