@@ -5,10 +5,14 @@ using Booking.Api.Controllers;
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
 using Booking.Api.Domain.Aggregates;
+using Booking.Api.Domain.ReadModels;
 using Booking.Api.Features.SleepingAccommodations.Repositories;
+using Booking.Api.Repositories.ReadModels;
 using Booking.Api.Services;
+using Booking.Api.Services.Caching;
 using Booking.Api.Services.DataMigration;
 using Booking.Api.Services.EventSourcing;
+using Booking.Api.Services.Projections;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -48,6 +52,21 @@ public class Program
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
         builder.Services.AddScoped<IEventSourcedRepository<SleepingAccommodationAggregate>, EventSourcedRepository<SleepingAccommodationAggregate>>();
         builder.Services.AddScoped<ISleepingAccommodationRepository, SleepingAccommodationRepository>();
+        
+        // Register Read Model Repository and Caching
+        builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<SleepingAccommodationReadModelRepository>();
+        builder.Services.AddScoped<ISleepingAccommodationReadModelRepository>(provider =>
+        {
+            var innerRepository = provider.GetRequiredService<SleepingAccommodationReadModelRepository>();
+            var cache = provider.GetRequiredService<IReadModelCache<SleepingAccommodationReadModel>>();
+            var logger = provider.GetRequiredService<ILogger<CachedSleepingAccommodationReadModelRepository>>();
+            return new CachedSleepingAccommodationReadModelRepository(innerRepository, cache, logger);
+        });
+        builder.Services.AddSingleton<IReadModelCache<SleepingAccommodationReadModel>, InMemoryReadModelCache<SleepingAccommodationReadModel>>();
+        
+        // Register Projection Services
+        builder.Services.AddScoped<IProjectionService<SleepingAccommodationAggregate, SleepingAccommodationReadModel>, SleepingAccommodationProjectionService>();
         
         // Register Data Migration services
         builder.Services.AddScoped<IDataMigrationService, DataMigrationService>();

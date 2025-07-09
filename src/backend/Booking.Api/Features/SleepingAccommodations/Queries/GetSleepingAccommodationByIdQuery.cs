@@ -1,7 +1,6 @@
-using Booking.Api.Data;
 using Booking.Api.Features.SleepingAccommodations.DTOs;
+using Booking.Api.Repositories.ReadModels;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Features.SleepingAccommodations.Queries;
 
@@ -9,29 +8,33 @@ public record GetSleepingAccommodationByIdQuery(Guid Id) : IRequest<SleepingAcco
 
 public class GetSleepingAccommodationByIdQueryHandler : IRequestHandler<GetSleepingAccommodationByIdQuery, SleepingAccommodationDto?>
 {
-    private readonly BookingDbContext _context;
+    private readonly ISleepingAccommodationReadModelRepository _repository;
 
-    public GetSleepingAccommodationByIdQueryHandler(BookingDbContext context)
+    public GetSleepingAccommodationByIdQueryHandler(ISleepingAccommodationReadModelRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     public async Task<SleepingAccommodationDto?> Handle(
         GetSleepingAccommodationByIdQuery request,
         CancellationToken cancellationToken)
     {
-        return await _context.SleepingAccommodationReadModels
-            .Where(sa => sa.Id == request.Id)
-            .Select(sa => new SleepingAccommodationDto
-            {
-                Id = sa.Id,
-                Name = sa.Name,
-                Type = sa.Type,
-                MaxCapacity = sa.MaxCapacity,
-                IsActive = sa.IsActive,
-                CreatedAt = sa.CreatedAt,
-                ChangedAt = sa.ChangedAt
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+        var readModel = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        
+        if (readModel == null)
+        {
+            return null;
+        }
+
+        return new SleepingAccommodationDto
+        {
+            Id = readModel.Id,
+            Name = readModel.Name,
+            Type = readModel.Type,
+            MaxCapacity = readModel.MaxCapacity,
+            IsActive = readModel.IsActive,
+            CreatedAt = readModel.CreatedAt,
+            ChangedAt = readModel.ChangedAt
+        };
     }
 }

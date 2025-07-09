@@ -1,31 +1,48 @@
-using Booking.Api.Data;
 using Booking.Api.Domain.Events.SleepingAccommodations;
+using Booking.Api.Repositories.ReadModels;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Features.SleepingAccommodations.EventHandlers;
 
 public class SleepingAccommodationDeactivatedEventHandler : INotificationHandler<SleepingAccommodationDeactivatedEvent>
 {
-    private readonly BookingDbContext _context;
+    private readonly ISleepingAccommodationReadModelRepository _repository;
+    private readonly ILogger<SleepingAccommodationDeactivatedEventHandler> _logger;
 
-    public SleepingAccommodationDeactivatedEventHandler(BookingDbContext context)
+    public SleepingAccommodationDeactivatedEventHandler(
+        ISleepingAccommodationReadModelRepository repository,
+        ILogger<SleepingAccommodationDeactivatedEventHandler> logger)
     {
-        _context = context;
+        _repository = repository;
+        _logger = logger;
     }
 
     public async Task Handle(SleepingAccommodationDeactivatedEvent notification, CancellationToken cancellationToken)
     {
-        var readModel = await _context.SleepingAccommodationReadModels
-            .FirstOrDefaultAsync(s => s.Id == notification.SleepingAccommodationId, cancellationToken);
-
-        if (readModel != null)
+        try
         {
-            readModel.IsActive = false;
-            readModel.ChangedAt = notification.OccurredAt;
-            readModel.LastEventVersion++;
+            await _repository.UpdateAsync(
+                notification.SleepingAccommodationId,
+                readModel =>
+                {
+                    readModel.IsActive = false;
+                    readModel.ChangedAt = notification.OccurredAt;
+                    readModel.LastEventVersion++;
+                },
+                cancellationToken);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation(
+                "Deactivated read model for SleepingAccommodation {AggregateId} from event {EventId}",
+                notification.SleepingAccommodationId,
+                notification.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deactivating read model for SleepingAccommodation {AggregateId} from event {EventId}",
+                notification.SleepingAccommodationId,
+                notification.Id);
+            throw;
         }
     }
 }

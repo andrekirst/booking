@@ -138,4 +138,39 @@ public class EventStore : IEventStore
 
         return lastEvent?.Version ?? -1;
     }
+
+    public async Task<List<(DomainEvent Event, int Version)>> GetEventsAsync(Guid aggregateId, int fromVersion, CancellationToken cancellationToken)
+    {
+        var eventStoreEvents = await _context.EventStoreEvents
+            .Where(e => e.AggregateId == aggregateId && e.Version > fromVersion)
+            .OrderBy(e => e.Version)
+            .ToListAsync(cancellationToken);
+
+        var eventsWithVersion = new List<(DomainEvent Event, int Version)>();
+        foreach (var eventStoreEvent in eventStoreEvents)
+        {
+            try
+            {
+                var domainEvent = _eventSerializer.DeserializeEvent(eventStoreEvent.EventData, eventStoreEvent.EventType);
+                eventsWithVersion.Add((domainEvent, eventStoreEvent.Version));
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to deserialize event {eventStoreEvent.Id}: {ex.Message}", ex);
+            }
+        }
+
+        return eventsWithVersion;
+    }
+
+    public async Task<List<Guid>> GetAllAggregateIdsAsync<T>(CancellationToken cancellationToken) where T : class
+    {
+        var aggregateType = typeof(T).Name;
+        
+        return await _context.EventStoreEvents
+            .Where(e => e.AggregateType == aggregateType)
+            .Select(e => e.AggregateId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
 }
