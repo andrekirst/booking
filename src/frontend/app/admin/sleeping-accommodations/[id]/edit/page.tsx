@@ -152,7 +152,7 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
       </div>
 
       {/* Menüband für Aktionen */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg px-6 py-4 mb-8">
+      <div className="mb-8">
         <button
           type="button"
           onClick={handleToggleActiveWrapper}
