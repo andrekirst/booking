@@ -26,7 +26,7 @@ test.describe('Bookings Page', () => {
 
   test('should handle API errors gracefully', async ({ page, context }) => {
     // Intercept the bookings API call and return an error
-    await context.route('**/bookings', route => {
+    await context.route('**/api/bookings', route => {
       route.fulfill({ status: 500 });
     });
     
@@ -50,7 +50,7 @@ test.describe('Bookings Page', () => {
 
   test('should load bookings list when data exists', async ({ page, context }) => {
     // Mock API response with test data
-    await context.route('**/bookings', async route => {
+    await context.route('**/api/bookings', async route => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -76,7 +76,7 @@ test.describe('Bookings Page', () => {
 
   test('should handle network errors', async ({ page, context }) => {
     // Block network requests to API
-    await context.route('**/bookings', route => route.abort());
+    await context.route('**/api/bookings', route => route.abort());
     
     // Reload page
     await page.reload();

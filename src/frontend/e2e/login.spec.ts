@@ -25,9 +25,9 @@ test.describe('Login Flow', () => {
   });
 
   test('should login successfully with valid credentials', async ({ page }) => {
-    // Fill in valid credentials
-    await page.getByPlaceholder('E-Mail').fill('test@example.com');
-    await page.getByPlaceholder('Passwort').fill('Test123!');
+    // Fill in valid credentials (using seeded admin user)
+    await page.getByPlaceholder('E-Mail').fill('admin@booking.com');
+    await page.getByPlaceholder('Passwort').fill('admin123');
     
     // Submit form
     await page.getByRole('button', { name: 'Anmelden' }).click();
@@ -50,13 +50,13 @@ test.describe('Login Flow', () => {
 
   test('should handle server errors gracefully', async ({ page, context }) => {
     // Intercept the login request and return 500
-    await context.route('**/auth/login', route => {
+    await context.route('**/api/auth/login', route => {
       route.fulfill({ status: 500 });
     });
     
     // Fill in credentials
-    await page.getByPlaceholder('E-Mail').fill('test@example.com');
-    await page.getByPlaceholder('Passwort').fill('Test123!');
+    await page.getByPlaceholder('E-Mail').fill('admin@booking.com');
+    await page.getByPlaceholder('Passwort').fill('admin123');
     
     // Submit form
     await page.getByRole('button', { name: 'Anmelden' }).click();
