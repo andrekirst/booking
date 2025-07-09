@@ -78,6 +78,34 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
     }
   };
 
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations/${id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: accommodation?.name,
+          type: accommodation?.type,
+          maxCapacity: accommodation?.maxCapacity,
+          isActive: isActive,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Fehler beim Ändern des Status');
+    }
+
+    // Update local state
+    setAccommodation(prev => prev ? { ...prev, isActive } : null);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -105,6 +133,7 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
         <SleepingAccommodationForm 
           accommodation={accommodation} 
           onSubmit={handleSubmit} 
+          onToggleActive={handleToggleActive}
           isEdit={true} 
         />
       </div>

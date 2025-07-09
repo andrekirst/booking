@@ -7,10 +7,11 @@ import { AccommodationType, CreateSleepingAccommodationDto, UpdateSleepingAccomm
 interface SleepingAccommodationFormProps {
   accommodation?: SleepingAccommodation;
   onSubmit: (data: CreateSleepingAccommodationDto | UpdateSleepingAccommodationDto) => Promise<void>;
+  onToggleActive?: (id: string, isActive: boolean) => Promise<void>;
   isEdit?: boolean;
 }
 
-export default function SleepingAccommodationForm({ accommodation, onSubmit, isEdit = false }: SleepingAccommodationFormProps) {
+export default function SleepingAccommodationForm({ accommodation, onSubmit, onToggleActive, isEdit = false }: SleepingAccommodationFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +20,6 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
     name: accommodation?.name || '',
     type: accommodation?.type ?? AccommodationType.Room,
     maxCapacity: accommodation?.maxCapacity || 1,
-    isActive: accommodation?.isActive ?? true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +29,7 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
 
     try {
       const data = isEdit
-        ? { ...formData, isActive: formData.isActive }
+        ? { ...formData, isActive: accommodation?.isActive ?? true }
         : { name: formData.name, type: formData.type, maxCapacity: formData.maxCapacity };
       
       await onSubmit(data);
@@ -37,6 +37,17 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleActive = async () => {
+    if (!accommodation?.id || !onToggleActive) return;
+
+    try {
+      await onToggleActive(accommodation.id, !accommodation.isActive);
+      // The parent component will handle the state update
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Fehler beim Ändern des Status');
     }
   };
 
@@ -97,17 +108,40 @@ export default function SleepingAccommodationForm({ accommodation, onSubmit, isE
         />
       </div>
 
-      {isEdit && (
+      {isEdit && accommodation && (
         <div>
-          <label className="inline-flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="ml-2 text-sm text-gray-700">Aktiv</span>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status
           </label>
+          <div className="flex items-center space-x-3">
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                accommodation.isActive
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-gray-100 text-gray-800'
+              }`}
+            >
+              {accommodation.isActive ? 'Aktiv' : 'Inaktiv'}
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleActive}
+              className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
+                accommodation.isActive
+                  ? 'text-red-700 bg-red-50 border-red-200 hover:bg-red-100 hover:text-red-800 focus:ring-red-500'
+                  : 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100 hover:text-green-800 focus:ring-green-500'
+              }`}
+            >
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                {accommodation.isActive ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h6a2 2 0 012 2v4a2 2 0 01-2 2h-6a2 2 0 01-2-2v-4a2 2 0 012-2z" />
+                )}
+              </svg>
+              {accommodation.isActive ? 'Deaktivieren' : 'Aktivieren'}
+            </button>
+          </div>
         </div>
       )}
 
