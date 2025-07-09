@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Booking.Api.Configuration;
 using Booking.Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 
 namespace Booking.Api.Tests.Integration.TestBase;
@@ -38,6 +40,9 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             {
                 builder.ConfigureAppConfiguration((context, config) =>
                 {
+                    // Clear any existing configuration to ensure our test configuration takes precedence
+                    config.Sources.Clear();
+                    
                     // Override configuration for tests
                     config.AddInMemoryCollection(new Dictionary<string, string?>
                     {
@@ -70,7 +75,11 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             
         Client = Factory.CreateClient();
         Services = Factory.Services;
-        TokenProvider = new TestJwtTokenProvider(TestJwtSecret, "TestApi", "TestApp");
+        
+        // Get the actual JWT settings from the configured services to ensure consistency
+        using var scope = Services.CreateScope();
+        var jwtSettings = scope.ServiceProvider.GetRequiredService<IOptions<JwtSettings>>().Value;
+        TokenProvider = new TestJwtTokenProvider(jwtSettings.Secret, jwtSettings.Issuer, jwtSettings.Audience);
     }
     
     public async Task DisposeAsync()
