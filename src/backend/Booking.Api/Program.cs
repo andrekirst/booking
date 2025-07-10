@@ -68,12 +68,19 @@ public class Program
         
         // Register Projection Services
         builder.Services.AddScoped<IProjectionService<SleepingAccommodationAggregate, SleepingAccommodationReadModel>, SleepingAccommodationProjectionService>();
+        builder.Services.AddScoped<IProjectionService<BookingAggregate, BookingReadModel>, BookingProjectionService>();
         
         // Register Event Appliers for SleepingAccommodation
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationCreatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationUpdatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationDeactivatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationReactivatedEventApplier>();
+        
+        // Register Event Appliers for Booking
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingCreatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingUpdatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingCancelledEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingConfirmedEventApplier>();
         
         
         // Configure JwtSettings with Options pattern
