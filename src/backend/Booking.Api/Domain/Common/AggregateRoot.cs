@@ -19,6 +19,11 @@ public abstract class AggregateRoot : IAggregate
         _domainEvents.Clear();
     }
     
+    public void MarkEventsAsCommitted(int eventCount)
+    {
+        Version += eventCount;
+    }
+    
     public void LoadFromHistory(IEnumerable<DomainEvent> events)
     {
         foreach (var domainEvent in events)

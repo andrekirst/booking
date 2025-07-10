@@ -29,6 +29,9 @@ public class EventSourcedRepository<T>(IEventStore eventStore, IEventDispatcher 
             var aggregateTypeName = typeof(T).Name;
             await eventStore.SaveEventsAsync(aggregate.Id, aggregateTypeName, events, aggregate.Version);
             
+            // Update aggregate version after successful save
+            aggregate.MarkEventsAsCommitted(events.Count);
+            
             // Publish events for read model projections
             foreach (var domainEvent in events)
             {

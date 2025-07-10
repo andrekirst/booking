@@ -29,7 +29,7 @@ public class SleepingAccommodationAggregateTests
         aggregate.IsActive.Should().BeTrue();
         aggregate.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         aggregate.ChangedAt.Should().BeNull();
-        aggregate.Version.Should().Be(0);
+        aggregate.Version.Should().Be(-1); // Version is -1 until events are persisted
 
         aggregate.DomainEvents.Should().HaveCount(1);
         var domainEvent = aggregate.DomainEvents.First();
