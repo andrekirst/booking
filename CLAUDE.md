@@ -40,8 +40,22 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Folge den in diesem Projekt üblichen Code-Konventionen (z. B. Benennung, Einrückung, Kommentare).
 - Schreibe klaren, gut dokumentierten und wartbaren Code.
 - Nutze, wenn möglich, bestehende Funktionen und Module wieder.
-- **Allgemeine Code-Hinweise**:
-  - Benutze primary constructor wenn möglich
+- **C# 12 Konventionen**:
+  - **Primary Constructors**: Verwende Primary Constructors für Klassen mit Dependency Injection
+    - Beispiel: `public class EventStore(BookingDbContext context, IEventSerializer serializer) : IEventStore`
+    - Entferne explizite private readonly Fields zugunsten der Parameter-Captures
+  - **Expression-bodied Members**: Nutze Expression-bodied Properties für einfache Get-Only Properties
+    - Beispiel: `public DbSet<User> Users => Set<User>();`
+  - **Brace-Formatierung**: ALLE if-Statements müssen Braces verwenden, auch bei einzeiligen Anweisungen
+    - Korrekt: `if (condition) { throw new ArgumentException(); }`
+    - Falsch: `if (condition) throw new ArgumentException();`
+  - **Performance-Optimierungen**:
+    - Verwende `Count == 0` statt `!Any()` für Listen
+    - Nutze Ternary Operators für einfache Conditional Returns
+    - Beispiel: `return snapshot == null ? null : eventSerializer.DeserializeSnapshot<T>(snapshot.SnapshotData);`
+  - **Async/Await Best Practices**:
+    - Verwende `await using` statt `using` für IAsyncDisposable
+    - Beispiel: `await using var transaction = await context.Database.BeginTransactionAsync();`
 
 ## 3. Commit-Nachrichten
 - Verwende beschreibende Commit-Nachrichten auf Englisch oder Deutsch.
