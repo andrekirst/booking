@@ -24,7 +24,7 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/sleepingaccommodations", createDto);
+        var response = await Client.PostAsJsonAsync("/api/sleeping-accommodations", createDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -55,10 +55,10 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
             MaxCapacity = 4
         };
 
-        await Client.PostAsJsonAsync("/api/sleepingaccommodations", createDto);
+        await Client.PostAsJsonAsync("/api/sleeping-accommodations", createDto);
 
         // Act
-        var response = await Client.GetAsync("/api/sleepingaccommodations");
+        var response = await Client.GetAsync("/api/sleeping-accommodations");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -92,11 +92,11 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
             MaxCapacity = 4
         };
 
-        var createResponse = await Client.PostAsJsonAsync("/api/sleepingaccommodations", createDto);
+        var createResponse = await Client.PostAsJsonAsync("/api/sleeping-accommodations", createDto);
         var createdAccommodation = await createResponse.Content.ReadFromJsonAsync<SleepingAccommodationDto>();
 
         // Act
-        var response = await Client.GetAsync($"/api/sleepingaccommodations/{createdAccommodation!.Id}");
+        var response = await Client.GetAsync($"/api/sleeping-accommodations/{createdAccommodation!.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -127,7 +127,7 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
             MaxCapacity = 4
         };
 
-        var createResponse = await Client.PostAsJsonAsync("/api/sleepingaccommodations", createDto);
+        var createResponse = await Client.PostAsJsonAsync("/api/sleeping-accommodations", createDto);
         var createdAccommodation = await createResponse.Content.ReadFromJsonAsync<SleepingAccommodationDto>();
 
         // Act
@@ -139,7 +139,7 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
             IsActive = true
         };
 
-        var response = await Client.PutAsJsonAsync($"/api/sleepingaccommodations/{createdAccommodation!.Id}", updateDto);
+        var response = await Client.PutAsJsonAsync($"/api/sleeping-accommodations/{createdAccommodation!.Id}", updateDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -170,17 +170,17 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
             MaxCapacity = 4
         };
 
-        var createResponse = await Client.PostAsJsonAsync("/api/sleepingaccommodations", createDto);
+        var createResponse = await Client.PostAsJsonAsync("/api/sleeping-accommodations", createDto);
         var createdAccommodation = await createResponse.Content.ReadFromJsonAsync<SleepingAccommodationDto>();
 
         // Act
-        var response = await Client.DeleteAsync($"/api/sleepingaccommodations/{createdAccommodation!.Id}");
+        var response = await Client.DeleteAsync($"/api/sleeping-accommodations/{createdAccommodation!.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // Verify accommodation is deactivated, not deleted
-        var getResponse = await Client.GetAsync($"/api/sleepingaccommodations/{createdAccommodation.Id}");
+        var getResponse = await Client.GetAsync($"/api/sleeping-accommodations/{createdAccommodation.Id}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         
         var result = await getResponse.Content.ReadFromJsonAsync<SleepingAccommodationDto>();
@@ -204,7 +204,7 @@ public class SleepingAccommodationApiContractTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/sleepingaccommodations", createDto);
+        var response = await Client.PostAsJsonAsync("/api/sleeping-accommodations", createDto);
         var result = await response.Content.ReadFromJsonAsync<SleepingAccommodationDto>();
 
         // Assert - Verify all expected properties exist and have correct types
