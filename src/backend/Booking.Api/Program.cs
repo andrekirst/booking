@@ -52,6 +52,7 @@ public class Program
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
         builder.Services.AddScoped<IEventSourcedRepository<SleepingAccommodationAggregate>, EventSourcedRepository<SleepingAccommodationAggregate>>();
         builder.Services.AddScoped<ISleepingAccommodationRepository, SleepingAccommodationRepository>();
+        builder.Services.AddScoped<IEventSourcedRepository<BookingAggregate>, EventSourcedRepository<BookingAggregate>>();
         
         // Register Read Model Repository and Caching
         builder.Services.AddMemoryCache();
