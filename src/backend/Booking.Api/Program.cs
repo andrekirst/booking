@@ -10,7 +10,6 @@ using Booking.Api.Features.SleepingAccommodations.Repositories;
 using Booking.Api.Repositories.ReadModels;
 using Booking.Api.Services;
 using Booking.Api.Services.Caching;
-using Booking.Api.Services.DataMigration;
 using Booking.Api.Services.EventSourcing;
 using Booking.Api.Services.Projections;
 using Booking.Api.Services.Projections.EventAppliers;
@@ -75,9 +74,6 @@ public class Program
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationDeactivatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationReactivatedEventApplier>();
         
-        // Register Data Migration services
-        builder.Services.AddScoped<IDataMigrationService, DataMigrationService>();
-        builder.Services.AddHostedService<DataMigrationBackgroundService>();
         
         // Configure JwtSettings with Options pattern
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
