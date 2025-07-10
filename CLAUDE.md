@@ -161,6 +161,12 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 ## Entwicklungs-Erinnerungen
 - Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
 
+## 12. Kommunikation
+- **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
+- Verwende deutsche Begriffe für Erklärungen und Dokumentation
+- Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
+- Commit-Nachrichten können auf Englisch oder Deutsch sein
+
 ---
 
 Diese Datei kann bei Bedarf erweitert oder angepasst werden.

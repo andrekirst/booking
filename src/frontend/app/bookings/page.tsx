@@ -90,8 +90,7 @@ export default function BookingsPage() {
   };
 
   const handleCreateBooking = () => {
-    // Placeholder for future implementation
-    console.log('Neue Buchung erstellen');
+    router.push('/bookings/new');
   };
 
   if (isLoading) {

@@ -1,7 +1,12 @@
 import { 
   LoginRequest, 
   LoginResponse, 
-  BookingsResponse, 
+  BookingsResponse,
+  Booking,
+  CreateBookingRequest,
+  UpdateBookingRequest,
+  BookingAvailability,
+  SleepingAccommodation,
   ErrorResponse 
 } from '../types/api';
 import { ApiError } from './errors';
@@ -12,7 +17,16 @@ export interface ApiClient {
   logout(): Promise<void>;
   
   // Booking endpoints
-  getBookings(): Promise<BookingsResponse>;
+  getBookings(): Promise<Booking[]>;
+  getBookingById(id: string): Promise<Booking>;
+  createBooking(booking: CreateBookingRequest): Promise<Booking>;
+  updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking>;
+  cancelBooking(id: string): Promise<void>;
+  confirmBooking(id: string): Promise<void>;
+  checkAvailability(startDate: string, endDate: string, excludeBookingId?: string): Promise<BookingAvailability>;
+  
+  // Sleeping Accommodations endpoints
+  getSleepingAccommodations(): Promise<SleepingAccommodation[]>;
   
   // Health check
   healthCheck(): Promise<{ status: string }>;
@@ -103,8 +117,55 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  async getBookings(): Promise<BookingsResponse> {
-    return this.request<BookingsResponse>('/api/bookings');
+  async getBookings(): Promise<Booking[]> {
+    return this.request<Booking[]>('/api/bookings');
+  }
+
+  async getBookingById(id: string): Promise<Booking> {
+    return this.request<Booking>(`/api/bookings/${id}`);
+  }
+
+  async createBooking(booking: CreateBookingRequest): Promise<Booking> {
+    return this.request<Booking>('/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify(booking),
+    });
+  }
+
+  async updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking> {
+    return this.request<Booking>(`/api/bookings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(booking),
+    });
+  }
+
+  async cancelBooking(id: string): Promise<void> {
+    await this.request<void>(`/api/bookings/${id}/cancel`, {
+      method: 'POST',
+    });
+  }
+
+  async confirmBooking(id: string): Promise<void> {
+    await this.request<void>(`/api/bookings/${id}/confirm`, {
+      method: 'POST',
+    });
+  }
+
+  async checkAvailability(startDate: string, endDate: string, excludeBookingId?: string): Promise<BookingAvailability> {
+    const params = new URLSearchParams({
+      startDate,
+      endDate,
+    });
+    
+    if (excludeBookingId) {
+      params.append('excludeBookingId', excludeBookingId);
+    }
+    
+    return this.request<BookingAvailability>(`/api/bookings/availability?${params.toString()}`);
+  }
+
+  async getSleepingAccommodations(): Promise<SleepingAccommodation[]> {
+    return this.request<SleepingAccommodation[]>('/api/sleeping-accommodations');
   }
 
   async healthCheck(): Promise<{ status: string }> {
