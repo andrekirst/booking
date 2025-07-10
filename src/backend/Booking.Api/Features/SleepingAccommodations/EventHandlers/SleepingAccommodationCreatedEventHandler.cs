@@ -5,19 +5,11 @@ using MediatR;
 
 namespace Booking.Api.Features.SleepingAccommodations.EventHandlers;
 
-public class SleepingAccommodationCreatedEventHandler : INotificationHandler<SleepingAccommodationCreatedEvent>
+public class SleepingAccommodationCreatedEventHandler(
+    ISleepingAccommodationReadModelRepository repository,
+    ILogger<SleepingAccommodationCreatedEventHandler> logger)
+    : INotificationHandler<SleepingAccommodationCreatedEvent>
 {
-    private readonly ISleepingAccommodationReadModelRepository _repository;
-    private readonly ILogger<SleepingAccommodationCreatedEventHandler> _logger;
-
-    public SleepingAccommodationCreatedEventHandler(
-        ISleepingAccommodationReadModelRepository repository,
-        ILogger<SleepingAccommodationCreatedEventHandler> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
-
     public async Task Handle(SleepingAccommodationCreatedEvent notification, CancellationToken cancellationToken)
     {
         try
@@ -33,16 +25,16 @@ public class SleepingAccommodationCreatedEventHandler : INotificationHandler<Sle
                 LastEventVersion = 0 // First event
             };
 
-            await _repository.SaveAsync(readModel, cancellationToken);
+            await repository.SaveAsync(readModel, cancellationToken);
             
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Created read model for SleepingAccommodation {AggregateId} from event {EventId}",
                 notification.SleepingAccommodationId,
                 notification.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
+            logger.LogError(ex,
                 "Error creating read model for SleepingAccommodation {AggregateId} from event {EventId}",
                 notification.SleepingAccommodationId,
                 notification.Id);

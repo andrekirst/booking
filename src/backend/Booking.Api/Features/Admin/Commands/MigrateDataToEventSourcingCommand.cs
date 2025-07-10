@@ -7,26 +7,18 @@ public record MigrateDataToEventSourcingCommand : IRequest<MigrateDataToEventSou
 
 public record MigrateDataToEventSourcingResult(bool WasRequired, bool Success, string Message);
 
-public class MigrateDataToEventSourcingCommandHandler : IRequestHandler<MigrateDataToEventSourcingCommand, MigrateDataToEventSourcingResult>
+public class MigrateDataToEventSourcingCommandHandler(
+    IDataMigrationService migrationService,
+    ILogger<MigrateDataToEventSourcingCommandHandler> logger)
+    : IRequestHandler<MigrateDataToEventSourcingCommand, MigrateDataToEventSourcingResult>
 {
-    private readonly IDataMigrationService _migrationService;
-    private readonly ILogger<MigrateDataToEventSourcingCommandHandler> _logger;
-
-    public MigrateDataToEventSourcingCommandHandler(
-        IDataMigrationService migrationService,
-        ILogger<MigrateDataToEventSourcingCommandHandler> logger)
-    {
-        _migrationService = migrationService;
-        _logger = logger;
-    }
-
     public async Task<MigrateDataToEventSourcingResult> Handle(
         MigrateDataToEventSourcingCommand request,
         CancellationToken cancellationToken)
     {
         try
         {
-            var isRequired = await _migrationService.IsDataMigrationRequiredAsync();
+            var isRequired = await migrationService.IsDataMigrationRequiredAsync();
             
             if (!isRequired)
             {
@@ -36,7 +28,7 @@ public class MigrateDataToEventSourcingCommandHandler : IRequestHandler<MigrateD
                     "No data migration required. Event sourcing data is already up to date.");
             }
 
-            await _migrationService.MigrateExistingDataToEventSourcingAsync();
+            await migrationService.MigrateExistingDataToEventSourcingAsync();
 
             return new MigrateDataToEventSourcingResult(
                 true,
@@ -45,7 +37,7 @@ public class MigrateDataToEventSourcingCommandHandler : IRequestHandler<MigrateD
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during manual data migration");
+            logger.LogError(ex, "Error during manual data migration");
             return new MigrateDataToEventSourcingResult(
                 true,
                 false,

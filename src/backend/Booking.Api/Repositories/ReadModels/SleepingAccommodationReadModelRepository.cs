@@ -4,15 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Repositories.ReadModels;
 
-public class SleepingAccommodationReadModelRepository : ReadModelRepository<SleepingAccommodationReadModel>, ISleepingAccommodationReadModelRepository
+public class SleepingAccommodationReadModelRepository(BookingDbContext context) : ReadModelRepository<SleepingAccommodationReadModel>(context), ISleepingAccommodationReadModelRepository
 {
-    public SleepingAccommodationReadModelRepository(BookingDbContext context) : base(context)
-    {
-    }
-
     public async Task<List<SleepingAccommodationReadModel>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Where(sa => sa.IsActive)
             .OrderBy(sa => sa.Name)
             .ToListAsync(cancellationToken);
@@ -20,7 +16,7 @@ public class SleepingAccommodationReadModelRepository : ReadModelRepository<Slee
 
     public async Task<SleepingAccommodationReadModel?> GetByIdWithVersionAsync(Guid id, int minVersion, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .Where(sa => sa.Id == id && sa.LastEventVersion >= minVersion)
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -32,7 +28,7 @@ public class SleepingAccommodationReadModelRepository : ReadModelRepository<Slee
 
     public override async Task<List<SleepingAccommodationReadModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await DbSet
             .OrderBy(sa => sa.Name)
             .ToListAsync(cancellationToken);
     }

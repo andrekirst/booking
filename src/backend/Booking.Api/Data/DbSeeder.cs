@@ -10,7 +10,9 @@ public static class DbSeeder
     {
         // Check if users already exist
         if (await context.Users.AnyAsync())
+        {
             return;
+        }
 
         var users = new[]
         {

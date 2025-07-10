@@ -5,20 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Services.EventSourcing;
 
-public class EventStore : IEventStore
+public class EventStore(BookingDbContext context, IEventSerializer eventSerializer) : IEventStore
 {
-    private readonly BookingDbContext _context;
-    private readonly IEventSerializer _eventSerializer;
-
-    public EventStore(BookingDbContext context, IEventSerializer eventSerializer)
-    {
-        _context = context;
-        _eventSerializer = eventSerializer;
-    }
-
     public async Task<List<DomainEvent>> GetEventsAsync(Guid aggregateId, int fromVersion = 0)
     {
-        var eventStoreEvents = await _context.EventStoreEvents
+        var eventStoreEvents = await context.EventStoreEvents
             .Where(e => e.AggregateId == aggregateId && e.Version > fromVersion)
             .OrderBy(e => e.Version)
             .ToListAsync();
@@ -28,7 +19,7 @@ public class EventStore : IEventStore
         {
             try
             {
-                var domainEvent = _eventSerializer.DeserializeEvent(eventStoreEvent.EventData, eventStoreEvent.EventType);
+                var domainEvent = eventSerializer.DeserializeEvent(eventStoreEvent.EventData, eventStoreEvent.EventType);
                 domainEvents.Add(domainEvent);
             }
             catch (Exception ex)
@@ -43,12 +34,12 @@ public class EventStore : IEventStore
     public async Task SaveEventsAsync(Guid aggregateId, string aggregateType, IEnumerable<DomainEvent> events, int expectedVersion)
     {
         var eventList = events.ToList();
-        if (!eventList.Any())
+        if (eventList.Count == 0)
         {
             return;
         }
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             // Check for concurrency conflicts
@@ -70,7 +61,7 @@ public class EventStore : IEventStore
                     AggregateId = aggregateId,
                     AggregateType = aggregateType,
                     EventType = domainEvent.EventType,
-                    EventData = _eventSerializer.SerializeEvent(domainEvent),
+                    EventData = eventSerializer.SerializeEvent(domainEvent),
                     Version = version,
                     Timestamp = domainEvent.OccurredAt
                 };
@@ -78,8 +69,8 @@ public class EventStore : IEventStore
                 eventStoreEvents.Add(eventStoreEvent);
             }
 
-            _context.EventStoreEvents.AddRange(eventStoreEvents);
-            await _context.SaveChangesAsync();
+            context.EventStoreEvents.AddRange(eventStoreEvents);
+            await context.SaveChangesAsync();
             await transaction.CommitAsync();
         }
         catch
@@ -91,47 +82,44 @@ public class EventStore : IEventStore
 
     public async Task<T?> GetSnapshotAsync<T>(Guid aggregateId) where T : class
     {
-        var snapshot = await _context.EventStoreSnapshots
+        var snapshot = await context.EventStoreSnapshots
             .Where(s => s.AggregateId == aggregateId)
             .OrderByDescending(s => s.Version)
             .FirstOrDefaultAsync();
 
-        if (snapshot == null)
-        {
-            return null;
-        }
-
-        return _eventSerializer.DeserializeSnapshot<T>(snapshot.SnapshotData);
+        return snapshot == null
+            ? null :
+            eventSerializer.DeserializeSnapshot<T>(snapshot.SnapshotData);
     }
 
     public async Task SaveSnapshotAsync<T>(Guid aggregateId, string aggregateType, T snapshot, int version) where T : class
     {
         // Remove existing snapshot (only keep the latest)
-        var existingSnapshot = await _context.EventStoreSnapshots
+        var existingSnapshot = await context.EventStoreSnapshots
             .Where(s => s.AggregateId == aggregateId)
             .FirstOrDefaultAsync();
 
         if (existingSnapshot != null)
         {
-            _context.EventStoreSnapshots.Remove(existingSnapshot);
+            context.EventStoreSnapshots.Remove(existingSnapshot);
         }
 
         var eventStoreSnapshot = new EventStoreSnapshot
         {
             AggregateId = aggregateId,
             AggregateType = aggregateType,
-            SnapshotData = _eventSerializer.SerializeSnapshot(snapshot),
+            SnapshotData = eventSerializer.SerializeSnapshot(snapshot),
             Version = version,
             Timestamp = DateTime.UtcNow
         };
 
-        _context.EventStoreSnapshots.Add(eventStoreSnapshot);
-        await _context.SaveChangesAsync();
+        context.EventStoreSnapshots.Add(eventStoreSnapshot);
+        await context.SaveChangesAsync();
     }
 
     private async Task<int> GetCurrentVersionAsync(Guid aggregateId)
     {
-        var lastEvent = await _context.EventStoreEvents
+        var lastEvent = await context.EventStoreEvents
             .Where(e => e.AggregateId == aggregateId)
             .OrderByDescending(e => e.Version)
             .FirstOrDefaultAsync();
@@ -141,7 +129,7 @@ public class EventStore : IEventStore
 
     public async Task<List<(DomainEvent Event, int Version)>> GetEventsAsync(Guid aggregateId, int fromVersion, CancellationToken cancellationToken)
     {
-        var eventStoreEvents = await _context.EventStoreEvents
+        var eventStoreEvents = await context.EventStoreEvents
             .Where(e => e.AggregateId == aggregateId && e.Version > fromVersion)
             .OrderBy(e => e.Version)
             .ToListAsync(cancellationToken);
@@ -151,7 +139,7 @@ public class EventStore : IEventStore
         {
             try
             {
-                var domainEvent = _eventSerializer.DeserializeEvent(eventStoreEvent.EventData, eventStoreEvent.EventType);
+                var domainEvent = eventSerializer.DeserializeEvent(eventStoreEvent.EventData, eventStoreEvent.EventType);
                 eventsWithVersion.Add((domainEvent, eventStoreEvent.Version));
             }
             catch (Exception ex)
@@ -167,7 +155,7 @@ public class EventStore : IEventStore
     {
         var aggregateType = typeof(T).Name;
         
-        return await _context.EventStoreEvents
+        return await context.EventStoreEvents
             .Where(e => e.AggregateType == aggregateType)
             .Select(e => e.AggregateId)
             .Distinct()

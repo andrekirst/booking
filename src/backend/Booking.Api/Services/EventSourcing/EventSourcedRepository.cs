@@ -2,22 +2,14 @@ using Booking.Api.Domain.Common;
 
 namespace Booking.Api.Services.EventSourcing;
 
-public class EventSourcedRepository<T> : IEventSourcedRepository<T> where T : AggregateRoot, new()
+public class EventSourcedRepository<T>(IEventStore eventStore, IEventDispatcher eventDispatcher) : IEventSourcedRepository<T>
+    where T : AggregateRoot, new()
 {
-    private readonly IEventStore _eventStore;
-    private readonly IEventDispatcher _eventDispatcher;
-
-    public EventSourcedRepository(IEventStore eventStore, IEventDispatcher eventDispatcher)
-    {
-        _eventStore = eventStore;
-        _eventDispatcher = eventDispatcher;
-    }
-
     public async Task<T?> GetByIdAsync(Guid id)
     {
-        var events = await _eventStore.GetEventsAsync(id);
+        var events = await eventStore.GetEventsAsync(id);
         
-        if (!events.Any())
+        if (events.Count == 0)
         {
             return null;
         }
@@ -32,15 +24,15 @@ public class EventSourcedRepository<T> : IEventSourcedRepository<T> where T : Ag
     {
         var events = aggregate.DomainEvents.ToList();
         
-        if (events.Any())
+        if (events.Count > 0)
         {
             var aggregateTypeName = typeof(T).Name;
-            await _eventStore.SaveEventsAsync(aggregate.Id, aggregateTypeName, events, aggregate.Version);
+            await eventStore.SaveEventsAsync(aggregate.Id, aggregateTypeName, events, aggregate.Version);
             
             // Publish events for read model projections
             foreach (var domainEvent in events)
             {
-                await _eventDispatcher.PublishAsync(domainEvent);
+                await eventDispatcher.PublishAsync(domainEvent);
             }
             
             aggregate.ClearDomainEvents();

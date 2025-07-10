@@ -6,37 +6,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Services.DataMigration;
 
-public class DataMigrationService : IDataMigrationService
+public class DataMigrationService(
+    BookingDbContext context,
+    IEventStore eventStore,
+    ILogger<DataMigrationService> logger)
+    : IDataMigrationService
 {
-    private readonly BookingDbContext _context;
-    private readonly IEventStore _eventStore;
-    private readonly IEventSerializer _eventSerializer;
-    private readonly ILogger<DataMigrationService> _logger;
-
-    public DataMigrationService(
-        BookingDbContext context,
-        IEventStore eventStore,
-        IEventSerializer eventSerializer,
-        ILogger<DataMigrationService> logger)
-    {
-        _context = context;
-        _eventStore = eventStore;
-        _eventSerializer = eventSerializer;
-        _logger = logger;
-    }
-
     public async Task<bool> IsDataMigrationRequiredAsync()
     {
         // Check if there are any existing SleepingAccommodation entities
-        var hasExistingEntities = await _context.SleepingAccommodations.AnyAsync();
+        var hasExistingEntities = await context.SleepingAccommodations.AnyAsync();
         
         // Check if there are any events in the event store
-        var hasEvents = await _context.EventStoreEvents
+        var hasEvents = await context.EventStoreEvents
             .Where(e => e.AggregateType == "SleepingAccommodationAggregate")
             .AnyAsync();
             
         // Check if there are any read models
-        var hasReadModels = await _context.SleepingAccommodationReadModels.AnyAsync();
+        var hasReadModels = await context.SleepingAccommodationReadModels.AnyAsync();
 
         // Migration is required if we have existing entities but no events or read models
         return hasExistingEntities && (!hasEvents || !hasReadModels);
@@ -44,18 +31,18 @@ public class DataMigrationService : IDataMigrationService
 
     public async Task MigrateExistingDataToEventSourcingAsync()
     {
-        _logger.LogInformation("Starting data migration to Event Sourcing...");
+        logger.LogInformation("Starting data migration to Event Sourcing...");
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
         
         try
         {
             // Get all existing SleepingAccommodation entities
-            var existingAccommodations = await _context.SleepingAccommodations
+            var existingAccommodations = await context.SleepingAccommodations
                 .OrderBy(sa => sa.CreatedAt)
                 .ToListAsync();
 
-            _logger.LogInformation("Found {Count} existing sleeping accommodations to migrate", existingAccommodations.Count);
+            logger.LogInformation("Found {Count} existing sleeping accommodations to migrate", existingAccommodations.Count);
 
             foreach (var accommodation in existingAccommodations)
             {
@@ -63,19 +50,19 @@ public class DataMigrationService : IDataMigrationService
             }
 
             await transaction.CommitAsync();
-            _logger.LogInformation("Data migration completed successfully. Migrated {Count} accommodations", existingAccommodations.Count);
+            logger.LogInformation("Data migration completed successfully. Migrated {Count} accommodations", existingAccommodations.Count);
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError(ex, "Data migration failed. Rolling back changes.");
+            logger.LogError(ex, "Data migration failed. Rolling back changes.");
             throw;
         }
     }
 
     private async Task MigrateAccommodationToEventsAsync(Domain.Entities.SleepingAccommodation accommodation)
     {
-        _logger.LogDebug("Migrating accommodation {Id} - {Name}", accommodation.Id, accommodation.Name);
+        logger.LogDebug("Migrating accommodation {Id} - {Name}", accommodation.Id, accommodation.Name);
 
         var events = new List<Domain.Common.DomainEvent>();
 
@@ -93,7 +80,7 @@ public class DataMigrationService : IDataMigrationService
         events.Add(createdEvent);
 
         // If the accommodation was later deactivated, create a deactivated event
-        if (!accommodation.IsActive && accommodation.ChangedAt.HasValue)
+        if (accommodation is { IsActive: false, ChangedAt: not null })
         {
             var deactivatedEvent = new SleepingAccommodationDeactivatedEvent
             {
@@ -105,7 +92,7 @@ public class DataMigrationService : IDataMigrationService
         }
 
         // Save events to event store
-        await _eventStore.SaveEventsAsync(
+        await eventStore.SaveEventsAsync(
             accommodation.Id,
             "SleepingAccommodationAggregate",
             events,
@@ -125,12 +112,12 @@ public class DataMigrationService : IDataMigrationService
         };
 
         // Check if read model already exists
-        var existingReadModel = await _context.SleepingAccommodationReadModels
+        var existingReadModel = await context.SleepingAccommodationReadModels
             .FirstOrDefaultAsync(rm => rm.Id == accommodation.Id);
 
         if (existingReadModel == null)
         {
-            _context.SleepingAccommodationReadModels.Add(readModel);
+            context.SleepingAccommodationReadModels.Add(readModel);
         }
         else
         {
@@ -144,6 +131,6 @@ public class DataMigrationService : IDataMigrationService
             existingReadModel.LastEventVersion = readModel.LastEventVersion;
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 }

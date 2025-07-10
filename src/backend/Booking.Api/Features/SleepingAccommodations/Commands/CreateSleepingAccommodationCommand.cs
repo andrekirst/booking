@@ -8,15 +8,8 @@ namespace Booking.Api.Features.SleepingAccommodations.Commands;
 public record CreateSleepingAccommodationCommand(CreateSleepingAccommodationDto Dto) 
     : IRequest<SleepingAccommodationDto>;
 
-public class CreateSleepingAccommodationCommandHandler : IRequestHandler<CreateSleepingAccommodationCommand, SleepingAccommodationDto>
+public class CreateSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository) : IRequestHandler<CreateSleepingAccommodationCommand, SleepingAccommodationDto>
 {
-    private readonly ISleepingAccommodationRepository _repository;
-
-    public CreateSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<SleepingAccommodationDto> Handle(
         CreateSleepingAccommodationCommand request,
         CancellationToken cancellationToken)
@@ -28,7 +21,7 @@ public class CreateSleepingAccommodationCommandHandler : IRequestHandler<CreateS
             request.Dto.Type,
             request.Dto.MaxCapacity);
         
-        await _repository.SaveAsync(aggregate);
+        await repository.SaveAsync(aggregate);
         
         return new SleepingAccommodationDto
         {

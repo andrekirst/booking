@@ -4,24 +4,16 @@ using MediatR;
 
 namespace Booking.Api.Features.SleepingAccommodations.EventHandlers;
 
-public class SleepingAccommodationUpdatedEventHandler : INotificationHandler<SleepingAccommodationUpdatedEvent>
+public class SleepingAccommodationUpdatedEventHandler(
+    ISleepingAccommodationReadModelRepository repository,
+    ILogger<SleepingAccommodationUpdatedEventHandler> logger)
+    : INotificationHandler<SleepingAccommodationUpdatedEvent>
 {
-    private readonly ISleepingAccommodationReadModelRepository _repository;
-    private readonly ILogger<SleepingAccommodationUpdatedEventHandler> _logger;
-
-    public SleepingAccommodationUpdatedEventHandler(
-        ISleepingAccommodationReadModelRepository repository,
-        ILogger<SleepingAccommodationUpdatedEventHandler> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
-
     public async Task Handle(SleepingAccommodationUpdatedEvent notification, CancellationToken cancellationToken)
     {
         try
         {
-            await _repository.UpdateAsync(
+            await repository.UpdateAsync(
                 notification.SleepingAccommodationId,
                 readModel =>
                 {
@@ -33,14 +25,14 @@ public class SleepingAccommodationUpdatedEventHandler : INotificationHandler<Sle
                 },
                 cancellationToken);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Updated read model for SleepingAccommodation {AggregateId} from event {EventId}",
                 notification.SleepingAccommodationId,
                 notification.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
+            logger.LogError(ex,
                 "Error updating read model for SleepingAccommodation {AggregateId} from event {EventId}",
                 notification.SleepingAccommodationId,
                 notification.Id);

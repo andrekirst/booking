@@ -31,7 +31,7 @@ public class SleepingAccommodationProjectionService : IProjectionService<Sleepin
             // Load events from the specified version
             var events = await _eventStore.GetEventsAsync(aggregateId, fromVersion, cancellationToken);
             
-            if (!events.Any())
+            if (events.Count == 0)
             {
                 _logger.LogWarning("No events found for aggregate {AggregateId} from version {FromVersion}", aggregateId, fromVersion);
                 return;
@@ -99,11 +99,8 @@ public class SleepingAccommodationProjectionService : IProjectionService<Sleepin
         // Get all unique aggregate IDs from event store
         var aggregateIds = await _eventStore.GetAllAggregateIdsAsync<SleepingAccommodationAggregate>(cancellationToken);
         
-        foreach (var aggregateId in aggregateIds)
+        foreach (var aggregateId in aggregateIds.TakeWhile(_ => !cancellationToken.IsCancellationRequested))
         {
-            if (cancellationToken.IsCancellationRequested)
-                break;
-                
             await RebuildAsync(aggregateId, cancellationToken);
         }
         

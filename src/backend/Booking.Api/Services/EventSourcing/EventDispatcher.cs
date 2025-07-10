@@ -3,17 +3,10 @@ using MediatR;
 
 namespace Booking.Api.Services.EventSourcing;
 
-public class EventDispatcher : IEventDispatcher
+public class EventDispatcher(IMediator mediator) : IEventDispatcher
 {
-    private readonly IMediator _mediator;
-
-    public EventDispatcher(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
     public async Task PublishAsync(DomainEvent domainEvent)
     {
-        await _mediator.Publish(domainEvent);
+        await mediator.Publish(domainEvent);
     }
 }

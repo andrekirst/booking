@@ -20,10 +20,14 @@ public class SleepingAccommodationAggregate : AggregateRoot
     public static SleepingAccommodationAggregate Create(Guid id, string name, AccommodationType type, int maxCapacity)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Name cannot be empty", nameof(name));
-        
+        }
+
         if (maxCapacity <= 0)
+        {
             throw new ArgumentException("Max capacity must be greater than 0", nameof(maxCapacity));
+        }
 
         var aggregate = new SleepingAccommodationAggregate();
         
@@ -43,10 +47,14 @@ public class SleepingAccommodationAggregate : AggregateRoot
     public void UpdateDetails(string name, AccommodationType type, int maxCapacity)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Name cannot be empty", nameof(name));
-        
+        }
+
         if (maxCapacity <= 0)
+        {
             throw new ArgumentException("Max capacity must be greater than 0", nameof(maxCapacity));
+        }
 
         // Only create event if something actually changed
         if (Name != name || Type != type || MaxCapacity != maxCapacity)
@@ -66,7 +74,9 @@ public class SleepingAccommodationAggregate : AggregateRoot
     public void Deactivate()
     {
         if (!IsActive)
+        {
             throw new InvalidOperationException("Sleeping accommodation is already deactivated");
+        }
 
         var deactivatedEvent = new SleepingAccommodationDeactivatedEvent
         {
@@ -79,7 +89,9 @@ public class SleepingAccommodationAggregate : AggregateRoot
     public void Reactivate()
     {
         if (IsActive)
+        {
             throw new InvalidOperationException("Sleeping accommodation is already active");
+        }
 
         var reactivatedEvent = new SleepingAccommodationReactivatedEvent
         {

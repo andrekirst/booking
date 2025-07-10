@@ -9,22 +9,15 @@ public record GetSleepingAccommodationsQuery : IRequest<List<SleepingAccommodati
     public bool IncludeInactive { get; init; } = false;
 }
 
-public class GetSleepingAccommodationsQueryHandler : IRequestHandler<GetSleepingAccommodationsQuery, List<SleepingAccommodationDto>>
+public class GetSleepingAccommodationsQueryHandler(ISleepingAccommodationReadModelRepository repository) : IRequestHandler<GetSleepingAccommodationsQuery, List<SleepingAccommodationDto>>
 {
-    private readonly ISleepingAccommodationReadModelRepository _repository;
-
-    public GetSleepingAccommodationsQueryHandler(ISleepingAccommodationReadModelRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<List<SleepingAccommodationDto>> Handle(
         GetSleepingAccommodationsQuery request, 
         CancellationToken cancellationToken)
     {
         var readModels = request.IncludeInactive
-            ? await _repository.GetAllAsync(cancellationToken)
-            : await _repository.GetActiveAsync(cancellationToken);
+            ? await repository.GetAllAsync(cancellationToken)
+            : await repository.GetActiveAsync(cancellationToken);
         
         return readModels
             .Select(sa => new SleepingAccommodationDto

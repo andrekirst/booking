@@ -19,7 +19,7 @@ public class OptimizedEventDispatcher : IEventDispatcher
     {
         _mediator = mediator;
         _logger = logger;
-        _useAsyncProjections = configuration.GetValue<bool>("EventSourcing:UseAsyncProjections", false);
+        _useAsyncProjections = configuration.GetValue("EventSourcing:UseAsyncProjections", false);
         
         // Get projection service only if async projections are enabled
         if (_useAsyncProjections)

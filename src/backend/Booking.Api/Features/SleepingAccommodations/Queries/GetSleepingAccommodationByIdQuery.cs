@@ -6,20 +6,13 @@ namespace Booking.Api.Features.SleepingAccommodations.Queries;
 
 public record GetSleepingAccommodationByIdQuery(Guid Id) : IRequest<SleepingAccommodationDto?>;
 
-public class GetSleepingAccommodationByIdQueryHandler : IRequestHandler<GetSleepingAccommodationByIdQuery, SleepingAccommodationDto?>
+public class GetSleepingAccommodationByIdQueryHandler(ISleepingAccommodationReadModelRepository repository) : IRequestHandler<GetSleepingAccommodationByIdQuery, SleepingAccommodationDto?>
 {
-    private readonly ISleepingAccommodationReadModelRepository _repository;
-
-    public GetSleepingAccommodationByIdQueryHandler(ISleepingAccommodationReadModelRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<SleepingAccommodationDto?> Handle(
         GetSleepingAccommodationByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var readModel = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var readModel = await repository.GetByIdAsync(request.Id, cancellationToken);
         
         if (readModel == null)
         {

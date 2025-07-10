@@ -5,29 +5,24 @@ namespace Booking.Api.Features.SleepingAccommodations.Commands;
 
 public record DeleteSleepingAccommodationCommand(Guid Id) : IRequest<bool>;
 
-public class DeleteSleepingAccommodationCommandHandler : IRequestHandler<DeleteSleepingAccommodationCommand, bool>
+public class DeleteSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository) : IRequestHandler<DeleteSleepingAccommodationCommand, bool>
 {
-    private readonly ISleepingAccommodationRepository _repository;
-
-    public DeleteSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<bool> Handle(
         DeleteSleepingAccommodationCommand request,
         CancellationToken cancellationToken)
     {
-        var aggregate = await _repository.GetByIdAsync(request.Id);
+        var aggregate = await repository.GetByIdAsync(request.Id);
             
         if (aggregate == null)
+        {
             return false;
-            
+        }
+
         // Soft delete - deactivate the sleeping accommodation
         if (aggregate.IsActive)
         {
             aggregate.Deactivate();
-            await _repository.SaveAsync(aggregate);
+            await repository.SaveAsync(aggregate);
         }
         
         return true;

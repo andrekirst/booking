@@ -4,24 +4,16 @@ using MediatR;
 
 namespace Booking.Api.Features.SleepingAccommodations.EventHandlers;
 
-public class SleepingAccommodationDeactivatedEventHandler : INotificationHandler<SleepingAccommodationDeactivatedEvent>
+public class SleepingAccommodationDeactivatedEventHandler(
+    ISleepingAccommodationReadModelRepository repository,
+    ILogger<SleepingAccommodationDeactivatedEventHandler> logger)
+    : INotificationHandler<SleepingAccommodationDeactivatedEvent>
 {
-    private readonly ISleepingAccommodationReadModelRepository _repository;
-    private readonly ILogger<SleepingAccommodationDeactivatedEventHandler> _logger;
-
-    public SleepingAccommodationDeactivatedEventHandler(
-        ISleepingAccommodationReadModelRepository repository,
-        ILogger<SleepingAccommodationDeactivatedEventHandler> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-    }
-
     public async Task Handle(SleepingAccommodationDeactivatedEvent notification, CancellationToken cancellationToken)
     {
         try
         {
-            await _repository.UpdateAsync(
+            await repository.UpdateAsync(
                 notification.SleepingAccommodationId,
                 readModel =>
                 {
@@ -31,14 +23,14 @@ public class SleepingAccommodationDeactivatedEventHandler : INotificationHandler
                 },
                 cancellationToken);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Deactivated read model for SleepingAccommodation {AggregateId} from event {EventId}",
                 notification.SleepingAccommodationId,
                 notification.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
+            logger.LogError(ex,
                 "Error deactivating read model for SleepingAccommodation {AggregateId} from event {EventId}",
                 notification.SleepingAccommodationId,
                 notification.Id);

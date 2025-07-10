@@ -7,38 +7,34 @@ namespace Booking.Api.Features.SleepingAccommodations.Commands;
 public record UpdateSleepingAccommodationCommand(Guid Id, UpdateSleepingAccommodationDto Dto) 
     : IRequest<SleepingAccommodationDto?>;
 
-public class UpdateSleepingAccommodationCommandHandler : IRequestHandler<UpdateSleepingAccommodationCommand, SleepingAccommodationDto?>
+public class UpdateSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository) : IRequestHandler<UpdateSleepingAccommodationCommand, SleepingAccommodationDto?>
 {
-    private readonly ISleepingAccommodationRepository _repository;
-
-    public UpdateSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<SleepingAccommodationDto?> Handle(
         UpdateSleepingAccommodationCommand request,
         CancellationToken cancellationToken)
     {
-        var aggregate = await _repository.GetByIdAsync(request.Id);
+        var aggregate = await repository.GetByIdAsync(request.Id);
             
         if (aggregate == null)
+        {
             return null;
-        
+        }
+
         // Update the details
         aggregate.UpdateDetails(request.Dto.Name, request.Dto.Type, request.Dto.MaxCapacity);
-        
-        // Handle activation/deactivation
-        if (request.Dto.IsActive && !aggregate.IsActive)
+
+        switch (request.Dto.IsActive)
         {
-            aggregate.Reactivate();
-        }
-        else if (!request.Dto.IsActive && aggregate.IsActive)
-        {
-            aggregate.Deactivate();
+            // Handle activation/deactivation
+            case true when !aggregate.IsActive:
+                aggregate.Reactivate();
+                break;
+            case false when aggregate.IsActive:
+                aggregate.Deactivate();
+                break;
         }
         
-        await _repository.SaveAsync(aggregate);
+        await repository.SaveAsync(aggregate);
         
         return new SleepingAccommodationDto
         {
