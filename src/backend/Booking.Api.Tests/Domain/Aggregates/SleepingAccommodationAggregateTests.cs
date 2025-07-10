@@ -2,6 +2,7 @@ using Booking.Api.Domain.Aggregates;
 using Booking.Api.Domain.Common;
 using Booking.Api.Domain.Enums;
 using Booking.Api.Domain.Events.SleepingAccommodations;
+using Booking.Api.Domain.Exceptions;
 using FluentAssertions;
 
 namespace Booking.Api.Tests.Domain.Aggregates;
@@ -43,7 +44,7 @@ public class SleepingAccommodationAggregateTests
     }
 
     [Fact]
-    public void Create_WithEmptyName_ShouldThrowArgumentException()
+    public void Create_WithEmptyName_ShouldThrowInvalidAccommodationNameException()
     {
         // Arrange
         var id = Guid.NewGuid();
@@ -53,11 +54,12 @@ public class SleepingAccommodationAggregateTests
 
         // Act & Assert
         var act = () => SleepingAccommodationAggregate.Create(id, name, type, maxCapacity);
-        act.Should().Throw<ArgumentException>().WithMessage("Name cannot be empty*");
+        act.Should().Throw<InvalidAccommodationNameException>()
+            .WithMessage("Sleeping accommodation name cannot be empty or whitespace");
     }
 
     [Fact]
-    public void Create_WithZeroCapacity_ShouldThrowArgumentException()
+    public void Create_WithZeroCapacity_ShouldThrowInvalidAccommodationCapacityException()
     {
         // Arrange
         var id = Guid.NewGuid();
@@ -67,7 +69,8 @@ public class SleepingAccommodationAggregateTests
 
         // Act & Assert
         var act = () => SleepingAccommodationAggregate.Create(id, name, type, maxCapacity);
-        act.Should().Throw<ArgumentException>().WithMessage("Max capacity must be greater than 0*");
+        act.Should().Throw<InvalidAccommodationCapacityException>()
+            .WithMessage("Sleeping accommodation capacity must be greater than 0. Provided: 0");
     }
 
     [Fact]
@@ -134,7 +137,7 @@ public class SleepingAccommodationAggregateTests
     }
 
     [Fact]
-    public void Deactivate_WhenAlreadyInactive_ShouldThrowInvalidOperationException()
+    public void Deactivate_WhenAlreadyInactive_ShouldThrowAccommodationAlreadyDeactivatedException()
     {
         // Arrange
         var aggregate = SleepingAccommodationAggregate.Create(Guid.NewGuid(), "Test Room", AccommodationType.Room, 4);
@@ -142,7 +145,8 @@ public class SleepingAccommodationAggregateTests
 
         // Act & Assert
         var act = () => aggregate.Deactivate();
-        act.Should().Throw<InvalidOperationException>().WithMessage("Sleeping accommodation is already deactivated");
+        act.Should().Throw<AccommodationAlreadyDeactivatedException>()
+            .WithMessage($"Sleeping accommodation {aggregate.Id} is already deactivated");
     }
 
     [Fact]
@@ -169,14 +173,15 @@ public class SleepingAccommodationAggregateTests
     }
 
     [Fact]
-    public void Reactivate_WhenAlreadyActive_ShouldThrowInvalidOperationException()
+    public void Reactivate_WhenAlreadyActive_ShouldThrowAccommodationAlreadyActivatedException()
     {
         // Arrange
         var aggregate = SleepingAccommodationAggregate.Create(Guid.NewGuid(), "Test Room", AccommodationType.Room, 4);
 
         // Act & Assert
         var act = () => aggregate.Reactivate();
-        act.Should().Throw<InvalidOperationException>().WithMessage("Sleeping accommodation is already active");
+        act.Should().Throw<AccommodationAlreadyActivatedException>()
+            .WithMessage($"Sleeping accommodation {aggregate.Id} is already active");
     }
 
     [Fact]

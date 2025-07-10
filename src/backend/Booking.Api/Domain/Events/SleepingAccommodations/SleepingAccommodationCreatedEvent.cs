@@ -3,7 +3,7 @@ using Booking.Api.Domain.Enums;
 
 namespace Booking.Api.Domain.Events.SleepingAccommodations;
 
-public record SleepingAccommodationCreatedEvent : DomainEvent
+public record SleepingAccommodationCreatedEvent : DomainEvent, IAggregateEvent
 {
     public override string EventType => "SleepingAccommodationCreated";
     
@@ -12,4 +12,7 @@ public record SleepingAccommodationCreatedEvent : DomainEvent
     public AccommodationType Type { get; init; }
     public int MaxCapacity { get; init; }
     public bool IsActive { get; init; }
+    
+    public Guid GetAggregateId() => SleepingAccommodationId;
+    public string GetAggregateType() => nameof(Aggregates.SleepingAccommodationAggregate);
 }

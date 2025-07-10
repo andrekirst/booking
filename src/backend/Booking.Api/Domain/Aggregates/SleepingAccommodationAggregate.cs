@@ -1,6 +1,7 @@
 using Booking.Api.Domain.Common;
 using Booking.Api.Domain.Enums;
 using Booking.Api.Domain.Events.SleepingAccommodations;
+using Booking.Api.Domain.Exceptions;
 
 namespace Booking.Api.Domain.Aggregates;
 
@@ -21,12 +22,12 @@ public class SleepingAccommodationAggregate : AggregateRoot
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Name cannot be empty", nameof(name));
+            throw new InvalidAccommodationNameException();
         }
 
         if (maxCapacity <= 0)
         {
-            throw new ArgumentException("Max capacity must be greater than 0", nameof(maxCapacity));
+            throw new InvalidAccommodationCapacityException(maxCapacity);
         }
 
         var aggregate = new SleepingAccommodationAggregate();
@@ -48,12 +49,12 @@ public class SleepingAccommodationAggregate : AggregateRoot
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Name cannot be empty", nameof(name));
+            throw new InvalidAccommodationNameException();
         }
 
         if (maxCapacity <= 0)
         {
-            throw new ArgumentException("Max capacity must be greater than 0", nameof(maxCapacity));
+            throw new InvalidAccommodationCapacityException(maxCapacity);
         }
 
         // Only create event if something actually changed
@@ -75,7 +76,7 @@ public class SleepingAccommodationAggregate : AggregateRoot
     {
         if (!IsActive)
         {
-            throw new InvalidOperationException("Sleeping accommodation is already deactivated");
+            throw new AccommodationAlreadyDeactivatedException(Id);
         }
 
         var deactivatedEvent = new SleepingAccommodationDeactivatedEvent
@@ -90,7 +91,7 @@ public class SleepingAccommodationAggregate : AggregateRoot
     {
         if (IsActive)
         {
-            throw new InvalidOperationException("Sleeping accommodation is already active");
+            throw new AccommodationAlreadyActivatedException(Id);
         }
 
         var reactivatedEvent = new SleepingAccommodationReactivatedEvent
@@ -151,4 +152,6 @@ public class SleepingAccommodationAggregate : AggregateRoot
         IsActive = true;
         ChangedAt = reactivated.OccurredAt;
     }
+    
+    public override string GetAggregateType() => nameof(SleepingAccommodationAggregate);
 }

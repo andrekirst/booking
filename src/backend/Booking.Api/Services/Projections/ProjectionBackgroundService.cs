@@ -1,5 +1,9 @@
 using System.Threading.Channels;
+using Booking.Api.Configuration;
 using Booking.Api.Domain.Common;
+using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Retry;
 
 namespace Booking.Api.Services.Projections;
 
@@ -7,14 +11,18 @@ public class ProjectionBackgroundService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ProjectionBackgroundService> _logger;
+    private readonly ProjectionRetryOptions _retryOptions;
     private readonly Channel<(DomainEvent Event, Guid AggregateId, string AggregateType)> _eventChannel;
+    private readonly AsyncRetryPolicy _retryPolicy;
 
     public ProjectionBackgroundService(
         IServiceProvider serviceProvider,
-        ILogger<ProjectionBackgroundService> logger)
+        ILogger<ProjectionBackgroundService> logger,
+        IOptions<ProjectionRetryOptions> retryOptions)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _retryOptions = retryOptions.Value;
         
         // Create an unbounded channel for event processing
         _eventChannel = Channel.CreateUnbounded<(DomainEvent, Guid, string)>(new UnboundedChannelOptions
@@ -22,6 +30,25 @@ public class ProjectionBackgroundService : BackgroundService
             SingleReader = true,
             SingleWriter = false
         });
+        
+        // Configure retry policy with exponential backoff
+        _retryPolicy = Policy
+            .Handle<Exception>(ex => !(ex is OperationCanceledException))
+            .WaitAndRetryAsync(
+                _retryOptions.MaxRetryAttempts,
+                retryAttempt => TimeSpan.FromMilliseconds(
+                    Math.Min(
+                        _retryOptions.InitialDelayMilliseconds * Math.Pow(_retryOptions.BackoffMultiplier, retryAttempt - 1),
+                        _retryOptions.MaxDelayMilliseconds)),
+                onRetry: (exception, timeSpan, retryCount, context) =>
+                {
+                    var aggregateId = context.TryGetValue("AggregateId", out var aggId) ? aggId : "Unknown";
+                    var eventType = context.TryGetValue("EventType", out var evtType) ? evtType : "Unknown";
+                    
+                    _logger.LogWarning(exception,
+                        "Retry {RetryCount} after {DelayMs}ms for event {EventType} on aggregate {AggregateId}",
+                        retryCount, timeSpan.TotalMilliseconds, eventType, aggregateId);
+                });
     }
 
     public async Task QueueEventForProjectionAsync(DomainEvent domainEvent, Guid aggregateId, string aggregateType)
@@ -37,17 +64,27 @@ public class ProjectionBackgroundService : BackgroundService
 
         await foreach (var (domainEvent, aggregateId, aggregateType) in _eventChannel.Reader.ReadAllAsync(stoppingToken))
         {
+            var context = new Context
+            {
+                ["AggregateId"] = aggregateId,
+                ["EventType"] = domainEvent.EventType,
+                ["AggregateType"] = aggregateType
+            };
+            
             try
             {
-                await ProcessEventAsync(domainEvent, aggregateId, aggregateType, stoppingToken);
+                await _retryPolicy.ExecuteAsync(
+                    async (ctx, ct) => await ProcessEventAsync(domainEvent, aggregateId, aggregateType, ct),
+                    context,
+                    stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, 
-                    "Error processing event {EventType} for aggregate {AggregateId}",
-                    domainEvent.EventType, aggregateId);
+                    "Failed to process event {EventType} for aggregate {AggregateId} after {MaxRetries} retries",
+                    domainEvent.EventType, aggregateId, _retryOptions.MaxRetryAttempts);
                 
-                // In production, you might want to implement retry logic or dead letter queue
+                // TODO: Consider implementing a dead letter queue for failed events
             }
         }
 
@@ -63,14 +100,13 @@ public class ProjectionBackgroundService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         
         // Determine which projection service to use based on aggregate type
-        switch (aggregateType)
+        if (aggregateType == typeof(Domain.Aggregates.SleepingAccommodationAggregate).Name)
         {
-            case "SleepingAccommodationAggregate":
-                await ProcessSleepingAccommodationEventAsync(scope, domainEvent, aggregateId, cancellationToken);
-                break;
-            default:
-                _logger.LogWarning("Unknown aggregate type: {AggregateType}", aggregateType);
-                break;
+            await ProcessSleepingAccommodationEventAsync(scope, domainEvent, aggregateId, cancellationToken);
+        }
+        else
+        {
+            _logger.LogWarning("Unknown aggregate type: {AggregateType}", aggregateType);
         }
     }
 

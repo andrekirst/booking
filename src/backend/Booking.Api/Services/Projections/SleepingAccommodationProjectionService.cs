@@ -13,15 +13,18 @@ public class SleepingAccommodationProjectionService : IProjectionService<Sleepin
     private readonly IEventStore _eventStore;
     private readonly ISleepingAccommodationReadModelRepository _readModelRepository;
     private readonly ILogger<SleepingAccommodationProjectionService> _logger;
+    private readonly Dictionary<Type, IEventApplier<SleepingAccommodationReadModel>> _eventAppliers;
 
     public SleepingAccommodationProjectionService(
         IEventStore eventStore,
         ISleepingAccommodationReadModelRepository readModelRepository,
-        ILogger<SleepingAccommodationProjectionService> logger)
+        ILogger<SleepingAccommodationProjectionService> logger,
+        IEnumerable<IEventApplier<SleepingAccommodationReadModel>> eventAppliers)
     {
         _eventStore = eventStore;
         _readModelRepository = readModelRepository;
         _logger = logger;
+        _eventAppliers = eventAppliers.ToDictionary(x => x.EventType);
     }
 
     public async Task ProjectAsync(Guid aggregateId, int fromVersion = 0, CancellationToken cancellationToken = default)
@@ -49,20 +52,20 @@ public class SleepingAccommodationProjectionService : IProjectionService<Sleepin
             // Apply events to read model
             foreach (var @event in events.OrderBy(e => e.Version))
             {
-                ApplyEventToReadModel(readModel, @event.Event);
-                readModel.LastEventVersion = @event.Version;
+                ApplyEventToReadModel(readModel!, @event.Event);
+                readModel!.LastEventVersion = @event.Version;
             }
 
             // Save read model
             if (isNew)
             {
-                await _readModelRepository.SaveAsync(readModel, cancellationToken);
+                await _readModelRepository.SaveAsync(readModel!, cancellationToken);
             }
             else
             {
                 await _readModelRepository.UpdateAsync(aggregateId, rm => 
                 {
-                    rm.Name = readModel.Name;
+                    rm.Name = readModel!.Name;
                     rm.Type = readModel.Type;
                     rm.MaxCapacity = readModel.MaxCapacity;
                     rm.IsActive = readModel.IsActive;
@@ -72,7 +75,7 @@ public class SleepingAccommodationProjectionService : IProjectionService<Sleepin
                 }, cancellationToken);
             }
 
-            _logger.LogInformation("Successfully projected aggregate {AggregateId} to version {Version}", aggregateId, readModel.LastEventVersion);
+            _logger.LogInformation("Successfully projected aggregate {AggregateId} to version {Version}", aggregateId, readModel!.LastEventVersion);
         }
         catch (Exception ex)
         {
@@ -109,36 +112,15 @@ public class SleepingAccommodationProjectionService : IProjectionService<Sleepin
 
     private void ApplyEventToReadModel(SleepingAccommodationReadModel readModel, DomainEvent @event)
     {
-        switch (@event)
+        var eventType = @event.GetType();
+        
+        if (_eventAppliers.TryGetValue(eventType, out var applier))
         {
-            case SleepingAccommodationCreatedEvent created:
-                readModel.Name = created.Name;
-                readModel.Type = created.Type;
-                readModel.MaxCapacity = created.MaxCapacity;
-                readModel.IsActive = created.IsActive;
-                readModel.CreatedAt = created.OccurredAt;
-                break;
-                
-            case SleepingAccommodationUpdatedEvent updated:
-                readModel.Name = updated.Name;
-                readModel.Type = updated.Type;
-                readModel.MaxCapacity = updated.MaxCapacity;
-                readModel.ChangedAt = updated.OccurredAt;
-                break;
-                
-            case SleepingAccommodationDeactivatedEvent deactivated:
-                readModel.IsActive = false;
-                readModel.ChangedAt = deactivated.OccurredAt;
-                break;
-                
-            case SleepingAccommodationReactivatedEvent reactivated:
-                readModel.IsActive = true;
-                readModel.ChangedAt = reactivated.OccurredAt;
-                break;
-                
-            default:
-                _logger.LogWarning("Unknown event type: {EventType}", @event.GetType().Name);
-                break;
+            applier.Apply(readModel, @event);
+        }
+        else
+        {
+            _logger.LogWarning("No event applier found for event type: {EventType}", eventType.Name);
         }
     }
 }

@@ -1,6 +1,6 @@
 namespace Booking.Api.Domain.Common;
 
-public abstract class AggregateRoot
+public abstract class AggregateRoot : IAggregate
 {
     private readonly List<DomainEvent> _domainEvents = new();
     
@@ -39,4 +39,6 @@ public abstract class AggregateRoot
     }
     
     protected abstract void Apply(DomainEvent domainEvent);
+    
+    public abstract string GetAggregateType();
 }

@@ -35,18 +35,13 @@ public class OptimizedEventDispatcher : IEventDispatcher
             // Always publish to MediatR for immediate handlers
             await _mediator.Publish(domainEvent);
             
-            // If async projections are enabled and we have aggregate info, queue for background processing
-            if (_useAsyncProjections && _projectionService != null)
+            // If async projections are enabled and event implements IAggregateEvent, queue for background processing
+            if (_useAsyncProjections && _projectionService != null && domainEvent is IAggregateEvent aggregateEvent)
             {
-                // Extract aggregate info from event (this assumes events have these properties)
-                var aggregateIdProperty = domainEvent.GetType().GetProperty($"{domainEvent.GetType().Name.Replace("Event", "")}Id");
-                if (aggregateIdProperty != null && aggregateIdProperty.PropertyType == typeof(Guid))
-                {
-                    var aggregateId = (Guid)aggregateIdProperty.GetValue(domainEvent)!;
-                    var aggregateType = domainEvent.GetType().Name.Replace("Event", "Aggregate");
-                    
-                    await _projectionService.QueueEventForProjectionAsync(domainEvent, aggregateId, aggregateType);
-                }
+                var aggregateId = aggregateEvent.GetAggregateId();
+                var aggregateType = aggregateEvent.GetAggregateType();
+                
+                await _projectionService.QueueEventForProjectionAsync(domainEvent, aggregateId, aggregateType);
             }
             
             _logger.LogDebug("Published event {EventType} with id {EventId}", 

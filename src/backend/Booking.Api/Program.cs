@@ -13,6 +13,7 @@ using Booking.Api.Services.Caching;
 using Booking.Api.Services.DataMigration;
 using Booking.Api.Services.EventSourcing;
 using Booking.Api.Services.Projections;
+using Booking.Api.Services.Projections.EventAppliers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -68,12 +69,21 @@ public class Program
         // Register Projection Services
         builder.Services.AddScoped<IProjectionService<SleepingAccommodationAggregate, SleepingAccommodationReadModel>, SleepingAccommodationProjectionService>();
         
+        // Register Event Appliers for SleepingAccommodation
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationCreatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationUpdatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationDeactivatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationReactivatedEventApplier>();
+        
         // Register Data Migration services
         builder.Services.AddScoped<IDataMigrationService, DataMigrationService>();
         builder.Services.AddHostedService<DataMigrationBackgroundService>();
         
         // Configure JwtSettings with Options pattern
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+        
+        // Configure ProjectionRetryOptions
+        builder.Services.Configure<ProjectionRetryOptions>(builder.Configuration.GetSection(ProjectionRetryOptions.SectionName));
         
         // Configure JWT Authentication
         var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
