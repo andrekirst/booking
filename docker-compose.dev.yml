@@ -48,7 +48,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: booking-frontend-dev
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+      NEXT_PUBLIC_API_URL: http://localhost:5000
     ports:
       - "3000:3000"
     volumes:
