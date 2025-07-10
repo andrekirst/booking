@@ -4,7 +4,15 @@ using Booking.Api.Configuration;
 using Booking.Api.Controllers;
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
+using Booking.Api.Domain.Aggregates;
+using Booking.Api.Domain.ReadModels;
+using Booking.Api.Features.SleepingAccommodations.Repositories;
+using Booking.Api.Repositories.ReadModels;
 using Booking.Api.Services;
+using Booking.Api.Services.Caching;
+using Booking.Api.Services.EventSourcing;
+using Booking.Api.Services.Projections;
+using Booking.Api.Services.Projections.EventAppliers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -38,8 +46,40 @@ public class Program
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IJwtService, JwtService>();
         
+        // Register Event Sourcing services
+        builder.Services.AddScoped<IEventStore, EventStore>();
+        builder.Services.AddScoped<IEventSerializer, EventSerializer>();
+        builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
+        builder.Services.AddScoped<IEventSourcedRepository<SleepingAccommodationAggregate>, EventSourcedRepository<SleepingAccommodationAggregate>>();
+        builder.Services.AddScoped<ISleepingAccommodationRepository, SleepingAccommodationRepository>();
+        
+        // Register Read Model Repository and Caching
+        builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<SleepingAccommodationReadModelRepository>();
+        builder.Services.AddScoped<ISleepingAccommodationReadModelRepository>(provider =>
+        {
+            var innerRepository = provider.GetRequiredService<SleepingAccommodationReadModelRepository>();
+            var cache = provider.GetRequiredService<IReadModelCache<SleepingAccommodationReadModel>>();
+            var logger = provider.GetRequiredService<ILogger<CachedSleepingAccommodationReadModelRepository>>();
+            return new CachedSleepingAccommodationReadModelRepository(innerRepository, cache, logger);
+        });
+        builder.Services.AddSingleton<IReadModelCache<SleepingAccommodationReadModel>, InMemoryReadModelCache<SleepingAccommodationReadModel>>();
+        
+        // Register Projection Services
+        builder.Services.AddScoped<IProjectionService<SleepingAccommodationAggregate, SleepingAccommodationReadModel>, SleepingAccommodationProjectionService>();
+        
+        // Register Event Appliers for SleepingAccommodation
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationCreatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationUpdatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationDeactivatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationReactivatedEventApplier>();
+        
+        
         // Configure JwtSettings with Options pattern
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+        
+        // Configure ProjectionRetryOptions
+        builder.Services.Configure<ProjectionRetryOptions>(builder.Configuration.GetSection(ProjectionRetryOptions.SectionName));
         
         // Configure JWT Authentication
         var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();

@@ -1,7 +1,6 @@
-using Booking.Api.Data;
 using Booking.Api.Features.SleepingAccommodations.DTOs;
+using Booking.Api.Repositories.ReadModels;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Features.SleepingAccommodations.Queries;
 
@@ -10,22 +9,17 @@ public record GetSleepingAccommodationsQuery : IRequest<List<SleepingAccommodati
     public bool IncludeInactive { get; init; } = false;
 }
 
-public class GetSleepingAccommodationsQueryHandler(BookingDbContext context) 
-    : IRequestHandler<GetSleepingAccommodationsQuery, List<SleepingAccommodationDto>>
+public class GetSleepingAccommodationsQueryHandler(ISleepingAccommodationReadModelRepository repository) : IRequestHandler<GetSleepingAccommodationsQuery, List<SleepingAccommodationDto>>
 {
     public async Task<List<SleepingAccommodationDto>> Handle(
         GetSleepingAccommodationsQuery request, 
         CancellationToken cancellationToken)
     {
-        var query = context.SleepingAccommodations.AsQueryable();
+        var readModels = request.IncludeInactive
+            ? await repository.GetAllAsync(cancellationToken)
+            : await repository.GetActiveAsync(cancellationToken);
         
-        if (!request.IncludeInactive)
-        {
-            query = query.Where(sa => sa.IsActive);
-        }
-        
-        return await query
-            .OrderBy(sa => sa.Name)
+        return readModels
             .Select(sa => new SleepingAccommodationDto
             {
                 Id = sa.Id,
@@ -36,6 +30,6 @@ public class GetSleepingAccommodationsQueryHandler(BookingDbContext context)
                 CreatedAt = sa.CreatedAt,
                 ChangedAt = sa.ChangedAt
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 }

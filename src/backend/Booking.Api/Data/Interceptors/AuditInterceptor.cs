@@ -23,7 +23,10 @@ public class AuditInterceptor : SaveChangesInterceptor
 
     private static void UpdateAuditableEntities(DbContext? context)
     {
-        if (context == null) return;
+        if (context == null)
+        {
+            return;
+        }
 
         var entries = context.ChangeTracker
             .Entries<IAuditableEntity>()

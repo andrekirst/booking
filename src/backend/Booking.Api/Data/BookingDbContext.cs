@@ -1,18 +1,21 @@
 using Booking.Api.Domain.Entities;
+using Booking.Api.Domain.ReadModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Data;
 
-public class BookingDbContext : DbContext
+public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbContext(options)
 {
-    public BookingDbContext(DbContextOptions<BookingDbContext> options)
-        : base(options)
-    {
-    }
-
-    public DbSet<User> Users { get; set; }
-    public DbSet<Domain.Entities.Booking> Bookings { get; set; }
-    public DbSet<SleepingAccommodation> SleepingAccommodations { get; set; }
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Domain.Entities.Booking> Bookings => Set<Domain.Entities.Booking>();
+    public DbSet<SleepingAccommodation> SleepingAccommodations => Set<SleepingAccommodation>();
+    
+    // Event Sourcing Tables
+    public DbSet<EventStoreEvent> EventStoreEvents => Set<EventStoreEvent>();
+    public DbSet<EventStoreSnapshot> EventStoreSnapshots => Set<EventStoreSnapshot>();
+    
+    // Read Models
+    public DbSet<SleepingAccommodationReadModel> SleepingAccommodationReadModels => Set<SleepingAccommodationReadModel>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,42 +1,50 @@
-using Booking.Api.Data;
 using Booking.Api.Features.SleepingAccommodations.DTOs;
+using Booking.Api.Features.SleepingAccommodations.Repositories;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Features.SleepingAccommodations.Commands;
 
 public record UpdateSleepingAccommodationCommand(Guid Id, UpdateSleepingAccommodationDto Dto) 
     : IRequest<SleepingAccommodationDto?>;
 
-public class UpdateSleepingAccommodationCommandHandler(BookingDbContext context)
-    : IRequestHandler<UpdateSleepingAccommodationCommand, SleepingAccommodationDto?>
+public class UpdateSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository) : IRequestHandler<UpdateSleepingAccommodationCommand, SleepingAccommodationDto?>
 {
     public async Task<SleepingAccommodationDto?> Handle(
         UpdateSleepingAccommodationCommand request,
         CancellationToken cancellationToken)
     {
-        var accommodation = await context.SleepingAccommodations
-            .FirstOrDefaultAsync(sa => sa.Id == request.Id, cancellationToken);
+        var aggregate = await repository.GetByIdAsync(request.Id);
             
-        if (accommodation == null)
+        if (aggregate == null)
+        {
             return null;
-            
-        accommodation.Name = request.Dto.Name;
-        accommodation.Type = request.Dto.Type;
-        accommodation.MaxCapacity = request.Dto.MaxCapacity;
-        accommodation.IsActive = request.Dto.IsActive;
+        }
+
+        // Update the details
+        aggregate.UpdateDetails(request.Dto.Name, request.Dto.Type, request.Dto.MaxCapacity);
+
+        switch (request.Dto.IsActive)
+        {
+            // Handle activation/deactivation
+            case true when !aggregate.IsActive:
+                aggregate.Reactivate();
+                break;
+            case false when aggregate.IsActive:
+                aggregate.Deactivate();
+                break;
+        }
         
-        await context.SaveChangesAsync(cancellationToken);
+        await repository.SaveAsync(aggregate);
         
         return new SleepingAccommodationDto
         {
-            Id = accommodation.Id,
-            Name = accommodation.Name,
-            Type = accommodation.Type,
-            MaxCapacity = accommodation.MaxCapacity,
-            IsActive = accommodation.IsActive,
-            CreatedAt = accommodation.CreatedAt,
-            ChangedAt = accommodation.ChangedAt
+            Id = aggregate.Id,
+            Name = aggregate.Name,
+            Type = aggregate.Type,
+            MaxCapacity = aggregate.MaxCapacity,
+            IsActive = aggregate.IsActive,
+            CreatedAt = aggregate.CreatedAt,
+            ChangedAt = aggregate.ChangedAt
         };
     }
 }

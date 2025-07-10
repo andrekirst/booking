@@ -20,6 +20,9 @@
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
     
+    <!-- Resilience -->
+    <PackageVersion Include="Polly" Version="8.5.2" />
+    
     <!-- Testing -->
     <PackageVersion Include="xunit" Version="2.9.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />

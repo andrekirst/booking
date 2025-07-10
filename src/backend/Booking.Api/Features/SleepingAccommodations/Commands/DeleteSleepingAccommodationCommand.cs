@@ -1,28 +1,29 @@
-using Booking.Api.Data;
+using Booking.Api.Features.SleepingAccommodations.Repositories;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Api.Features.SleepingAccommodations.Commands;
 
 public record DeleteSleepingAccommodationCommand(Guid Id) : IRequest<bool>;
 
-public class DeleteSleepingAccommodationCommandHandler(BookingDbContext context)
-    : IRequestHandler<DeleteSleepingAccommodationCommand, bool>
+public class DeleteSleepingAccommodationCommandHandler(ISleepingAccommodationRepository repository) : IRequestHandler<DeleteSleepingAccommodationCommand, bool>
 {
     public async Task<bool> Handle(
         DeleteSleepingAccommodationCommand request,
         CancellationToken cancellationToken)
     {
-        var accommodation = await context.SleepingAccommodations
-            .FirstOrDefaultAsync(sa => sa.Id == request.Id, cancellationToken);
+        var aggregate = await repository.GetByIdAsync(request.Id);
             
-        if (accommodation == null)
+        if (aggregate == null)
+        {
             return false;
-            
-        // Soft delete - only set IsActive to false
-        accommodation.IsActive = false;
-        
-        await context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Soft delete - deactivate the sleeping accommodation
+        if (aggregate.IsActive)
+        {
+            aggregate.Deactivate();
+            await repository.SaveAsync(aggregate);
+        }
         
         return true;
     }
