@@ -176,8 +176,8 @@ public class AvailabilityValidationAttributeTests
         var endDate = DateTime.UtcNow.Date.AddDays(2);
         var bookingItems = new List<TestBookingItemDto>();
 
-        _mediator.Send(Arg.Any<CheckAvailabilityQuery>())
-            .Throws(new Exception("Database error"));
+        _mediator.When(x => x.Send(Arg.Any<CheckAvailabilityQuery>()))
+            .Do(x => throw new Exception("Database error"));
 
         // Act
         var result = await AvailabilityValidationAttribute.ValidateAvailabilityAsync(
@@ -251,6 +251,6 @@ public class AvailabilityValidationAttributeTests
         await _mediator.Received(1).Send(Arg.Is<CheckAvailabilityQuery>(q => 
             q.StartDate == startDate && 
             q.EndDate == endDate && 
-            q.ExcludeBookingId == excludeBookingId));
+            q.ExcludeBookingId == Guid.Parse(excludeBookingId)));
     }
 }

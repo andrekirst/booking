@@ -61,7 +61,7 @@ public class BookingsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<BookingDto>> CreateBooking([FromBody] CreateBookingDto createDto)
+    public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto createDto)
     {
         // Perform comprehensive validation including availability checks
         var validationResult = await this.ValidateAsync(createDto, mediator);
@@ -89,7 +89,7 @@ public class BookingsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<BookingDto>> UpdateBooking(Guid id, [FromBody] UpdateBookingDto updateDto)
+    public async Task<IActionResult> UpdateBooking(Guid id, [FromBody] UpdateBookingDto updateDto)
     {
         // First check if booking exists and user has permission
         var existingBooking = await mediator.Send(new GetBookingByIdQuery(id));
@@ -214,7 +214,7 @@ public class BookingsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("validate")]
-    public async Task<ActionResult> ValidateBookingRequest([FromBody] CreateBookingDto createDto)
+    public async Task<IActionResult> ValidateBookingRequest([FromBody] CreateBookingDto createDto)
     {
         // Perform all validation rules but don't create the booking
         var validationResult = await this.ValidateAsync(createDto, mediator);

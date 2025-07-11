@@ -55,7 +55,7 @@ public class BookingProjectionService(
 
                 // Find the appropriate event applier
                 var eventType = domainEvent.GetType();
-                if (eventAppliers.TryGetValue(eventType, out var applier))
+                if (eventAppliers.TryGetValue(eventType, out var applier) && readModel != null)
                 {
                     applier.Apply(readModel, domainEvent);
                     readModel.LastEventVersion = eventStoreEvent.Version;
@@ -69,7 +69,10 @@ public class BookingProjectionService(
                         eventType.Name, aggregateId);
                     
                     // Still update the version to avoid reprocessing
-                    readModel.LastEventVersion = eventStoreEvent.Version;
+                    if (readModel != null)
+                    {
+                        readModel.LastEventVersion = eventStoreEvent.Version;
+                    }
                 }
             }
             catch (Exception ex)

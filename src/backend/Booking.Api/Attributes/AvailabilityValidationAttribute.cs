@@ -35,7 +35,7 @@ public class AvailabilityValidationAttribute : ValidationAttribute
     {
         try
         {
-            var query = new CheckAvailabilityQuery(startDate, endDate, excludeBookingId);
+            var query = new CheckAvailabilityQuery(startDate, endDate, string.IsNullOrEmpty(excludeBookingId) ? null : Guid.Parse(excludeBookingId));
             var availability = await mediator.Send(query);
 
             // Check if any requested accommodation is fully booked
@@ -44,7 +44,7 @@ public class AvailabilityValidationAttribute : ValidationAttribute
             foreach (var request in requestedAccommodations)
             {
                 var accommodationAvailability = availability.Accommodations
-                    .FirstOrDefault(a => a.Id == request.AccommodationId);
+                    .FirstOrDefault(a => a.Id.ToString() == request.AccommodationId);
 
                 if (accommodationAvailability == null)
                 {
@@ -64,7 +64,7 @@ public class AvailabilityValidationAttribute : ValidationAttribute
 
             return (true, null);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception in a real scenario
             return (false, "Verfügbarkeitsprüfung fehlgeschlagen. Bitte versuchen Sie es später erneut.");
@@ -80,10 +80,10 @@ public class AvailabilityValidationAttribute : ValidationAttribute
             var accommodationIdProperty = item.GetType().GetProperty("SleepingAccommodationId");
             var personCountProperty = item.GetType().GetProperty("PersonCount");
 
-            if (accommodationIdProperty?.GetValue(item) is string accommodationId &&
+            if (accommodationIdProperty?.GetValue(item) is Guid accommodationId &&
                 personCountProperty?.GetValue(item) is int personCount)
             {
-                requests.Add((accommodationId, personCount));
+                requests.Add((accommodationId.ToString(), personCount));
             }
         }
 
