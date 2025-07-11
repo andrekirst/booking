@@ -109,8 +109,12 @@ export default function DateRangePicker({
   };
 
   const isDateDisabled = (date: Date) => {
-    if (date < effectiveMinDate) return true;
-    if (maxDate && date > new Date(maxDate)) return true;
+    // Create date objects for comparison at midnight to avoid time issues
+    const dateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const minDateAtMidnight = new Date(effectiveMinDate.getFullYear(), effectiveMinDate.getMonth(), effectiveMinDate.getDate());
+    
+    if (dateAtMidnight < minDateAtMidnight) return true;
+    if (maxDate && dateAtMidnight > new Date(maxDate)) return true;
     return false;
   };
 
