@@ -230,6 +230,7 @@ export default function DateRangePicker({
       <div className="relative" ref={dropdownRef}>
         <button 
           onClick={() => setIsOpen(!isOpen)}
+          data-testid="date-range-picker-button"
           className={`flex items-center justify-between w-full px-4 py-3 border rounded-xl cursor-pointer transition-all duration-200 ${
             isOpen 
               ? 'border-blue-500 ring-2 ring-blue-500/20' 

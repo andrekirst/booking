@@ -122,8 +122,8 @@ public class ValidationExtensionsTests
         Assert.Equal(2, result.Errors.Count);
         Assert.Contains("Field1", result.Errors.Keys);
         Assert.Contains("Field2", result.Errors.Keys);
-        Assert.Equal(2, result.Errors["Field1"].Length);
-        Assert.Equal(1, result.Errors["Field2"].Length);
+        Assert.Equal(2, result.Errors["Field1"].Count);
+        Assert.Single(result.Errors["Field2"]);
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class ValidationExtensionsTests
         var field = "TestField";
 
         // Act
-        var result = ValidationExtensions.CreateValidationProblem(field, message!);
+        var result = ValidationExtensions.CreateValidationProblem(field, message ?? string.Empty);
 
         // Assert
         Assert.Contains(field, result.Errors.Keys);
@@ -189,6 +189,6 @@ public class ValidationExtensionsTests
 
         // Assert
         Assert.Contains("Field1", result.Errors.Keys);
-        Assert.Equal(3, result.Errors["Field1"].Length); // ModelStateDictionary keeps duplicates
+        Assert.Equal(3, result.Errors["Field1"].Count); // ModelStateDictionary keeps duplicates
     }
 }

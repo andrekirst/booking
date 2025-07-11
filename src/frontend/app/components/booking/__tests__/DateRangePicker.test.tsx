@@ -171,7 +171,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const input = screen.getByRole('button');
+      const input = screen.getByTestId('date-range-picker-button');
       await user.click(input);
 
       expect(screen.getByText('Januar 2025')).toBeInTheDocument();
@@ -185,7 +185,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
 
       const dayHeaders = screen.getAllByText(/^(Mo|Di|Mi|Do|Fr|Sa|So)$/);
       expect(dayHeaders[0]).toHaveTextContent('Mo');
@@ -199,7 +199,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
 
       const todayButton = screen.getByRole('button', { name: '15' });
       expect(todayButton).toHaveClass('ring-2', 'ring-blue-200');
@@ -212,7 +212,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       // Navigate to different month first
       const nextButton = screen.getAllByRole('button').find(btn => 
@@ -240,7 +240,7 @@ describe('DateRangePicker', () => {
       );
 
       // Open calendar
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       expect(screen.getByText('Januar 2025')).toBeInTheDocument();
 
       // Click outside
@@ -258,7 +258,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       expect(screen.getByText('Vergangen')).toBeInTheDocument();
       expect(screen.getByText('Ausgebucht')).toBeInTheDocument();
@@ -275,7 +275,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       await user.click(screen.getByRole('button', { name: '20' }));
 
       expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-20', '');
@@ -291,7 +291,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       await user.click(screen.getByRole('button', { name: '25' }));
 
       expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-20', '2025-01-25');
@@ -308,7 +308,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       await user.click(screen.getByRole('button', { name: '20' }));
 
       expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-20', '');
@@ -321,7 +321,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       await user.click(screen.getByRole('button', { name: '15' }));
 
       expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-15', '');
@@ -334,7 +334,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const pastDateButton = screen.getByRole('button', { name: '10 ✗' });
       expect(pastDateButton).toBeDisabled();
@@ -348,7 +348,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const pastDateButton = screen.getByRole('button', { name: '10 ✗' });
       const indicator = pastDateButton.querySelector('span');
@@ -368,7 +368,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const date25Button = screen.getByRole('button', { name: '25' });
       await user.hover(date25Button);
@@ -383,7 +383,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const date25Button = screen.getByRole('button', { name: '25' });
       await user.hover(date25Button);
@@ -401,7 +401,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const date25Button = screen.getByRole('button', { name: '25' });
       await user.hover(date25Button);
@@ -423,7 +423,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const date20Button = screen.getByRole('button', { name: '20' });
       expect(date20Button).not.toBeDisabled();
@@ -460,7 +460,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const clearButton = screen.getByText('Löschen');
       await user.click(clearButton);
@@ -479,7 +479,7 @@ describe('DateRangePicker', () => {
         />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       await user.click(screen.getByRole('button', { name: '27' }));
 
       expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-27', '');
@@ -505,7 +505,7 @@ describe('DateRangePicker', () => {
       const dropdownArrow = screen.getByRole('button').querySelector('svg:last-child');
       expect(dropdownArrow).not.toHaveClass('rotate-180');
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       expect(dropdownArrow).toHaveClass('rotate-180');
     });
@@ -517,7 +517,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const nextButton = screen.getAllByRole('button').find(btn => 
         btn.querySelector('path[d*="M9 5l7 7-7 7"]')
@@ -535,7 +535,7 @@ describe('DateRangePicker', () => {
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByTestId('date-range-picker-button'));
       
       const prevButton = screen.getAllByRole('button').find(btn => 
         btn.querySelector('path[d*="M15 19l-7-7 7-7"]')
