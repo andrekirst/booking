@@ -37,6 +37,10 @@ export interface ApiClient {
 
   // Health check
   healthCheck(): Promise<{ status: string }>;
+
+  // Token management
+  setToken(token: string): void;
+  getToken(): string | null;
 }
 
 export class HttpApiClient implements ApiClient {

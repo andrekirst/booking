@@ -17,6 +17,7 @@ import {
 export class MockApiClient implements ApiClient {
   private authenticated = false;
   private currentUser: User | null = null;
+  private token: string | null = null;
 
   // Mock data
   private mockUsers: User[] = [
@@ -412,6 +413,15 @@ export class MockApiClient implements ApiClient {
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Token management
+  setToken(token: string): void {
+    this.token = token;
+  }
+
+  getToken(): string | null {
+    return this.token;
   }
 }
 
