@@ -2,6 +2,7 @@ using Booking.Api.Domain.Common;
 using Booking.Api.Domain.Enums;
 using Booking.Api.Domain.Events.Bookings;
 using Booking.Api.Domain.ValueObjects;
+using Booking.Api.Attributes;
 
 namespace Booking.Api.Domain.Aggregates;
 
@@ -26,14 +27,11 @@ public class BookingAggregate : AggregateRoot
         List<BookingItem> bookingItems,
         string? notes = null)
     {
-        if (startDate >= endDate)
+        // Use centralized validation logic consistent with API validation
+        var validationResult = DateRangeValidationAttribute.ValidateDateRange(startDate, endDate, allowSameDay: false, allowToday: true);
+        if (!validationResult.IsValid)
         {
-            throw new ArgumentException("Start date must be before end date");
-        }
-
-        if (startDate < DateTime.UtcNow.Date)
-        {
-            throw new ArgumentException("Start date cannot be in the past");
+            throw new ArgumentException(validationResult.ErrorMessage);
         }
 
         if (bookingItems == null || bookingItems.Count == 0)
@@ -65,14 +63,11 @@ public class BookingAggregate : AggregateRoot
             throw new InvalidOperationException("Cannot update a cancelled booking");
         }
 
-        if (startDate >= endDate)
+        // Use centralized validation logic consistent with API validation
+        var validationResult = DateRangeValidationAttribute.ValidateDateRange(startDate, endDate, allowSameDay: false, allowToday: true);
+        if (!validationResult.IsValid)
         {
-            throw new ArgumentException("Start date must be before end date");
-        }
-
-        if (startDate < DateTime.UtcNow.Date)
-        {
-            throw new ArgumentException("Start date cannot be in the past");
+            throw new ArgumentException(validationResult.ErrorMessage);
         }
 
         if (bookingItems == null || bookingItems.Count == 0)

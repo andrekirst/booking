@@ -1,6 +1,8 @@
 using Booking.Api.Features.Bookings.Commands;
 using Booking.Api.Features.Bookings.DTOs;
 using Booking.Api.Features.Bookings.Queries;
+using Booking.Api.Extensions;
+using Booking.Api.Attributes;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -61,6 +63,13 @@ public class BookingsController(IMediator mediator) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<BookingDto>> CreateBooking([FromBody] CreateBookingDto createDto)
     {
+        // Perform comprehensive validation including availability checks
+        var validationResult = await this.ValidateAsync(createDto, mediator);
+        if (validationResult != null)
+        {
+            return validationResult;
+        }
+
         var userId = GetCurrentUserId();
         var command = new CreateBookingCommand(userId, createDto);
         
@@ -71,11 +80,11 @@ public class BookingsController(IMediator mediator) : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", ex.Message, "Domain Validation Error"));
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(ex.Message);
+            return Conflict(ValidationExtensions.CreateValidationProblem("Business", ex.Message, "Business Rule Violation"));
         }
     }
 
@@ -97,6 +106,14 @@ public class BookingsController(IMediator mediator) : ControllerBase
             return Forbid();
         }
 
+        // Perform comprehensive validation including availability checks
+        // Exclude current booking from availability check
+        var validationResult = await this.ValidateAsync(updateDto, mediator, id.ToString());
+        if (validationResult != null)
+        {
+            return validationResult;
+        }
+
         var command = new UpdateBookingCommand(id, updateDto);
         
         try
@@ -111,11 +128,11 @@ public class BookingsController(IMediator mediator) : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", ex.Message, "Domain Validation Error"));
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(ex.Message);
+            return Conflict(ValidationExtensions.CreateValidationProblem("Business", ex.Message, "Business Rule Violation"));
         }
     }
 
@@ -183,20 +200,44 @@ public class BookingsController(IMediator mediator) : ControllerBase
         [FromQuery] DateTime endDate,
         [FromQuery] Guid? excludeBookingId = null)
     {
-        if (startDate >= endDate)
+        // Use centralized validation
+        var validationResult = DateRangeValidationAttribute.ValidateDateRange(startDate, endDate, allowSameDay: false, allowToday: true);
+        if (!validationResult.IsValid)
         {
-            return BadRequest("Start date must be before end date");
-        }
-
-        if (startDate < DateTime.UtcNow.Date)
-        {
-            return BadRequest("Start date cannot be in the past");
+            return BadRequest(ValidationExtensions.CreateValidationProblem("DateRange", validationResult.ErrorMessage!, "Date Range Validation Error"));
         }
 
         var query = new CheckAvailabilityQuery(startDate, endDate, excludeBookingId);
         var result = await mediator.Send(query);
         
         return Ok(result);
+    }
+
+    [HttpPost("validate")]
+    public async Task<ActionResult> ValidateBookingRequest([FromBody] CreateBookingDto createDto)
+    {
+        // Perform all validation rules but don't create the booking
+        var validationResult = await this.ValidateAsync(createDto, mediator);
+        if (validationResult != null)
+        {
+            return validationResult;
+        }
+
+        // Return success with validation details
+        return Ok(new
+        {
+            IsValid = true,
+            Message = "Buchungsanfrage ist gültig",
+            ValidatedAt = DateTime.UtcNow,
+            DateRange = new
+            {
+                StartDate = createDto.StartDate,
+                EndDate = createDto.EndDate,
+                Nights = (createDto.EndDate - createDto.StartDate).Days
+            },
+            TotalPersons = createDto.BookingItems.Sum(x => x.PersonCount),
+            AccommodationCount = createDto.BookingItems.Count
+        });
     }
 
     private int GetCurrentUserId()
