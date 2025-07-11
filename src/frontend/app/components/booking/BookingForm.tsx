@@ -32,6 +32,7 @@ export default function BookingForm({
   }>({});
   const [showAccommodations, setShowAccommodations] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const accommodationRef = useRef<HTMLDivElement>(null);
 
   // Load accommodations on component mount
@@ -40,9 +41,11 @@ export default function BookingForm({
       try {
         const data = await apiClient.getSleepingAccommodations();
         setAccommodations(data);
+        setIsInitialized(true);
       } catch (error) {
         console.error('Fehler beim Laden der Schlafmöglichkeiten:', error);
         setErrors(prev => ({ ...prev, general: 'Fehler beim Laden der Schlafmöglichkeiten' }));
+        setIsInitialized(true);
       }
     };
 
@@ -259,12 +262,12 @@ export default function BookingForm({
       {/* Accommodation Selection */}
       <div 
         ref={accommodationRef}
-        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
-          startDate && endDate ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+        className={`overflow-hidden ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''} ${
+          startDate && endDate && showAccommodations ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {startDate && endDate && (
-          <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-[800ms] ease-in-out ${
+          <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''} ${
             showAccommodations ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
             {isCheckingAvailability ? (
@@ -291,7 +294,7 @@ export default function BookingForm({
 
       {/* Placeholder when no dates selected */}
       <div 
-        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
+        className={`overflow-hidden ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''} ${
           showPlaceholder && (!startDate || !endDate) ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
@@ -308,12 +311,12 @@ export default function BookingForm({
 
       {/* Notes */}
       <div 
-        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
+        className={`overflow-hidden ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''} ${
           selectedItems.length > 0 ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {selectedItems.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-[800ms] ease-in-out">
+          <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''}`}>
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-3">
             Notizen (optional)
           </label>
@@ -336,12 +339,12 @@ export default function BookingForm({
 
       {/* Summary */}
       <div 
-        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
+        className={`overflow-hidden ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''} ${
           selectedItems.length > 0 ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {selectedItems.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 transform transition-all duration-[800ms] ease-in-out">
+          <div className={`bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 transform ${isInitialized ? 'transition-all duration-[800ms] ease-in-out' : ''}`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Buchungsübersicht</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center">
