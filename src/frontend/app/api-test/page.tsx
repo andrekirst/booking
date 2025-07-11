@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { apiClient } from "@/lib/api/client";
 
+interface TestResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+  statusCode?: number;
+  details?: unknown;
+}
+
 export default function ApiTestPage() {
-  const [results, setResults] = useState<{ [key: string]: unknown }>({});
+  const [results, setResults] = useState<{ [key: string]: TestResult }>({});
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
 
   const testEndpoint = async (name: string, testFn: () => Promise<unknown>) => {
@@ -13,13 +21,21 @@ export default function ApiTestPage() {
       const result = await testFn();
       setResults((prev) => ({ ...prev, [name]: { success: true, data: result } }));
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const statusCode = error && typeof error === 'object' && 'statusCode' in error && typeof error.statusCode === 'number' 
+        ? error.statusCode 
+        : undefined;
+      const details = error && typeof error === 'object' && 'details' in error 
+        ? error.details 
+        : undefined;
+
       setResults((prev) => ({
         ...prev,
         [name]: {
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          statusCode: error && typeof error === 'object' && 'statusCode' in error ? error.statusCode : undefined,
-          details: error && typeof error === 'object' && 'details' in error ? error.details : undefined,
+          error: errorMessage,
+          statusCode,
+          details,
         },
       }));
     } finally {
@@ -71,37 +87,44 @@ export default function ApiTestPage() {
                 </button>
               </div>
 
-              {results[test.name] && (
-                <div
-                  className={`p-4 rounded ${
-                    results[test.name].success
-                      ? "bg-green-50 border border-green-200"
-                      : "bg-red-50 border border-red-200"
-                  }`}
-                >
-                  {results[test.name].success ? (
-                    <div>
-                      <p className="text-green-700 font-semibold mb-2">Success!</p>
-                      <pre className="text-xs overflow-auto">
-                        {JSON.stringify(results[test.name].data, null, 2)}
-                      </pre>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-red-700 font-semibold mb-2">Error</p>
-                      <p className="text-red-600">{results[test.name].error}</p>
-                      {results[test.name].statusCode && (
-                        <p className="text-red-600">Status Code: {results[test.name].statusCode}</p>
-                      )}
-                      {results[test.name].details && (
-                        <pre className="text-xs overflow-auto mt-2">
-                          {JSON.stringify(results[test.name].details, null, 2)}
+              {(() => {
+                const result = results[test.name];
+                if (!result) return null;
+                
+                return (
+                  <div
+                    className={`p-4 rounded ${
+                      result.success
+                        ? "bg-green-50 border border-green-200"
+                        : "bg-red-50 border border-red-200"
+                    }`}
+                  >
+                    {result.success ? (
+                      <div>
+                        <p className="text-green-700 font-semibold mb-2">Success!</p>
+                        <pre className="text-xs overflow-auto">
+                          {JSON.stringify(result.data, null, 2)}
                         </pre>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-red-700 font-semibold mb-2">Error</p>
+                        <p className="text-red-600">{result.error}</p>
+                        {result.statusCode && (
+                          <p className="text-red-600">Status Code: {result.statusCode}</p>
+                        )}
+                        {result.details != null ? (
+                          <pre className="text-xs overflow-auto mt-2">
+                            {typeof result.details === 'string' 
+                              ? result.details 
+                              : JSON.stringify(result.details, null, 2)}
+                          </pre>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </div>

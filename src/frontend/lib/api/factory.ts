@@ -22,6 +22,10 @@ export class ApiFactory {
     }
   }
 
+  static createMockClient(): MockApiClient {
+    return new MockApiClient();
+  }
+
   static getInstance(environment?: ApiEnvironment): ApiClient {
     if (!this.instance || (environment && environment !== this.environment)) {
       this.environment = environment || this.getEnvironment();
