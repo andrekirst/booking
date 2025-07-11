@@ -137,6 +137,12 @@ export default function DateRangePicker({
     return false;
   };
 
+  const isDateInPast = (date: Date) => {
+    const dateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return dateAtMidnight < todayAtMidnight;
+  };
+
   const isDateFullyBooked = (date: Date) => {
     if (!availability) return false;
     
@@ -341,12 +347,13 @@ export default function DateRangePicker({
               const isInHoverRange = isDateInHoverRange(date);
               const isDisabled = isDateDisabled(date);
               const isFullyBooked = isDateFullyBooked(date);
+              const isInPast = isDateInPast(date);
               const currentHoverNights = calculateHoverNights(date);
               
               return (
                 <button
                   key={index}
-                  onClick={() => !(isDisabled || isFullyBooked) && handleDateSelect(date)}
+                  onClick={() => !(isDisabled || isFullyBooked || isInPast) && handleDateSelect(date)}
                   onMouseEnter={() => {
                     setHoverDate(date);
                     setHoverNights(currentHoverNights);
@@ -355,21 +362,27 @@ export default function DateRangePicker({
                     setHoverDate(null);
                     setHoverNights(0);
                   }}
-                  disabled={isDisabled || isFullyBooked}
+                  disabled={isDisabled || isFullyBooked || isInPast}
                   className={`
                     p-2 text-sm rounded-lg transition-all duration-150 relative
                     ${!isCurrentMonth ? 'text-gray-300' : 'text-gray-900'}
+                    ${isInPast && isCurrentMonth ? 'bg-gray-100 text-gray-400 line-through cursor-not-allowed' : ''}
                     ${isDisabled ? 'text-gray-300 cursor-not-allowed' : ''}
-                    ${isFullyBooked && !isDisabled ? 'bg-red-100 text-red-500 cursor-not-allowed line-through' : ''}
-                    ${!isDisabled && !isFullyBooked ? 'hover:bg-blue-50 cursor-pointer' : ''}
+                    ${isFullyBooked && !isDisabled && !isInPast ? 'bg-red-100 text-red-500 cursor-not-allowed line-through' : ''}
+                    ${!isDisabled && !isFullyBooked && !isInPast ? 'hover:bg-blue-50 cursor-pointer' : ''}
                     ${isToday && !isSelected ? 'ring-2 ring-blue-200' : ''}
                     ${isSelected ? 'bg-blue-600 text-white font-semibold' : ''}
                     ${isInRange || isInHoverRange ? 'bg-blue-100 text-blue-800' : ''}
                   `}
                 >
                   {date.getDate()}
-                  {isFullyBooked && !isDisabled && (
+                  {isFullyBooked && !isDisabled && !isInPast && (
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                  {isInPast && isCurrentMonth && (
+                    <span className="absolute -top-0.5 -right-0.5 text-xs text-gray-400">
+                      ✗
+                    </span>
                   )}
                 </button>
               );
@@ -388,6 +401,32 @@ export default function DateRangePicker({
                     : 'Wählen Sie das Abreisedatum'
               }
             </p>
+          </div>
+
+          {/* Status Legend */}
+          <div className="mt-3 text-xs text-gray-600">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-gray-100 rounded border border-gray-300 relative">
+                  <span className="absolute -top-0.5 -right-0.5 text-xs">✗</span>
+                </div>
+                <span>Vergangen</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-red-100 rounded border relative">
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </div>
+                <span>Ausgebucht</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                <span>Ausgewählt</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 border-2 border-blue-200 rounded"></div>
+                <span>Heute</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

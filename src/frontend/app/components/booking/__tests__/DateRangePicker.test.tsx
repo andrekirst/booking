@@ -5,7 +5,30 @@ import { SleepingAccommodationAvailability } from '@/lib/types/api';
 
 // Mock current date for consistent testing
 const mockToday = new Date('2025-01-15');
-jest.spyOn(global.Date, 'now').mockImplementation(() => mockToday.getTime());
+
+// Mock Date constructor and Date.now()
+const RealDate = Date;
+// @ts-ignore
+global.Date = class extends RealDate {
+  constructor(...args: any[]) {
+    if (args.length === 0) {
+      return new RealDate(mockToday);
+    }
+    return new RealDate(...args);
+  }
+  
+  static now() {
+    return mockToday.getTime();
+  }
+  
+  static parse(s: string) {
+    return RealDate.parse(s);
+  }
+  
+  static UTC(...args: any[]) {
+    return RealDate.UTC(...args);
+  }
+};
 
 const mockOnDateChange = jest.fn();
 
@@ -227,6 +250,21 @@ describe('DateRangePicker', () => {
         expect(screen.queryByText('Januar 2025')).not.toBeInTheDocument();
       });
     });
+
+    it('shows status legend in calendar', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      expect(screen.getByText('Vergangen')).toBeInTheDocument();
+      expect(screen.getByText('Ausgebucht')).toBeInTheDocument();
+      expect(screen.getByText('Ausgewählt')).toBeInTheDocument();
+      expect(screen.getByText('Heute')).toBeInTheDocument();
+    });
   });
 
   describe('Date Selection', () => {
@@ -298,8 +336,24 @@ describe('DateRangePicker', () => {
 
       await user.click(screen.getByRole('button'));
       
-      const pastDateButton = screen.getByRole('button', { name: '10' });
+      const pastDateButton = screen.getByRole('button', { name: '10 ✗' });
       expect(pastDateButton).toBeDisabled();
+      expect(pastDateButton).toHaveClass('bg-gray-100', 'text-gray-400', 'line-through', 'cursor-not-allowed');
+    });
+
+    it('shows visual indicators for past dates', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const pastDateButton = screen.getByRole('button', { name: '10 ✗' });
+      const indicator = pastDateButton.querySelector('span');
+      expect(indicator).toBeInTheDocument();
+      expect(indicator).toHaveTextContent('✗');
     });
   });
 
