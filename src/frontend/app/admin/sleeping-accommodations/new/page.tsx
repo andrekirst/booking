@@ -2,23 +2,13 @@
 
 import { CreateSleepingAccommodationDto } from '@/lib/types/sleeping-accommodation';
 import SleepingAccommodationForm from '@/app/components/admin/SleepingAccommodationForm';
+import { useApi } from '@/contexts/ApiContext';
 
 export default function NewSleepingAccommodationPage() {
+  const api = useApi();
+  
   const handleSubmit = async (data: CreateSleepingAccommodationDto) => {
-    const token = localStorage.getItem('token');
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Fehler beim Erstellen der Schlafmöglichkeit');
-    }
+    await api.createSleepingAccommodation(data);
   };
 
   return (

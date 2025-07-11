@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SleepingAccommodation, UpdateSleepingAccommodationDto, CreateSleepingAccommodationDto } from '@/lib/types/sleeping-accommodation';
 import SleepingAccommodationForm from '@/app/components/admin/SleepingAccommodationForm';
+import { useApi } from '@/contexts/ApiContext';
 
 export default function EditSleepingAccommodationPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const api = useApi();
   const [accommodation, setAccommodation] = useState<SleepingAccommodation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,34 +23,14 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
 
   const fetchAccommodation = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 404) {
+      const data = await api.getSleepingAccommodationById(id);
+      setAccommodation(data);
+    } catch (err: any) {
+      if (err.statusCode === 404) {
         router.push('/admin/sleeping-accommodations');
         return;
       }
-
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der Schlafmöglichkeit');
-      }
-
-      const data = await response.json();
-      setAccommodation(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten');
+      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten');
     } finally {
       setIsLoading(false);
     }
@@ -59,48 +41,18 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
       throw new Error('Schlafmöglichkeit ID nicht gefunden');
     }
 
-    const token = localStorage.getItem('token');
-    
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations/${accommodationId}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Fehler beim Aktualisieren der Schlafmöglichkeit');
-    }
+    await api.updateSleepingAccommodation(accommodationId, data);
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    const token = localStorage.getItem('token');
+    if (!accommodation) return;
     
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations/${id}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: accommodation?.name,
-          type: accommodation?.type,
-          maxCapacity: accommodation?.maxCapacity,
-          isActive: isActive,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Fehler beim Ändern des Status');
-    }
+    await api.updateSleepingAccommodation(id, {
+      name: accommodation.name,
+      type: accommodation.type,
+      maxCapacity: accommodation.maxCapacity,
+      isActive: isActive,
+    });
 
     // Update local state
     setAccommodation(prev => prev ? { ...prev, isActive } : null);

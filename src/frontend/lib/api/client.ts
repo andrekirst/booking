@@ -29,7 +29,11 @@ export interface ApiClient {
   ): Promise<BookingAvailability>;
 
   // Sleeping Accommodations endpoints
-  getSleepingAccommodations(): Promise<SleepingAccommodation[]>;
+  getSleepingAccommodations(includeInactive?: boolean): Promise<SleepingAccommodation[]>;
+  getSleepingAccommodationById(id: string): Promise<SleepingAccommodation>;
+  createSleepingAccommodation(accommodation: Partial<SleepingAccommodation>): Promise<SleepingAccommodation>;
+  updateSleepingAccommodation(id: string, accommodation: Partial<SleepingAccommodation>): Promise<SleepingAccommodation>;
+  deleteSleepingAccommodation(id: string): Promise<void>;
 
   // Health check
   healthCheck(): Promise<{ status: string }>;
@@ -40,8 +44,7 @@ export class HttpApiClient implements ApiClient {
   private token: string | null = null;
 
   constructor(
-    baseUrl: string = process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:7000/api"
+    baseUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7000"
   ) {
     this.baseUrl = baseUrl;
 
@@ -51,10 +54,20 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
+  // Method to refresh token from localStorage
+  private refreshToken(): void {
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("auth_token");
+    }
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // Refresh token from localStorage before each request
+    this.refreshToken();
+
     const url = `${this.baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
@@ -75,30 +88,63 @@ export class HttpApiClient implements ApiClient {
       headers["Authorization"] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    try {
+      console.log(`[API] ${options.method || 'GET'} ${url}`);
+      
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      const errorData: ErrorResponse = await response.json().catch(() => ({
-        error: "Unknown error",
-        message: `HTTP ${response.status}: ${response.statusText}`,
-      }));
+      if (!response.ok) {
+        let errorData: ErrorResponse;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = {
+            error: "Unknown error",
+            message: `HTTP ${response.status}: ${response.statusText}`,
+          };
+        }
 
+        console.error(`[API] Error ${response.status}:`, errorData);
+
+        // Handle specific error codes
+        if (response.status === 401) {
+          // Token expired or invalid
+          this.logout();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+        }
+
+        throw new ApiError(
+          errorData.message || errorData.error || "An error occurred",
+          response.status,
+          errorData
+        );
+      }
+
+      // Handle empty responses (e.g., 204 No Content)
+      if (response.status === 204) {
+        return {} as T;
+      }
+
+      const data = await response.json();
+      console.log(`[API] Response:`, data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      console.error(`[API] Network error:`, error);
       throw new ApiError(
-        errorData.message || errorData.error || "An error occurred",
-        response.status,
-        errorData
+        "Netzwerkfehler: Bitte überprüfen Sie Ihre Internetverbindung.",
+        0,
+        { error: error instanceof Error ? error.message : "Unknown error" }
       );
     }
-
-    // Handle empty responses (e.g., 204 No Content)
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    return response.json();
   }
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
@@ -175,12 +221,38 @@ export class HttpApiClient implements ApiClient {
     }
 
     return this.request<BookingAvailability>(
-      `bookings/availability?${params.toString()}`
+      `/bookings/availability?${params.toString()}`
     );
   }
 
-  async getSleepingAccommodations(): Promise<SleepingAccommodation[]> {
-    return this.request<SleepingAccommodation[]>("/sleeping-accommodations");
+  async getSleepingAccommodations(includeInactive: boolean = false): Promise<SleepingAccommodation[]> {
+    return this.request<SleepingAccommodation[]>(
+      `/sleeping-accommodations?includeInactive=${includeInactive}`
+    );
+  }
+
+  async getSleepingAccommodationById(id: string): Promise<SleepingAccommodation> {
+    return this.request<SleepingAccommodation>(`/sleeping-accommodations/${id}`);
+  }
+
+  async createSleepingAccommodation(accommodation: Partial<SleepingAccommodation>): Promise<SleepingAccommodation> {
+    return this.request<SleepingAccommodation>("/sleeping-accommodations", {
+      method: "POST",
+      body: JSON.stringify(accommodation),
+    });
+  }
+
+  async updateSleepingAccommodation(id: string, accommodation: Partial<SleepingAccommodation>): Promise<SleepingAccommodation> {
+    return this.request<SleepingAccommodation>(`/sleeping-accommodations/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(accommodation),
+    });
+  }
+
+  async deleteSleepingAccommodation(id: string): Promise<void> {
+    await this.request<void>(`/sleeping-accommodations/${id}`, {
+      method: "DELETE",
+    });
   }
 
   async healthCheck(): Promise<{ status: string }> {
