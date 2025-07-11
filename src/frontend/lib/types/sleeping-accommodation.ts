@@ -1,6 +1,8 @@
 export enum AccommodationType {
   Room = 0,
-  Tent = 1
+  Tent = 1,
+  Camper = 2,
+  Other = 3
 }
 
 export interface SleepingAccommodation {

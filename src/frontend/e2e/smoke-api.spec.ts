@@ -39,9 +39,9 @@ test.describe('Smoke Tests - API Abstraction', () => {
     });
 
     // Then fetch bookings
-    const response = await apiClient.getBookings();
-    expect(response.bookings).toBeInstanceOf(Array);
-    expect(response.count).toBeGreaterThanOrEqual(0);
+    const bookings = await apiClient.getBookings();
+    expect(bookings).toBeInstanceOf(Array);
+    expect(bookings.length).toBeGreaterThanOrEqual(0);
   });
 
   test('should handle multiple users', async ({ apiClient }) => {

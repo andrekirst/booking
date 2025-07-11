@@ -19,7 +19,7 @@ export default function AdminLayout({
 
   const checkAdminAccess = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       if (!token) {
         router.push('/login');
         return;
@@ -101,7 +101,7 @@ export default function AdminLayout({
               <button
                 type="button"
                 onClick={() => {
-                  localStorage.removeItem('token');
+                  localStorage.removeItem('auth_token');
                   router.push('/login');
                 }}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"

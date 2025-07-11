@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SleepingAccommodation } from '@/lib/types/sleeping-accommodation';
 import SleepingAccommodationsTable from '@/app/components/admin/SleepingAccommodationsTable';
+import { useApi } from '@/contexts/ApiContext';
 
 export default function SleepingAccommodationsPage() {
   const router = useRouter();
+  const api = useApi();
   const [accommodations, setAccommodations] = useState<SleepingAccommodation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,41 +23,14 @@ export default function SleepingAccommodationsPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations?includeInactive=${includeInactive}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 403) {
+      const data = await api.getSleepingAccommodations(includeInactive);
+      setAccommodations(data);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 403) {
         router.push('/bookings');
         return;
       }
-
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der Schlafmöglichkeiten');
-      }
-
-      const data = await response.json();
-      setAccommodations(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten');
+      setError(error instanceof Error ? error.message : 'Fehler beim Laden der Schlafplätze');
     } finally {
       setIsLoading(false);
     }
@@ -71,24 +46,10 @@ export default function SleepingAccommodationsPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sleeping-accommodations/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        fetchAccommodations();
-      } else {
-        throw new Error('Fehler beim Deaktivieren');
-      }
-    } catch {
-      alert('Fehler beim Deaktivieren der Schlafmöglichkeit');
+      await api.deleteSleepingAccommodation(id);
+      fetchAccommodations();
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Fehler beim Deaktivieren der Schlafmöglichkeit');
     }
   };
 

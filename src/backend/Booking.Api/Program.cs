@@ -25,6 +25,9 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        // Configure Npgsql to handle DateTime.Kind=Unspecified for PostgreSQL compatibility
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
@@ -52,6 +55,7 @@ public class Program
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
         builder.Services.AddScoped<IEventSourcedRepository<SleepingAccommodationAggregate>, EventSourcedRepository<SleepingAccommodationAggregate>>();
         builder.Services.AddScoped<ISleepingAccommodationRepository, SleepingAccommodationRepository>();
+        builder.Services.AddScoped<IEventSourcedRepository<BookingAggregate>, EventSourcedRepository<BookingAggregate>>();
         
         // Register Read Model Repository and Caching
         builder.Services.AddMemoryCache();
@@ -67,12 +71,19 @@ public class Program
         
         // Register Projection Services
         builder.Services.AddScoped<IProjectionService<SleepingAccommodationAggregate, SleepingAccommodationReadModel>, SleepingAccommodationProjectionService>();
+        builder.Services.AddScoped<IProjectionService<BookingAggregate, BookingReadModel>, BookingProjectionService>();
         
         // Register Event Appliers for SleepingAccommodation
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationCreatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationUpdatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationDeactivatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<SleepingAccommodationReadModel>, SleepingAccommodationReactivatedEventApplier>();
+        
+        // Register Event Appliers for Booking
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingCreatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingUpdatedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingCancelledEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingConfirmedEventApplier>();
         
         
         // Configure JwtSettings with Options pattern

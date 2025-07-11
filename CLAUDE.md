@@ -64,10 +64,18 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Die Commit-Nachricht soll kurz beschreiben, was geändert wurde.
 
 ## 4. Umsetzungsplan
+- **ALLERERSTER SCHRITT**: Branch-Workflow aus Abschnitt 11 und 12 durchführen - KEINE AUSNAHMEN!
 - Vor der Umsetzung eines Issues erstellt Copilot einen kurzen Umsetzungsplan (Schritte/Tasks).
 - Die Umsetzung erfolgt Schritt für Schritt entlang dieses Plans.
 - Nach jedem Schritt erfolgt ein Commit und Push.
 - **WICHTIG - Schrittweise Umsetzung**: Implementiere immer nur das, was explizit besprochen und geplant wurde. Vermeide es, zusätzliche Features oder Placeholder für zukünftige Funktionen zu erstellen, da dies die Issues zu groß macht und das Testen erschwert. Jedes Feature sollte vollständig und isoliert implementiert werden.
+
+### 4.1 Obligatorische Reihenfolge bei Issue-Bearbeitung:
+1. **Branch-Setup** (Abschnitt 11.3 + 12.1) - IMMER zuerst!
+2. **Umsetzungsplan** erstellen und dokumentieren
+3. **Schritt-für-Schritt Implementation** mit regelmäßigen Commits
+4. **Tests** erstellen und ausführen
+5. **Pull Request** erstellen und reviewen
 
 ## 5. Tests
 
@@ -153,13 +161,118 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
   - Weitere Labels nach Bedarf, immer mit Beschreibung und Farbe versehen.
 
 ## 11. Branch-Strategie für Issues
-- Für jedes Issue, das durch Copilot umgesetzt wird, muss immer ein neuer Branch angelegt werden.
-- Der Branch wird immer auf GitHub (remote) erzeugt, niemals lokal. Grund: Es soll immer der neueste Stand aus dem Haupt-Repository verwendet werden, um Merge-Konflikte zu minimieren.
-- Die Erstellung des Branches erfolgt per GitHub CLI (`gh`), z. B. mit `gh pr checkout -b <branchname>` oder `gh api`.
-- Nach dem Anlegen des Branches auf GitHub muss der Branch lokal ausgecheckt werden, damit Änderungen nicht versehentlich auf `main` erfolgen.
+
+### 11.1 Grundprinzipien
+- **JEDES Issue erfordert einen neuen Branch** - keine Ausnahmen
+- **Remote-First**: Branches werden IMMER auf GitHub (remote) erstellt, niemals lokal
+- **Aktueller Stand**: Verwende immer den neuesten Stand des Haupt-Repository
+- **Konfliktvermeidung**: Minimiere Merge-Konflikte durch saubere Branch-Trennung
+
+### 11.2 Branch-Naming-Convention
+- Format: `feat/ISSUE-NUMBER-short-description`
+- Beispiele:
+  - `feat/26-user-authentication`
+  - `feat/27-booking-calendar-widget`
+  - `fix/28-date-validation-bug`
+  - `docs/29-api-documentation`
+
+### 11.3 Obligatorischer Workflow
+**DIESER WORKFLOW MUSS VOR JEDER ISSUE-BEARBEITUNG DURCHGEFÜHRT WERDEN:**
+
+#### Schritt 1: Branch-Status überprüfen
+```bash
+git branch -a
+git status
+```
+- ✅ Prüfe, ob du auf `main` Branch bist
+- ✅ Falls nicht auf `main`: Wechsle zu `main` mit `git checkout main`
+
+#### Schritt 2: Repository aktualisieren
+```bash
+git pull origin main
+```
+- ✅ Stelle sicher, dass lokaler `main` auf neuestem Stand ist
+
+#### Schritt 3: Issue-Status prüfen
+- ✅ Überprüfe, ob das Issue bereits auf einem anderen Branch bearbeitet wird
+- ✅ Verwende `gh pr list` um aktive Pull Requests zu prüfen
+
+#### Schritt 4: Neuen Branch erstellen (Remote)
+```bash
+gh api repos/:owner/:repo/git/refs -f ref=refs/heads/BRANCH-NAME -f sha=$(git rev-parse main)
+```
+- ✅ Erstelle Branch remote mit aktuellem `main` Stand
+
+#### Schritt 5: Branch lokal auschecken
+```bash
+git fetch origin
+git checkout BRANCH-NAME
+```
+- ✅ Checke den neuen Branch lokal aus
+- ✅ Bestätige mit `git status`, dass du auf dem richtigen Branch bist
+
+#### Schritt 6: Implementation beginnen
+- ✅ Erst NACH successful Branch-Setup mit der Implementierung beginnen
+
+### 11.4 Fehlervermeidung
+- **NIEMALS** auf `main` Branch direkte Änderungen machen
+- **IMMER** Branch-Status vor Arbeitsbeginn überprüfen
+- **IMMER** Remote-Branch vor lokalem Checkout erstellen
+- **NIEMALS** mehrere Issues auf einem Branch bearbeiten
+
+## 12. Issue-Workflow (OBLIGATORISCH)
+
+### 12.1 Workflow-Checkliste für neue Issues
+**DIESE CHECKLISTE MUSS BEI JEDEM NEUEN ISSUE ABGEARBEITET WERDEN:**
+
+#### ✅ Phase 1: Vorbereitung
+- [ ] Issue-Nummer und Beschreibung notieren
+- [ ] Aktuellen Branch überprüfen mit `git branch`
+- [ ] Falls nicht auf `main`: `git checkout main`
+- [ ] Repository aktualisieren mit `git pull origin main`
+- [ ] Prüfen ob Issue bereits bearbeitet wird: `gh pr list`
+
+#### ✅ Phase 2: Branch-Erstellung
+- [ ] Branch-Namen festlegen (Format: `feat/ISSUE-NUMBER-description`)
+- [ ] Remote-Branch erstellen mit `gh api`
+- [ ] Branch lokal auschecken mit `git checkout BRANCH-NAME`
+- [ ] Branch-Status bestätigen mit `git status`
+
+#### ✅ Phase 3: Implementation
+- [ ] Umsetzungsplan erstellen und dokumentieren
+- [ ] Schritt-für-Schritt Implementierung
+- [ ] Regelmäßige Commits mit aussagekräftigen Nachrichten
+- [ ] Tests erstellen und ausführen
+
+#### ✅ Phase 4: Abschluss
+- [ ] Finale Tests durchführen
+- [ ] Branch pushen mit `git push origin BRANCH-NAME`
+- [ ] Pull Request erstellen mit `gh pr create`
+- [ ] PR-Details ausfüllen (Summary, Test Plan, etc.)
+
+### 12.2 Notfall-Checkliste bei Branch-Problemen
+**Falls du feststellst, dass du auf dem falschen Branch arbeitest:**
+
+1. **SOFORT STOPPEN** - keine weiteren Änderungen
+2. Aktuellen Zustand sichern: `git stash`
+3. Zum korrekten Branch wechseln oder neuen erstellen
+4. Änderungen wiederherstellen: `git stash pop`
+5. Weiterarbeiten auf dem korrekten Branch
+
+### 12.3 Qualitätssicherung
+- **Vor jedem Commit**: Überprüfe mit `git status` den Branch
+- **Vor jedem Push**: Bestätige dass du auf dem richtigen Branch bist
+- **Vor PR-Erstellung**: Verifiziere dass alle Änderungen zum Issue gehören
 
 ## Entwicklungs-Erinnerungen
 - Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
+- **WICHTIG - Pipeline-Validierung**: Nach jedem Commit und Push MUSS gewartet werden, bis alle GitHub Actions/Pipelines erfolgreich durchgelaufen sind, bevor eine Aufgabe als "abgeschlossen" markiert wird. Dies gilt besonders für PR-Fixes und kritische Änderungen.
+
+## 13. Kommunikation
+- **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
+- Verwende deutsche Begriffe für Erklärungen und Dokumentation
+- Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
+- Commit-Nachrichten können auf Englisch oder Deutsch sein
 
 ---
 

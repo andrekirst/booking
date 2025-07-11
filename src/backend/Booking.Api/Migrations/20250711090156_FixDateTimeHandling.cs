@@ -1,0 +1,315 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Booking.Api.Migrations
+{
+    /// <inheritdoc />
+    public partial class FixDateTimeHandling : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "LastLoginAt",
+                table: "Users",
+                type: "timestamp without time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "Users",
+                type: "timestamp without time zone",
+                nullable: false,
+                defaultValueSql: "CURRENT_TIMESTAMP",
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "Users",
+                type: "timestamp without time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "SleepingAccommodations",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "SleepingAccommodations",
+                type: "timestamp without time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "SleepingAccommodationReadModels",
+                type: "timestamp without time zone",
+                nullable: false,
+                defaultValueSql: "CURRENT_TIMESTAMP",
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "SleepingAccommodationReadModels",
+                type: "timestamp without time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "Timestamp",
+                table: "EventStoreSnapshots",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "Timestamp",
+                table: "EventStoreEvents",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "StartDate",
+                table: "Bookings",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "EndDate",
+                table: "Bookings",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "Bookings",
+                type: "timestamp without time zone",
+                nullable: false,
+                defaultValueSql: "CURRENT_TIMESTAMP",
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "Bookings",
+                type: "timestamp without time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "StartDate",
+                table: "BookingReadModels",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "EndDate",
+                table: "BookingReadModels",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "BookingReadModels",
+                type: "timestamp without time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "BookingReadModels",
+                type: "timestamp without time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "LastLoginAt",
+                table: "Users",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "Users",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValueSql: "CURRENT_TIMESTAMP",
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "Users",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "SleepingAccommodations",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "SleepingAccommodations",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "SleepingAccommodationReadModels",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValueSql: "CURRENT_TIMESTAMP",
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "SleepingAccommodationReadModels",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "Timestamp",
+                table: "EventStoreSnapshots",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "Timestamp",
+                table: "EventStoreEvents",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "StartDate",
+                table: "Bookings",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "EndDate",
+                table: "Bookings",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "Bookings",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValueSql: "CURRENT_TIMESTAMP",
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldDefaultValueSql: "CURRENT_TIMESTAMP");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "Bookings",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "StartDate",
+                table: "BookingReadModels",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "EndDate",
+                table: "BookingReadModels",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "CreatedAt",
+                table: "BookingReadModels",
+                type: "timestamp with time zone",
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "ChangedAt",
+                table: "BookingReadModels",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp without time zone",
+                oldNullable: true);
+        }
+    }
+}

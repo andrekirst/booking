@@ -16,6 +16,7 @@ public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbCo
     
     // Read Models
     public DbSet<SleepingAccommodationReadModel> SleepingAccommodationReadModels => Set<SleepingAccommodationReadModel>();
+    public DbSet<BookingReadModel> BookingReadModels => Set<BookingReadModel>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
