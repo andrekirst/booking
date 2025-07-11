@@ -35,6 +35,16 @@ export default function DateRangePicker({
   const [selectingStart, setSelectingStart] = useState(true);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [hoverNights, setHoverNights] = useState<number>(0);
+
+  // Sync with external props
+  useEffect(() => {
+    setLocalStartDate(startDate);
+    setLocalEndDate(endDate);
+    // Reset selection state when both dates are cleared from outside
+    if (!startDate && !endDate) {
+      setSelectingStart(true);
+    }
+  }, [startDate, endDate]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const today = new Date();
@@ -68,6 +78,15 @@ export default function DateRangePicker({
 
   const handleDateSelect = (date: Date) => {
     const dateStr = formatDateForInput(date);
+    
+    // If both dates are already selected, start over with new start date
+    if (localStartDate && localEndDate && !selectingStart) {
+      setLocalStartDate(dateStr);
+      setLocalEndDate('');
+      setSelectingStart(false);
+      onDateChange(dateStr, '');
+      return;
+    }
     
     if (selectingStart || !localStartDate) {
       setLocalStartDate(dateStr);
@@ -142,6 +161,13 @@ export default function DateRangePicker({
     setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
   };
 
+  const clearSelection = () => {
+    setLocalStartDate('');
+    setLocalEndDate('');
+    setSelectingStart(true);
+    onDateChange('', '');
+  };
+
   const generateCalendarDays = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -195,7 +221,7 @@ export default function DateRangePicker({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Main Input */}
-      <div 
+      <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center justify-between w-full px-4 py-3 border rounded-xl cursor-pointer transition-all duration-200 ${
           isOpen 
@@ -222,18 +248,33 @@ export default function DateRangePicker({
           </div>
         </div>
         
-        {localStartDate && localEndDate && (
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
+          {localStartDate && localEndDate && (
             <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
               {getNights()} {getNights() === 1 ? 'Nacht' : 'Nächte'}
             </span>
-          </div>
-        )}
+          )}
+          
+          {(localStartDate || localEndDate) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                clearSelection();
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              title="Auswahl löschen"
+            >
+              <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
         
         <svg className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
-      </div>
+      </button>
 
       {/* Calendar Dropdown */}
       {isOpen && (
@@ -256,6 +297,15 @@ export default function DateRangePicker({
               >
                 Heute
               </button>
+              
+              {(localStartDate || localEndDate) && (
+                <button
+                  onClick={clearSelection}
+                  className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Löschen
+                </button>
+              )}
             </div>
             
             <h3 className="font-semibold text-gray-900">
@@ -332,7 +382,7 @@ export default function DateRangePicker({
               {selectingStart || !localStartDate 
                 ? 'Wählen Sie das Anreisedatum' 
                 : localEndDate 
-                  ? `${getNights()} ${getNights() === 1 ? 'Nacht' : 'Nächte'} ausgewählt`
+                  ? `${getNights()} ${getNights() === 1 ? 'Nacht' : 'Nächte'} ausgewählt - Klicken Sie für neue Auswahl`
                   : hoverNights > 0
                     ? `${hoverNights} ${hoverNights === 1 ? 'Nacht' : 'Nächte'} - Klicken Sie um zu bestätigen`
                     : 'Wählen Sie das Abreisedatum'

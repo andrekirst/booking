@@ -51,8 +51,8 @@ describe('DateRangePicker', () => {
         />
       );
 
-      expect(screen.getByText('20. Jan 2025')).toBeInTheDocument();
-      expect(screen.getByText('25. Jan 2025')).toBeInTheDocument();
+      expect(screen.getByText('20. Jan. 2025')).toBeInTheDocument();
+      expect(screen.getByText('25. Jan. 2025')).toBeInTheDocument();
       expect(screen.getByText('→')).toBeInTheDocument();
     });
 
@@ -115,6 +115,28 @@ describe('DateRangePicker', () => {
 
       expect(screen.getByText('Error message')).toBeInTheDocument();
       expect(screen.queryByText('Warning message')).not.toBeInTheDocument();
+    });
+
+    it('shows clear button when dates are selected', () => {
+      render(
+        <DateRangePicker
+          startDate="2025-01-20"
+          endDate="2025-01-25"
+          onDateChange={mockOnDateChange}
+        />
+      );
+
+      const clearButton = screen.getByTitle('Auswahl löschen');
+      expect(clearButton).toBeInTheDocument();
+    });
+
+    it('does not show clear button when no dates are selected', () => {
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      const clearButton = screen.queryByTitle('Auswahl löschen');
+      expect(clearButton).not.toBeInTheDocument();
     });
   });
 
@@ -352,6 +374,61 @@ describe('DateRangePicker', () => {
       const date20Button = screen.getByRole('button', { name: '20' });
       expect(date20Button).not.toBeDisabled();
       expect(date20Button).not.toHaveClass('bg-red-100');
+    });
+  });
+
+  describe('Clear Functionality', () => {
+    it('clears selection when clear button is clicked', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker
+          startDate="2025-01-20"
+          endDate="2025-01-25"
+          onDateChange={mockOnDateChange}
+        />
+      );
+
+      const clearButton = screen.getByTitle('Auswahl löschen');
+      await user.click(clearButton);
+
+      expect(mockOnDateChange).toHaveBeenCalledWith('', '');
+    });
+
+    it('clears selection when clear button in calendar is clicked', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker
+          startDate="2025-01-20"
+          endDate="2025-01-25"
+          onDateChange={mockOnDateChange}
+        />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const clearButton = screen.getByText('Löschen');
+      await user.click(clearButton);
+
+      expect(mockOnDateChange).toHaveBeenCalledWith('', '');
+    });
+
+    it('starts new selection when date is clicked after complete selection', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker
+          startDate="2025-01-20"
+          endDate="2025-01-25"
+          onDateChange={mockOnDateChange}
+        />
+      );
+
+      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button', { name: '27' }));
+
+      expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-27', '');
     });
   });
 
