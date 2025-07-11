@@ -284,7 +284,7 @@ export default function DateRangePicker({
 
       {/* Calendar Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 p-6 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+        <div className="absolute top-full left-0 right-0 mt-2 p-6 bg-white border border-gray-200 rounded-xl shadow-lg z-[60]">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">

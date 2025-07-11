@@ -244,7 +244,7 @@ export default function BookingForm({
       )}
 
       {/* Date Selection */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm overflow-visible">
         <DateRangePicker
           startDate={startDate}
           endDate={endDate}
