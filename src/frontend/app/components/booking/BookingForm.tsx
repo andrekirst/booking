@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CreateBookingRequest, CreateBookingItem, SleepingAccommodation, BookingAvailability } from '../../../lib/types/api';
 import { apiClient } from '../../../lib/api/client';
 import DateRangePicker from './DateRangePicker';
@@ -30,6 +30,8 @@ export default function BookingForm({
     accommodations?: string;
     general?: string;
   }>({});
+  const [showAccommodations, setShowAccommodations] = useState(false);
+  const accommodationRef = useRef<HTMLDivElement>(null);
 
   // Load accommodations on component mount
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function BookingForm({
     const checkAvailability = async () => {
       if (!startDate || !endDate) {
         setAvailability(null);
+        setShowAccommodations(false);
         return;
       }
 
@@ -60,6 +63,15 @@ export default function BookingForm({
       try {
         const availabilityData = await apiClient.checkAvailability(startDate, endDate);
         setAvailability(availabilityData);
+        
+        // Trigger smooth expansion after a small delay
+        setTimeout(() => {
+          setShowAccommodations(true);
+          // Scroll to accommodations after expansion
+          setTimeout(() => {
+            accommodationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 300);
+        }, 100);
       } catch (error) {
         console.error('Fehler beim Prüfen der Verfügbarkeit:', error);
         
@@ -86,6 +98,14 @@ export default function BookingForm({
           ...prev, 
           dates: 'Verfügbarkeitsprüfung nicht möglich - alle Schlafplätze werden als verfügbar angezeigt' 
         }));
+        
+        // Still show accommodations even on error
+        setTimeout(() => {
+          setShowAccommodations(true);
+          setTimeout(() => {
+            accommodationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 300);
+        }, 100);
       } finally {
         setIsCheckingAvailability(false);
       }
@@ -223,42 +243,59 @@ export default function BookingForm({
 
 
       {/* Accommodation Selection */}
-      {startDate && endDate ? (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-          {isCheckingAvailability ? (
-            <div className="text-center py-8">
-              <svg className="animate-spin w-8 h-8 text-blue-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <p className="text-gray-600">Verfügbarkeit wird geprüft...</p>
-              <p className="text-sm text-gray-500 mt-2">Schlafmöglichkeiten werden geladen...</p>
-            </div>
-          ) : (
-            <AccommodationSelector
-              accommodations={accommodations}
-              availability={availability?.accommodations}
-              selectedItems={selectedItems}
-              onSelectionChange={handleAccommodationChange}
-              error={errors.accommodations}
-            />
-          )}
-        </div>
-      ) : (
+      <div 
+        ref={accommodationRef}
+        className={`overflow-hidden transition-all duration-500 ease-out ${
+          startDate && endDate ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {startDate && endDate && (
+          <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-500 ${
+            showAccommodations ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          }`}>
+            {isCheckingAvailability ? (
+              <div className="text-center py-8">
+                <svg className="animate-spin w-8 h-8 text-blue-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-gray-600">Verfügbarkeit wird geprüft...</p>
+                <p className="text-sm text-gray-500 mt-2">Schlafmöglichkeiten werden geladen...</p>
+              </div>
+            ) : (
+              <AccommodationSelector
+                accommodations={accommodations}
+                availability={availability?.accommodations}
+                selectedItems={selectedItems}
+                onSelectionChange={handleAccommodationChange}
+                error={errors.accommodations}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Placeholder when no dates selected */}
+      {!startDate || !endDate ? (
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="text-center py-8">
             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="text-gray-600 font-medium">Wählen Sie zuerst Ihre Reisedaten</p>
             <p className="text-sm text-gray-500 mt-2">Sobald Sie An- und Abreisedatum gewählt haben, können Sie die verfügbaren Schlafmöglichkeiten auswählen.</p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Notes */}
-      {selectedItems.length > 0 && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <div 
+        className={`overflow-hidden transition-all duration-500 ease-out ${
+          selectedItems.length > 0 ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {selectedItems.length > 0 && (
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-500">
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-3">
             Notizen (optional)
           </label>
@@ -276,11 +313,17 @@ export default function BookingForm({
             <p className="text-xs text-gray-500">{notes.length}/500</p>
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {/* Summary */}
-      {selectedItems.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200">
+      <div 
+        className={`overflow-hidden transition-all duration-500 ease-out ${
+          selectedItems.length > 0 ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {selectedItems.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 transform transition-all duration-500">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Buchungsübersicht</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center">
@@ -309,7 +352,8 @@ export default function BookingForm({
             </div>
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {/* Form Actions */}
       <div className="flex flex-col sm:flex-row gap-3 pt-6">
