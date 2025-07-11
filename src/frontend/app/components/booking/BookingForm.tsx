@@ -136,11 +136,11 @@ export default function BookingForm({
       if (onSuccess) {
         onSuccess(createdBooking.id);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Fehler beim Erstellen der Buchung:', error);
       setErrors(prev => ({ 
         ...prev, 
-        general: error.message || 'Fehler beim Erstellen der Buchung' 
+        general: error instanceof Error ? error.message : 'Fehler beim Erstellen der Buchung' 
       }));
     } finally {
       setIsLoading(false);

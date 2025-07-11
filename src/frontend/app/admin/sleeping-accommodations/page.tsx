@@ -25,12 +25,12 @@ export default function SleepingAccommodationsPage() {
     try {
       const data = await api.getSleepingAccommodations(includeInactive);
       setAccommodations(data);
-    } catch (error: any) {
-      if (error.statusCode === 403) {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 403) {
         router.push('/bookings');
         return;
       }
-      setError(error.message || 'Fehler beim Laden der Schlafplätze');
+      setError(error instanceof Error ? error.message : 'Fehler beim Laden der Schlafplätze');
     } finally {
       setIsLoading(false);
     }
@@ -48,8 +48,8 @@ export default function SleepingAccommodationsPage() {
     try {
       await api.deleteSleepingAccommodation(id);
       fetchAccommodations();
-    } catch (error: any) {
-      alert(error.message || 'Fehler beim Deaktivieren der Schlafmöglichkeit');
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Fehler beim Deaktivieren der Schlafmöglichkeit');
     }
   };
 

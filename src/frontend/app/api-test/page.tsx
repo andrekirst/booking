@@ -4,22 +4,22 @@ import { useState } from "react";
 import { apiClient } from "@/lib/api/client";
 
 export default function ApiTestPage() {
-  const [results, setResults] = useState<{ [key: string]: any }>({});
+  const [results, setResults] = useState<{ [key: string]: unknown }>({});
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
 
-  const testEndpoint = async (name: string, testFn: () => Promise<any>) => {
+  const testEndpoint = async (name: string, testFn: () => Promise<unknown>) => {
     setLoading((prev) => ({ ...prev, [name]: true }));
     try {
       const result = await testFn();
       setResults((prev) => ({ ...prev, [name]: { success: true, data: result } }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setResults((prev) => ({
         ...prev,
         [name]: {
           success: false,
-          error: error.message,
-          statusCode: error.statusCode,
-          details: error.details,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          statusCode: error && typeof error === 'object' && 'statusCode' in error ? error.statusCode : undefined,
+          details: error && typeof error === 'object' && 'details' in error ? error.details : undefined,
         },
       }));
     } finally {
