@@ -1,10 +1,17 @@
+using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using Booking.Api.Configuration;
 using Booking.Api.Data;
+using Booking.Api.Domain.Aggregates;
 using Booking.Api.Domain.Entities;
 using Booking.Api.Domain.Enums;
 using Booking.Api.Domain.ReadModels;
+using Booking.Api.Features.Bookings.DTOs;
+using Booking.Api.Services.Projections;
+using FluentAssertions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -167,6 +174,32 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             
             return accommodation.Id;
         });
+    }
+    
+    protected async Task ProjectBookingAsync(Guid bookingId)
+    {
+        await WithScopeAsync(async serviceProvider =>
+        {
+            var projectionService = serviceProvider.GetRequiredService<IProjectionService<BookingAggregate, BookingReadModel>>();
+            await projectionService.ProjectAsync(bookingId);
+        });
+    }
+    
+    protected async Task<BookingDto> CreateBookingAndProjectAsync(CreateBookingDto request)
+    {
+        var response = await Client.PostAsJsonAsync("/api/bookings", request);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<BookingDto>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        
+        result.Should().NotBeNull();
+        result!.Id.Should().NotBeEmpty();
+        
+        // Trigger projection to update read model
+        await ProjectBookingAsync(result.Id);
+        
+        return result;
     }
     
     private static void SeedTestUsers(BookingDbContext context)

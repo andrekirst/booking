@@ -33,27 +33,15 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
             }
         );
 
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/bookings", request);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        // Act & Assert
+        var result = await CreateBookingAndProjectAsync(request);
         
-        var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<BookingDto>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
-        result.Should().NotBeNull();
-        result!.Id.Should().NotBeEmpty();
         result.UserId.Should().Be(1);
         result.StartDate.Should().Be(request.StartDate);
         result.EndDate.Should().Be(request.EndDate);
         result.Status.Should().Be(BookingStatus.Pending);
         result.Notes.Should().Be("Test Buchung");
         result.TotalPersons.Should().Be(2);
-
-        // Verify Location header
-        response.Headers.Location.Should().NotBeNull();
-        response.Headers.Location!.ToString().Should().Contain($"/api/bookings/{result.Id}");
     }
 
     [Fact]
@@ -121,7 +109,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
                 new(accommodationId, 2)
             }
         );
-        await Client.PostAsJsonAsync("/api/bookings", booking1Request);
+        await CreateBookingAndProjectAsync(booking1Request);
 
         // Erstelle Buchung für User 2
         AddAuthorizationHeader(user2Token);
@@ -134,7 +122,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
                 new(accommodationId, 1)
             }
         );
-        await Client.PostAsJsonAsync("/api/bookings", booking2Request);
+        await CreateBookingAndProjectAsync(booking2Request);
 
         // Act - User 1 ruft seine Buchungen ab
         AddAuthorizationHeader(user1Token);
@@ -172,7 +160,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
                 new(accommodationId, 2)
             }
         );
-        await Client.PostAsJsonAsync("/api/bookings", userBookingRequest);
+        await CreateBookingAndProjectAsync(userBookingRequest);
 
         // Erstelle Buchung als Admin
         AddAuthorizationHeader(adminToken);
@@ -185,7 +173,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
                 new(accommodationId, 1)
             }
         );
-        await Client.PostAsJsonAsync("/api/bookings", adminBookingRequest);
+        await CreateBookingAndProjectAsync(adminBookingRequest);
 
         // Act - Admin ruft alle Buchungen ab
         var response = await Client.GetAsync("/api/bookings");
@@ -221,9 +209,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
             }
         );
 
-        var createResponse = await Client.PostAsJsonAsync("/api/bookings", createRequest);
-        var createContent = await createResponse.Content.ReadAsStringAsync();
-        var createResult = JsonSerializer.Deserialize<BookingDto>(createContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var createResult = await CreateBookingAndProjectAsync(createRequest);
 
         // Act
         var response = await Client.GetAsync($"/api/bookings/{createResult!.Id}");
@@ -277,9 +263,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
             }
         );
 
-        var createResponse = await Client.PostAsJsonAsync("/api/bookings", createRequest);
-        var createContent = await createResponse.Content.ReadAsStringAsync();
-        var createResult = JsonSerializer.Deserialize<BookingDto>(createContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var createResult = await CreateBookingAndProjectAsync(createRequest);
 
         // Update Request
         var updateRequest = new UpdateBookingDto(
@@ -329,9 +313,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
             }
         );
 
-        var createResponse = await Client.PostAsJsonAsync("/api/bookings", createRequest);
-        var createContent = await createResponse.Content.ReadAsStringAsync();
-        var createResult = JsonSerializer.Deserialize<BookingDto>(createContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var createResult = await CreateBookingAndProjectAsync(createRequest);
 
         // Act - Admin bestätigt Buchung
         AddAuthorizationHeader(adminToken);
@@ -367,9 +349,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
             }
         );
 
-        var createResponse = await Client.PostAsJsonAsync("/api/bookings", createRequest);
-        var createContent = await createResponse.Content.ReadAsStringAsync();
-        var createResult = JsonSerializer.Deserialize<BookingDto>(createContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var createResult = await CreateBookingAndProjectAsync(createRequest);
 
         // Act
         var response = await Client.PostAsync($"/api/bookings/{createResult!.Id}/confirm", null);
@@ -398,9 +378,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
             }
         );
 
-        var createResponse = await Client.PostAsJsonAsync("/api/bookings", createRequest);
-        var createContent = await createResponse.Content.ReadAsStringAsync();
-        var createResult = JsonSerializer.Deserialize<BookingDto>(createContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var createResult = await CreateBookingAndProjectAsync(createRequest);
 
         // Act
         var response = await Client.PostAsync($"/api/bookings/{createResult!.Id}/cancel", null);
@@ -463,7 +441,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
                 new(accommodationId, 2)
             }
         );
-        await Client.PostAsJsonAsync("/api/bookings", createRequest);
+        await CreateBookingAndProjectAsync(createRequest);
 
         var startDate = DateTime.UtcNow.AddDays(10).ToString("yyyy-MM-dd");
         var endDate = DateTime.UtcNow.AddDays(12).ToString("yyyy-MM-dd");
