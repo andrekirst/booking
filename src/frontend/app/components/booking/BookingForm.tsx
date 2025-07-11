@@ -67,11 +67,11 @@ export default function BookingForm({
         // Trigger smooth expansion after a small delay
         setTimeout(() => {
           setShowAccommodations(true);
-          // Scroll to accommodations after expansion
+          // Scroll to accommodations after expansion with longer delay
           setTimeout(() => {
             accommodationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }, 300);
-        }, 100);
+          }, 800);
+        }, 200);
       } catch (error) {
         console.error('Fehler beim Prüfen der Verfügbarkeit:', error);
         
@@ -104,8 +104,8 @@ export default function BookingForm({
           setShowAccommodations(true);
           setTimeout(() => {
             accommodationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }, 300);
-        }, 100);
+          }, 800);
+        }, 200);
       } finally {
         setIsCheckingAvailability(false);
       }
@@ -245,13 +245,13 @@ export default function BookingForm({
       {/* Accommodation Selection */}
       <div 
         ref={accommodationRef}
-        className={`overflow-hidden transition-all duration-500 ease-out ${
+        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
           startDate && endDate ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {startDate && endDate && (
-          <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-500 ${
-            showAccommodations ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          <div className={`bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-[800ms] ease-in-out ${
+            showAccommodations ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
             {isCheckingAvailability ? (
               <div className="text-center py-8">
@@ -290,12 +290,12 @@ export default function BookingForm({
 
       {/* Notes */}
       <div 
-        className={`overflow-hidden transition-all duration-500 ease-out ${
+        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
           selectedItems.length > 0 ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {selectedItems.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-500">
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transform transition-all duration-[800ms] ease-in-out">
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-3">
             Notizen (optional)
           </label>
@@ -318,12 +318,12 @@ export default function BookingForm({
 
       {/* Summary */}
       <div 
-        className={`overflow-hidden transition-all duration-500 ease-out ${
+        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
           selectedItems.length > 0 ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {selectedItems.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 transform transition-all duration-500">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200 transform transition-all duration-[800ms] ease-in-out">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Buchungsübersicht</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center">
