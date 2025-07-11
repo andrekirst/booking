@@ -114,7 +114,7 @@ public class DateRangeValidationAttributeTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Equal("Eine Buchung muss mindestens eine Nacht umfassen", result.ErrorMessage);
+        Assert.Equal("Das Abreisedatum muss nach dem Anreisedatum liegen", result.ErrorMessage);
     }
 
     [Fact]

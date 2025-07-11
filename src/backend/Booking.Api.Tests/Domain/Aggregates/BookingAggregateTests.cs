@@ -83,7 +83,7 @@ public class BookingAggregateTests
         // Act & Assert
         var act = () => BookingAggregate.Create(id, userId, startDate, endDate, bookingItems);
         act.Should().Throw<ArgumentException>()
-            .WithMessage("Start date cannot be in the past");
+            .WithMessage("Das Anreisedatum kann nicht vor heute liegen");
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class BookingAggregateTests
         // Act & Assert
         var act = () => BookingAggregate.Create(id, userId, startDate, endDate, bookingItems);
         act.Should().Throw<ArgumentException>()
-            .WithMessage("Start date must be before end date");
+            .WithMessage("Das Abreisedatum muss nach dem Anreisedatum liegen");
     }
 
     [Fact]
