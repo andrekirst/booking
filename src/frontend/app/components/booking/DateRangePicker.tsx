@@ -30,7 +30,7 @@ export default function DateRangePicker({
   const [localEndDate, setLocalEndDate] = useState(endDate);
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectingStart, setSelectingStart] = useState(true);
+  const [selectingStart, setSelectingStart] = useState(!startDate || !!endDate);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [hoverNights, setHoverNights] = useState<number>(0);
 
@@ -38,9 +38,13 @@ export default function DateRangePicker({
   useEffect(() => {
     setLocalStartDate(startDate);
     setLocalEndDate(endDate);
-    // Reset selection state when both dates are cleared from outside
+    // Update selection state based on external props
     if (!startDate && !endDate) {
       setSelectingStart(true);
+    } else if (startDate && !endDate) {
+      setSelectingStart(false);
+    } else if (startDate && endDate) {
+      setSelectingStart(false);
     }
   }, [startDate, endDate]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -71,7 +75,10 @@ export default function DateRangePicker({
   };
 
   const formatDateForInput = (date: Date) => {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleDateSelect = (date: Date) => {
@@ -261,18 +268,26 @@ export default function DateRangePicker({
           )}
           
           {(localStartDate || localEndDate) && (
-            <button
+            <span
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 clearSelection();
               }}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                  clearSelection();
+                }
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
               title="Auswahl löschen"
             >
               <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+            </span>
           )}
         </div>
         

@@ -99,8 +99,13 @@ describe('AccommodationSelector', () => {
         />
       );
 
-      expect(screen.getByText(/zimmer/i)).toBeInTheDocument();
-      expect(screen.getByText(/zelt/i)).toBeInTheDocument();
+      // Use getAllByText since "Zimmer" appears multiple times
+      const zimmerElements = screen.getAllByText(/zimmer/i);
+      expect(zimmerElements.length).toBeGreaterThan(0);
+      
+      // Use getAllByText since "Zelt" may appear multiple times too
+      const zeltElements = screen.getAllByText(/zelt/i);
+      expect(zeltElements.length).toBeGreaterThan(0);
     });
 
     it('shows max capacity for each accommodation', () => {

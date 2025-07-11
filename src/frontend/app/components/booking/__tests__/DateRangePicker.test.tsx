@@ -4,32 +4,14 @@ import DateRangePicker from '../DateRangePicker';
 import { SleepingAccommodationAvailability } from '@/lib/types/api';
 
 // Mock current date for consistent testing
-const mockToday = new Date('2025-01-15');
+beforeAll(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date('2025-01-15'));
+});
 
-// Mock Date constructor and Date.now()
-const RealDate = Date;
-// @ts-expect-error - Mocking global Date constructor for testing
-global.Date = class extends RealDate {
-  constructor(...args: unknown[]) {
-    super();
-    if (args.length === 0) {
-      return new RealDate(mockToday);
-    }
-    return new RealDate(...(args as ConstructorParameters<typeof RealDate>));
-  }
-  
-  static now() {
-    return mockToday.getTime();
-  }
-  
-  static parse(s: string) {
-    return RealDate.parse(s);
-  }
-  
-  static UTC(...args: unknown[]) {
-    return RealDate.UTC(...(args as Parameters<typeof RealDate.UTC>));
-  }
-};
+afterAll(() => {
+  jest.useRealTimers();
+});
 
 const mockOnDateChange = jest.fn();
 
@@ -166,7 +148,7 @@ describe('DateRangePicker', () => {
 
   describe('Calendar Interaction', () => {
     it('opens calendar when clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -176,11 +158,12 @@ describe('DateRangePicker', () => {
       await user.click(input);
 
       expect(screen.getByText('Januar 2025')).toBeInTheDocument();
-      expect(screen.getByText('Heute')).toBeInTheDocument();
+      // Check for the "Heute" button specifically
+      expect(screen.getByRole('button', { name: 'Heute' })).toBeInTheDocument();
     });
 
     it('shows Monday as first day of week', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -194,7 +177,7 @@ describe('DateRangePicker', () => {
     });
 
     it('highlights today with blue ring', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -207,7 +190,7 @@ describe('DateRangePicker', () => {
     });
 
     it('navigates to today when "Heute" button is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -231,7 +214,7 @@ describe('DateRangePicker', () => {
     });
 
     it('closes calendar when clicking outside', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <div>
@@ -253,7 +236,7 @@ describe('DateRangePicker', () => {
     });
 
     it('shows status legend in calendar', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -264,13 +247,15 @@ describe('DateRangePicker', () => {
       expect(screen.getByText('Vergangen')).toBeInTheDocument();
       expect(screen.getByText('Ausgebucht')).toBeInTheDocument();
       expect(screen.getByText('Ausgewählt')).toBeInTheDocument();
-      expect(screen.getByText('Heute')).toBeInTheDocument();
+      // Use getAllByText since "Heute" appears in button and legend
+      const heuteElements = screen.getAllByText('Heute');
+      expect(heuteElements.length).toBeGreaterThan(0);
     });
   });
 
   describe('Date Selection', () => {
     it('selects start date and calls onDateChange', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -283,7 +268,7 @@ describe('DateRangePicker', () => {
     });
 
     it('selects end date after start date', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -299,7 +284,7 @@ describe('DateRangePicker', () => {
     });
 
     it('clears end date when selecting earlier start date', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -316,7 +301,7 @@ describe('DateRangePicker', () => {
     });
 
     it('allows selecting today', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -329,7 +314,7 @@ describe('DateRangePicker', () => {
     });
 
     it('disables dates in the past', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -343,7 +328,7 @@ describe('DateRangePicker', () => {
     });
 
     it('shows visual indicators for past dates', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -360,7 +345,7 @@ describe('DateRangePicker', () => {
 
   describe('Hover Functionality', () => {
     it('shows nights preview on hover when start date is selected', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -378,7 +363,7 @@ describe('DateRangePicker', () => {
     });
 
     it('does not show hover preview when no start date selected', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -393,7 +378,7 @@ describe('DateRangePicker', () => {
     });
 
     it('highlights range between start date and hover date', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -415,7 +400,7 @@ describe('DateRangePicker', () => {
 
   describe('Availability Integration', () => {
     it('shows available dates normally', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -434,7 +419,7 @@ describe('DateRangePicker', () => {
 
   describe('Clear Functionality', () => {
     it('clears selection when clear button is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -451,7 +436,7 @@ describe('DateRangePicker', () => {
     });
 
     it('clears selection when clear button in calendar is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -470,7 +455,7 @@ describe('DateRangePicker', () => {
     });
 
     it('starts new selection when date is clicked after complete selection', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker
@@ -497,7 +482,7 @@ describe('DateRangePicker', () => {
     });
 
     it('shows dropdown arrow with rotation on open', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -512,7 +497,7 @@ describe('DateRangePicker', () => {
     });
 
     it('navigates to next month', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
@@ -530,7 +515,7 @@ describe('DateRangePicker', () => {
     });
 
     it('navigates to previous month', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
