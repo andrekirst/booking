@@ -31,6 +31,7 @@ export default function BookingForm({
     general?: string;
   }>({});
   const [showAccommodations, setShowAccommodations] = useState(false);
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
   const accommodationRef = useRef<HTMLDivElement>(null);
 
   // Load accommodations on component mount
@@ -52,8 +53,17 @@ export default function BookingForm({
   useEffect(() => {
     const checkAvailability = async () => {
       if (!startDate || !endDate) {
-        setAvailability(null);
+        // Animate out first, then clear data
         setShowAccommodations(false);
+        // Show placeholder after animation completes
+        if (!showPlaceholder) {
+          setTimeout(() => {
+            setShowPlaceholder(true);
+          }, 600);
+        }
+        setTimeout(() => {
+          setAvailability(null);
+        }, 800); // Wait for animation to complete
         return;
       }
 
@@ -64,6 +74,8 @@ export default function BookingForm({
         const availabilityData = await apiClient.checkAvailability(startDate, endDate);
         setAvailability(availabilityData);
         
+        // Hide placeholder first
+        setShowPlaceholder(false);
         // Trigger smooth expansion after a small delay
         setTimeout(() => {
           setShowAccommodations(true);
@@ -99,6 +111,8 @@ export default function BookingForm({
           dates: 'Verfügbarkeitsprüfung nicht möglich - alle Schlafplätze werden als verfügbar angezeigt' 
         }));
         
+        // Hide placeholder first
+        setShowPlaceholder(false);
         // Still show accommodations even on error
         setTimeout(() => {
           setShowAccommodations(true);
@@ -276,7 +290,11 @@ export default function BookingForm({
       </div>
 
       {/* Placeholder when no dates selected */}
-      {!startDate || !endDate ? (
+      <div 
+        className={`overflow-hidden transition-all duration-[800ms] ease-in-out ${
+          showPlaceholder && (!startDate || !endDate) ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="text-center py-8">
             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +304,7 @@ export default function BookingForm({
             <p className="text-sm text-gray-500 mt-2">Sobald Sie An- und Abreisedatum gewählt haben, können Sie die verfügbaren Schlafmöglichkeiten auswählen.</p>
           </div>
         </div>
-      ) : null}
+      </div>
 
       {/* Notes */}
       <div 
