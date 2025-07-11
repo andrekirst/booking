@@ -58,9 +58,9 @@ public class ValidationExtensionsTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.IsType<ObjectResult>(result);
         
-        var badRequestResult = (BadRequestObjectResult)result;
+        var badRequestResult = (ObjectResult)result;
         Assert.IsType<ValidationProblemDetails>(badRequestResult.Value);
         
         var problemDetails = (ValidationProblemDetails)badRequestResult.Value!;

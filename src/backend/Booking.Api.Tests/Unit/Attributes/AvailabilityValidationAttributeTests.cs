@@ -231,13 +231,27 @@ public class AvailabilityValidationAttributeTests
         // Arrange
         var startDate = DateTime.UtcNow.Date.AddDays(1);
         var endDate = DateTime.UtcNow.Date.AddDays(2);
-        var excludeBookingId = "test-booking-id";
-        var bookingItems = new List<TestBookingItemDto>();
+        var excludeBookingId = Guid.NewGuid().ToString();
+        var bookingItems = new List<TestBookingItemDto>
+        {
+            new TestBookingItemDto { SleepingAccommodationId = Guid.NewGuid(), PersonCount = 2 }
+        };
 
+        var accommodationId = bookingItems[0].SleepingAccommodationId;
         var availability = new BookingAvailabilityDto(
             startDate,
             endDate,
-            new List<SleepingAccommodationAvailabilityDto>()
+            new List<SleepingAccommodationAvailabilityDto>
+            {
+                new SleepingAccommodationAvailabilityDto(
+                    accommodationId,
+                    "Test Accommodation",
+                    4,
+                    true,
+                    4,
+                    new List<ConflictingBookingDto>()
+                )
+            }
         );
 
         _mediator.Send(Arg.Any<CheckAvailabilityQuery>())
