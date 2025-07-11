@@ -25,6 +25,9 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        // Configure Npgsql to handle DateTime.Kind=Unspecified for PostgreSQL compatibility
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.

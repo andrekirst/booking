@@ -62,15 +62,37 @@ export default function BookingForm({
         setAvailability(availabilityData);
       } catch (error) {
         console.error('Fehler beim Prüfen der Verfügbarkeit:', error);
-        setErrors(prev => ({ ...prev, dates: 'Fehler beim Prüfen der Verfügbarkeit' }));
-        setAvailability(null);
+        
+        // Create fallback availability data based on accommodations
+        const fallbackAvailability: BookingAvailability = {
+          startDate,
+          endDate,
+          accommodations: accommodations
+            .filter(acc => acc.isActive)
+            .map(acc => ({
+              id: acc.id,
+              name: acc.name,
+              maxCapacity: acc.maxCapacity,
+              isAvailable: true, // Assume available when API fails
+              availableCapacity: acc.maxCapacity,
+              conflictingBookings: []
+            }))
+        };
+        
+        setAvailability(fallbackAvailability);
+        
+        // Show warning instead of error
+        setErrors(prev => ({ 
+          ...prev, 
+          dates: 'Verfügbarkeitsprüfung nicht möglich - alle Schlafplätze werden als verfügbar angezeigt' 
+        }));
       } finally {
         setIsCheckingAvailability(false);
       }
     };
 
     checkAvailability();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, accommodations]);
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => {
     setStartDate(newStartDate);
@@ -193,7 +215,8 @@ export default function BookingForm({
           startDate={startDate}
           endDate={endDate}
           onDateChange={handleDateChange}
-          error={errors.dates}
+          warning={errors.dates?.includes('Verfügbarkeitsprüfung') ? errors.dates : undefined}
+          error={errors.dates && !errors.dates.includes('Verfügbarkeitsprüfung') ? errors.dates : undefined}
         />
       </div>
 
