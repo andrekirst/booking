@@ -25,12 +25,15 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
     try {
       const data = await api.getSleepingAccommodationById(id);
       setAccommodation(data);
-    } catch (err: any) {
-      if (err.statusCode === 404) {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'statusCode' in err && err.statusCode === 404) {
         router.push('/admin/sleeping-accommodations');
         return;
       }
-      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten');
+      const errorMessage = err && typeof err === 'object' && 'message' in err 
+        ? String(err.message) 
+        : 'Ein unerwarteter Fehler ist aufgetreten';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

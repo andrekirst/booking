@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DateRangePicker from '../DateRangePicker';
 import { SleepingAccommodationAvailability } from '@/lib/types/api';
@@ -8,9 +8,9 @@ const mockToday = new Date('2025-01-15');
 
 // Mock Date constructor and Date.now()
 const RealDate = Date;
-// @ts-ignore
+// @ts-expect-error - Mocking global Date constructor for testing
 global.Date = class extends RealDate {
-  constructor(...args: any[]) {
+  constructor(...args: unknown[]) {
     if (args.length === 0) {
       return new RealDate(mockToday);
     }
@@ -25,7 +25,7 @@ global.Date = class extends RealDate {
     return RealDate.parse(s);
   }
   
-  static UTC(...args: any[]) {
+  static UTC(...args: unknown[]) {
     return RealDate.UTC(...args);
   }
 };

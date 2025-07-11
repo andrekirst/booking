@@ -129,7 +129,7 @@ export default function BookingForm({
     };
 
     checkAvailability();
-  }, [startDate, endDate, accommodations]);
+  }, [startDate, endDate, accommodations, showPlaceholder]);
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => {
     setStartDate(newStartDate);

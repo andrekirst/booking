@@ -13,7 +13,6 @@ interface DateRangePickerProps {
   error?: string;
   warning?: string;
   availability?: SleepingAccommodationAvailability[];
-  onDateAvailabilityCheck?: (date: string) => Promise<boolean>;
 }
 
 export default function DateRangePicker({
@@ -25,8 +24,7 @@ export default function DateRangePicker({
   className = '',
   error,
   warning,
-  availability,
-  onDateAvailabilityCheck
+  availability
 }: DateRangePickerProps) {
   const [localStartDate, setLocalStartDate] = useState(startDate);
   const [localEndDate, setLocalEndDate] = useState(endDate);
@@ -143,7 +141,7 @@ export default function DateRangePicker({
     return dateAtMidnight < todayAtMidnight;
   };
 
-  const isDateFullyBooked = (date: Date) => {
+  const isDateFullyBooked = () => {
     if (!availability) return false;
     
     // A date is fully booked if all accommodations have no available capacity
@@ -179,7 +177,6 @@ export default function DateRangePicker({
     const month = currentMonth.getMonth();
     
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     
     // Calculate start date for Monday-first week
     // getDay() returns 0 for Sunday, 1 for Monday, etc.
@@ -348,7 +345,7 @@ export default function DateRangePicker({
               const isInRange = isDateInRange(date);
               const isInHoverRange = isDateInHoverRange(date);
               const isDisabled = isDateDisabled(date);
-              const isFullyBooked = isDateFullyBooked(date);
+              const isFullyBooked = isDateFullyBooked();
               const isInPast = isDateInPast(date);
               const currentHoverNights = calculateHoverNights(date);
               

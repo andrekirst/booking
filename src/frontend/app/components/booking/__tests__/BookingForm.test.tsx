@@ -71,7 +71,6 @@ const mockCreatedBooking = {
 };
 
 describe('BookingForm', () => {
-  const mockOnSuccess = jest.fn();
   const mockOnCancel = jest.fn();
 
   beforeEach(() => {

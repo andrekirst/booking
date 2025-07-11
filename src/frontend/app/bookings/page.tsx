@@ -162,12 +162,15 @@ export default function BookingsPage() {
     try {
       const data = await apiClient.getBookings();
       setBookings(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
-      setError(err.message || 'Fehler beim Laden der Buchungen');
+      const errorMessage = err && typeof err === 'object' && 'message' in err 
+        ? String(err.message) 
+        : 'Fehler beim Laden der Buchungen';
+      setError(errorMessage);
       
       // Handle authentication errors
-      if (err.status === 401) {
+      if (err && typeof err === 'object' && 'status' in err && err.status === 401) {
         router.push('/login');
       }
     } finally {
@@ -196,9 +199,6 @@ export default function BookingsPage() {
     }
   };
 
-  const handleReload = () => {
-    fetchBookings();
-  };
 
   const handleLogout = () => {
     apiClient.logout();
