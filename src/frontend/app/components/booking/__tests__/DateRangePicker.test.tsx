@@ -1,61 +1,83 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import DateRangePicker from '../DateRangePicker';
+import { SleepingAccommodationAvailability } from '@/lib/types/api';
+
+// Mock current date for consistent testing
+const mockToday = new Date('2025-01-15');
+jest.spyOn(global.Date, 'now').mockImplementation(() => mockToday.getTime());
+
+const mockOnDateChange = jest.fn();
+
+const mockAvailability: SleepingAccommodationAvailability[] = [
+  {
+    id: '1',
+    name: 'Hauptzimmer',
+    maxCapacity: 4,
+    isAvailable: true,
+    availableCapacity: 4,
+    conflictingBookings: []
+  },
+  {
+    id: '2',
+    name: 'Gartenzimmer',
+    maxCapacity: 2,
+    isAvailable: false,
+    availableCapacity: 0,
+    conflictingBookings: []
+  }
+];
 
 describe('DateRangePicker', () => {
-  const mockOnDateChange = jest.fn();
-
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockOnDateChange.mockClear();
   });
 
   describe('Rendering', () => {
-    it('renders start and end date inputs', () => {
+    it('renders with default placeholder text', () => {
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      expect(screen.getByLabelText(/anreise/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/abreise/i)).toBeInTheDocument();
+      expect(screen.getByText('Anreise')).toBeInTheDocument();
     });
 
-    it('renders with initial values', () => {
+    it('displays selected dates in correct format', () => {
       render(
         <DateRangePicker
-          startDate="2024-07-15"
-          endDate="2024-07-17"
+          startDate="2025-01-20"
+          endDate="2025-01-25"
           onDateChange={mockOnDateChange}
         />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i) as HTMLInputElement;
-      const endInput = screen.getByLabelText(/abreise/i) as HTMLInputElement;
-
-      expect(startInput.value).toBe('2024-07-15');
-      expect(endInput.value).toBe('2024-07-17');
+      expect(screen.getByText('20. Jan 2025')).toBeInTheDocument();
+      expect(screen.getByText('25. Jan 2025')).toBeInTheDocument();
+      expect(screen.getByText('→')).toBeInTheDocument();
     });
 
-    it('displays night count when both dates are selected', () => {
+    it('shows nights count when both dates are selected', () => {
       render(
         <DateRangePicker
-          startDate="2024-07-15"
-          endDate="2024-07-17"
+          startDate="2025-01-20"
+          endDate="2025-01-25"
           onDateChange={mockOnDateChange}
         />
       );
 
-      expect(screen.getByText(/2 nächte/i)).toBeInTheDocument();
+      expect(screen.getByText('5 Nächte')).toBeInTheDocument();
     });
 
-    it('displays singular form for one night', () => {
+    it('shows singular night for one night stay', () => {
       render(
         <DateRangePicker
-          startDate="2024-07-15"
-          endDate="2024-07-16"
+          startDate="2025-01-20"
+          endDate="2025-01-21"
           onDateChange={mockOnDateChange}
         />
       );
 
-      expect(screen.getByText(/1 nacht/i)).toBeInTheDocument();
+      expect(screen.getByText('1 Nacht')).toBeInTheDocument();
     });
 
     it('displays error message when provided', () => {
@@ -69,188 +91,328 @@ describe('DateRangePicker', () => {
 
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
-  });
 
-  describe('Date Input Behavior', () => {
-    it('calls onDateChange when start date changes', () => {
-      render(
-        <DateRangePicker onDateChange={mockOnDateChange} />
-      );
-
-      const startInput = screen.getByLabelText(/anreise/i);
-      fireEvent.change(startInput, { target: { value: '2024-07-15' } });
-
-      expect(mockOnDateChange).toHaveBeenCalledWith('2024-07-15', '');
-    });
-
-    it('calls onDateChange when end date changes', () => {
+    it('displays warning message when provided and no error', () => {
+      const warningMessage = 'Verfügbarkeitsprüfung nicht möglich';
       render(
         <DateRangePicker
-          startDate="2024-07-15"
           onDateChange={mockOnDateChange}
+          warning={warningMessage}
         />
       );
 
-      const endInput = screen.getByLabelText(/abreise/i);
-      fireEvent.change(endInput, { target: { value: '2024-07-17' } });
-
-      expect(mockOnDateChange).toHaveBeenCalledWith('2024-07-15', '2024-07-17');
+      expect(screen.getByText(warningMessage)).toBeInTheDocument();
     });
 
-    it('clears end date when start date is set to after end date', () => {
+    it('prioritizes error over warning', () => {
       render(
         <DateRangePicker
-          startDate="2024-07-15"
-          endDate="2024-07-17"
           onDateChange={mockOnDateChange}
+          error="Error message"
+          warning="Warning message"
         />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i);
-      fireEvent.change(startInput, { target: { value: '2024-07-18' } });
-
-      expect(mockOnDateChange).toHaveBeenCalledWith('2024-07-18', '');
-    });
-
-    it('disables end date input when no start date is selected', () => {
-      render(
-        <DateRangePicker onDateChange={mockOnDateChange} />
-      );
-
-      const endInput = screen.getByLabelText(/abreise/i);
-      expect(endInput).toBeDisabled();
-    });
-
-    it('enables end date input when start date is selected', () => {
-      render(
-        <DateRangePicker
-          startDate="2024-07-15"
-          onDateChange={mockOnDateChange}
-        />
-      );
-
-      const endInput = screen.getByLabelText(/abreise/i);
-      expect(endInput).not.toBeDisabled();
+      expect(screen.getByText('Error message')).toBeInTheDocument();
+      expect(screen.queryByText('Warning message')).not.toBeInTheDocument();
     });
   });
 
-  describe('Date Validation', () => {
-    it('sets minimum date to today by default', () => {
-      const today = new Date().toISOString().split('T')[0];
+  describe('Calendar Interaction', () => {
+    it('opens calendar when clicked', async () => {
+      const user = userEvent.setup();
       
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i) as HTMLInputElement;
-      expect(startInput.min).toBe(today);
+      const input = screen.getByRole('button');
+      await user.click(input);
+
+      expect(screen.getByText('Januar 2025')).toBeInTheDocument();
+      expect(screen.getByText('Heute')).toBeInTheDocument();
     });
 
-    it('uses custom minimum date when provided', () => {
-      const customMinDate = '2024-07-01';
+    it('shows Monday as first day of week', async () => {
+      const user = userEvent.setup();
       
       render(
-        <DateRangePicker
-          onDateChange={mockOnDateChange}
-          minDate={customMinDate}
-        />
+        <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i) as HTMLInputElement;
-      expect(startInput.min).toBe(customMinDate);
+      await user.click(screen.getByRole('button'));
+
+      const dayHeaders = screen.getAllByText(/^(Mo|Di|Mi|Do|Fr|Sa|So)$/);
+      expect(dayHeaders[0]).toHaveTextContent('Mo');
+      expect(dayHeaders[6]).toHaveTextContent('So');
     });
 
-    it('sets end date minimum to one day after start date', () => {
+    it('highlights today with blue ring', async () => {
+      const user = userEvent.setup();
+      
       render(
-        <DateRangePicker
-          startDate="2024-07-15"
-          onDateChange={mockOnDateChange}
-        />
+        <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const endInput = screen.getByLabelText(/abreise/i) as HTMLInputElement;
-      expect(endInput.min).toBe('2024-07-16');
+      await user.click(screen.getByRole('button'));
+
+      const todayButton = screen.getByRole('button', { name: '15' });
+      expect(todayButton).toHaveClass('ring-2', 'ring-blue-200');
     });
 
-    it('applies maximum date when provided', () => {
-      const maxDate = '2024-12-31';
+    it('navigates to today when "Heute" button is clicked', async () => {
+      const user = userEvent.setup();
       
       render(
-        <DateRangePicker
-          onDateChange={mockOnDateChange}
-          maxDate={maxDate}
-        />
+        <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i) as HTMLInputElement;
-      const endInput = screen.getByLabelText(/abreise/i) as HTMLInputElement;
+      await user.click(screen.getByRole('button'));
       
-      expect(startInput.max).toBe(maxDate);
-      expect(endInput.max).toBe(maxDate);
+      // Navigate to different month first
+      const nextButton = screen.getAllByRole('button').find(btn => 
+        btn.querySelector('path[d*="M9 5l7 7-7 7"]')
+      );
+      await user.click(nextButton!);
+      
+      expect(screen.getByText('Februar 2025')).toBeInTheDocument();
+
+      // Click "Heute" button
+      const todayButton = screen.getByRole('button', { name: 'Heute' });
+      await user.click(todayButton);
+
+      expect(screen.getByText('Januar 2025')).toBeInTheDocument();
+    });
+
+    it('closes calendar when clicking outside', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <div>
+          <DateRangePicker onDateChange={mockOnDateChange} />
+          <div data-testid="outside-element">Outside</div>
+        </div>
+      );
+
+      // Open calendar
+      await user.click(screen.getByRole('button'));
+      expect(screen.getByText('Januar 2025')).toBeInTheDocument();
+
+      // Click outside
+      await user.click(screen.getByTestId('outside-element'));
+      
+      await waitFor(() => {
+        expect(screen.queryByText('Januar 2025')).not.toBeInTheDocument();
+      });
     });
   });
 
-  describe('Error States', () => {
-    it('applies error styles when error is provided', () => {
+  describe('Date Selection', () => {
+    it('selects start date and calls onDateChange', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button', { name: '20' }));
+
+      expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-20', '');
+    });
+
+    it('selects end date after start date', async () => {
+      const user = userEvent.setup();
+      
       render(
         <DateRangePicker
+          startDate="2025-01-20"
           onDateChange={mockOnDateChange}
-          error="Test error"
         />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i);
-      const endInput = screen.getByLabelText(/abreise/i);
+      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button', { name: '25' }));
 
-      expect(startInput).toHaveClass('border-red-300');
-      expect(endInput).toHaveClass('border-red-300');
+      expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-20', '2025-01-25');
     });
 
-    it('applies normal styles when no error', () => {
+    it('clears end date when selecting earlier start date', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker
+          startDate="2025-01-25"
+          endDate="2025-01-30"
+          onDateChange={mockOnDateChange}
+        />
+      );
+
+      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button', { name: '20' }));
+
+      expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-20', '');
+    });
+
+    it('allows selecting today', async () => {
+      const user = userEvent.setup();
+      
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i);
-      const endInput = screen.getByLabelText(/abreise/i);
+      await user.click(screen.getByRole('button'));
+      await user.click(screen.getByRole('button', { name: '15' }));
 
-      expect(startInput).toHaveClass('border-gray-300');
-      expect(endInput).toHaveClass('border-gray-300');
+      expect(mockOnDateChange).toHaveBeenCalledWith('2025-01-15', '');
+    });
+
+    it('disables dates in the past', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const pastDateButton = screen.getByRole('button', { name: '10' });
+      expect(pastDateButton).toBeDisabled();
     });
   });
 
-  describe('Accessibility', () => {
-    it('has proper labels for screen readers', () => {
+  describe('Hover Functionality', () => {
+    it('shows nights preview on hover when start date is selected', async () => {
+      const user = userEvent.setup();
+      
       render(
-        <DateRangePicker onDateChange={mockOnDateChange} />
+        <DateRangePicker
+          startDate="2025-01-20"
+          onDateChange={mockOnDateChange}
+        />
       );
 
-      expect(screen.getByLabelText(/anreise/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/abreise/i)).toBeInTheDocument();
+      await user.click(screen.getByRole('button'));
+      
+      const date25Button = screen.getByRole('button', { name: '25' });
+      await user.hover(date25Button);
+
+      expect(screen.getByText('5 Nächte - Klicken Sie um zu bestätigen')).toBeInTheDocument();
     });
 
-    it('marks inputs as required', () => {
+    it('does not show hover preview when no start date selected', async () => {
+      const user = userEvent.setup();
+      
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i);
-      const endInput = screen.getByLabelText(/abreise/i);
+      await user.click(screen.getByRole('button'));
+      
+      const date25Button = screen.getByRole('button', { name: '25' });
+      await user.hover(date25Button);
 
-      expect(startInput).toBeRequired();
-      expect(endInput).toBeRequired();
+      expect(screen.queryByText(/Nächte - Klicken Sie um zu bestätigen/)).not.toBeInTheDocument();
     });
 
-    it('has proper input type for date inputs', () => {
+    it('highlights range between start date and hover date', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker
+          startDate="2025-01-20"
+          onDateChange={mockOnDateChange}
+        />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const date25Button = screen.getByRole('button', { name: '25' });
+      await user.hover(date25Button);
+
+      // Check that dates in between have hover range styling
+      const date22Button = screen.getByRole('button', { name: '22' });
+      expect(date22Button).toHaveClass('bg-blue-100', 'text-blue-800');
+    });
+  });
+
+  describe('Availability Integration', () => {
+    it('shows available dates normally', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker
+          onDateChange={mockOnDateChange}
+          availability={mockAvailability}
+        />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const date20Button = screen.getByRole('button', { name: '20' });
+      expect(date20Button).not.toBeDisabled();
+      expect(date20Button).not.toHaveClass('bg-red-100');
+    });
+  });
+
+  describe('Accessibility and Interaction', () => {
+    it('has proper button role for main input', () => {
       render(
         <DateRangePicker onDateChange={mockOnDateChange} />
       );
 
-      const startInput = screen.getByLabelText(/anreise/i);
-      const endInput = screen.getByLabelText(/abreise/i);
+      expect(screen.getByRole('button')).toBeInTheDocument();
+    });
 
-      expect(startInput).toHaveAttribute('type', 'date');
-      expect(endInput).toHaveAttribute('type', 'date');
+    it('shows dropdown arrow with rotation on open', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      const dropdownArrow = screen.getByRole('button').querySelector('svg:last-child');
+      expect(dropdownArrow).not.toHaveClass('rotate-180');
+
+      await user.click(screen.getByRole('button'));
+      
+      expect(dropdownArrow).toHaveClass('rotate-180');
+    });
+
+    it('navigates to next month', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const nextButton = screen.getAllByRole('button').find(btn => 
+        btn.querySelector('path[d*="M9 5l7 7-7 7"]')
+      );
+      
+      await user.click(nextButton!);
+      
+      expect(screen.getByText('Februar 2025')).toBeInTheDocument();
+    });
+
+    it('navigates to previous month', async () => {
+      const user = userEvent.setup();
+      
+      render(
+        <DateRangePicker onDateChange={mockOnDateChange} />
+      );
+
+      await user.click(screen.getByRole('button'));
+      
+      const prevButton = screen.getAllByRole('button').find(btn => 
+        btn.querySelector('path[d*="M15 19l-7-7 7-7"]')
+      );
+      
+      await user.click(prevButton!);
+      
+      expect(screen.getByText('Dezember 2024')).toBeInTheDocument();
     });
   });
 });
