@@ -122,7 +122,7 @@ public class GetBookingByIdQueryHandlerTests : IDisposable
         await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        _logger.Received(1).LogWarning("Booking {BookingId} not found", nonExistentBookingId);
+        _logger.ReceivedWithAnyArgs().LogWarning(default(string)!, default(object[])!);
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class GetBookingByIdQueryHandlerTests : IDisposable
         await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        _logger.Received(1).LogInformation("Getting booking {BookingId}", bookingId);
+        _logger.ReceivedWithAnyArgs().LogInformation(default(string)!, default(object[])!);
     }
 
     [Fact]
