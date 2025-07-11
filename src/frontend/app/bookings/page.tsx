@@ -165,12 +165,12 @@ export default function BookingsPage() {
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
       const errorMessage = err && typeof err === 'object' && 'message' in err 
-        ? String(err.message) 
+        ? String((err as { message: string }).message) 
         : 'Fehler beim Laden der Buchungen';
       setError(errorMessage);
       
       // Handle authentication errors
-      if (err && typeof err === 'object' && 'status' in err && err.status === 401) {
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
         router.push('/login');
       }
     } finally {
@@ -198,7 +198,6 @@ export default function BookingsPage() {
       console.error('Error checking user role:', error);
     }
   };
-
 
   const handleLogout = () => {
     apiClient.logout();
