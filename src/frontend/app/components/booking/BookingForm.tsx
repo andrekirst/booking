@@ -229,7 +229,7 @@ export default function BookingForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-8 ${className}`}>
+    <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Neue Buchung erstellen</h2>
