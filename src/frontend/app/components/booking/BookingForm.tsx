@@ -197,27 +197,38 @@ export default function BookingForm({
         />
       </div>
 
-      {/* Availability Check Status */}
-      {isCheckingAvailability && (
-        <div className="flex items-center justify-center p-4 bg-blue-50 rounded-xl">
-          <svg className="animate-spin w-5 h-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span className="text-blue-700 font-medium">Verfügbarkeit wird geprüft...</span>
-        </div>
-      )}
 
       {/* Accommodation Selection */}
-      {startDate && endDate && !isCheckingAvailability && (
+      {startDate && endDate ? (
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-          <AccommodationSelector
-            accommodations={accommodations}
-            availability={availability?.accommodations}
-            selectedItems={selectedItems}
-            onSelectionChange={handleAccommodationChange}
-            error={errors.accommodations}
-          />
+          {isCheckingAvailability ? (
+            <div className="text-center py-8">
+              <svg className="animate-spin w-8 h-8 text-blue-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-gray-600">Verfügbarkeit wird geprüft...</p>
+              <p className="text-sm text-gray-500 mt-2">Schlafmöglichkeiten werden geladen...</p>
+            </div>
+          ) : (
+            <AccommodationSelector
+              accommodations={accommodations}
+              availability={availability?.accommodations}
+              selectedItems={selectedItems}
+              onSelectionChange={handleAccommodationChange}
+              error={errors.accommodations}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="text-center py-8">
+            <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+            </svg>
+            <p className="text-gray-600 font-medium">Wählen Sie zuerst Ihre Reisedaten</p>
+            <p className="text-sm text-gray-500 mt-2">Sobald Sie An- und Abreisedatum gewählt haben, können Sie die verfügbaren Schlafmöglichkeiten auswählen.</p>
+          </div>
         </div>
       )}
 

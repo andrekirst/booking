@@ -80,7 +80,7 @@ export default function DateRangePicker({
             onChange={(e) => handleStartDateChange(e.target.value)}
             min={effectiveMinDate}
             max={maxDate}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors ${
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors bg-white text-gray-900 ${
               error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/50' : 'border-gray-300'
             }`}
             required
@@ -100,7 +100,7 @@ export default function DateRangePicker({
             min={getMinEndDate()}
             max={maxDate}
             disabled={!localStartDate}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed ${
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors bg-white text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500 ${
               error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/50' : 'border-gray-300'
             }`}
             required
