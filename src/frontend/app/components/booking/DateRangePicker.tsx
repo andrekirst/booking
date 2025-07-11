@@ -144,8 +144,15 @@ export default function DateRangePicker({
     
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
+    
+    // Calculate start date for Monday-first week
+    // getDay() returns 0 for Sunday, 1 for Monday, etc.
+    // We want Monday (1) to be 0, Tuesday (2) to be 1, etc.
+    const firstDayOfWeek = firstDay.getDay();
+    const mondayOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    startDate.setDate(startDate.getDate() - mondayOffset);
     
     const days = [];
     const current = new Date(startDate);
@@ -179,7 +186,7 @@ export default function DateRangePicker({
     'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
   ];
 
-  const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
