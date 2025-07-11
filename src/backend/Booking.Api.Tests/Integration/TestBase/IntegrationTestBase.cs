@@ -2,6 +2,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using Booking.Api.Configuration;
 using Booking.Api.Data;
+using Booking.Api.Domain.Entities;
+using Booking.Api.Domain.Enums;
+using Booking.Api.Domain.ReadModels;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -93,11 +96,14 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                         };
                     });
                     
-                    // Apply migrations
+                    // Apply migrations and seed test data
                     var sp = services.BuildServiceProvider();
                     using var scope = sp.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
                     db.Database.Migrate();
+                    
+                    // Seed test users
+                    SeedTestUsers(db);
                 });
             });
             
@@ -136,5 +142,101 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     {
         using var scope = Services.CreateScope();
         await action(scope.ServiceProvider);
+    }
+    
+    protected async Task<Guid> CreateTestSleepingAccommodationAsync(string name = "Test Zimmer", AccommodationType type = AccommodationType.Room, int maxCapacity = 4)
+    {
+        return await WithScopeAsync(async serviceProvider =>
+        {
+            var context = serviceProvider.GetRequiredService<BookingDbContext>();
+            
+            var accommodation = new SleepingAccommodationReadModel
+            {
+                Id = Guid.NewGuid(),
+                Name = name,
+                Type = type,
+                MaxCapacity = maxCapacity,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                ChangedAt = null,
+                LastEventVersion = 1
+            };
+            
+            context.SleepingAccommodationReadModels.Add(accommodation);
+            await context.SaveChangesAsync();
+            
+            return accommodation.Id;
+        });
+    }
+    
+    private static void SeedTestUsers(BookingDbContext context)
+    {
+        // Check if test users already exist
+        if (context.Users.Any())
+        {
+            return;
+        }
+        
+        var testUsers = new[]
+        {
+            new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                PasswordHash = "dummy_hash", // Not used in JWT tests
+                FirstName = "Test",
+                LastName = "User",
+                Role = UserRole.Member,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = 2,
+                Email = "user1@example.com",
+                PasswordHash = "dummy_hash",
+                FirstName = "User",
+                LastName = "One",
+                Role = UserRole.Member,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = 3,
+                Email = "user2@example.com",
+                PasswordHash = "dummy_hash",
+                FirstName = "User",
+                LastName = "Two",
+                Role = UserRole.Member,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = 4,
+                Email = "admin@example.com",
+                PasswordHash = "dummy_hash",
+                FirstName = "Admin",
+                LastName = "User",
+                Role = UserRole.Administrator,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = 5,
+                Email = "user@example.com",
+                PasswordHash = "dummy_hash",
+                FirstName = "Regular",
+                LastName = "User",
+                Role = UserRole.Member,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+        
+        context.Users.AddRange(testUsers);
+        context.SaveChanges();
     }
 }

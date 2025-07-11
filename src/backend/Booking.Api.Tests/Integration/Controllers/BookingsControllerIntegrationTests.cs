@@ -105,8 +105,8 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
     public async Task GetBookings_AsRegularUser_ShouldReturnOnlyOwnBookings()
     {
         // Arrange
-        var user1Token = TokenProvider.GenerateToken(1, "user1@example.com");
-        var user2Token = TokenProvider.GenerateToken(2, "user2@example.com");
+        var user1Token = TokenProvider.GenerateToken(2, "user1@example.com");
+        var user2Token = TokenProvider.GenerateToken(3, "user2@example.com");
 
         var accommodationId = await CreateTestSleepingAccommodationAsync();
 
@@ -148,7 +148,7 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
         
         result.Should().NotBeNull();
         result!.Should().HaveCount(1);
-        result.First().UserId.Should().Be(1);
+        result.First().UserId.Should().Be(2);
         result.First().Notes.Should().Be("Buchung von User 1");
     }
 
@@ -156,8 +156,8 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
     public async Task GetBookings_AsAdmin_ShouldReturnAllBookings()
     {
         // Arrange
-        var adminToken = TokenProvider.GenerateToken(1, "admin@example.com", "Administrator");
-        var userToken = TokenProvider.GenerateToken(2, "user@example.com");
+        var adminToken = TokenProvider.GenerateToken(4, "admin@example.com", "Administrator");
+        var userToken = TokenProvider.GenerateToken(5, "user@example.com");
 
         var accommodationId = await CreateTestSleepingAccommodationAsync();
 
@@ -198,8 +198,8 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
         
         result.Should().NotBeNull();
         result!.Should().HaveCount(2);
-        result.Should().Contain(b => b.UserId == 1 && b.Notes == "Admin Buchung");
-        result.Should().Contain(b => b.UserId == 2 && b.Notes == "User Buchung");
+        result.Should().Contain(b => b.UserId == 4 && b.Notes == "Admin Buchung");
+        result.Should().Contain(b => b.UserId == 5 && b.Notes == "User Buchung");
     }
 
     [Fact]
@@ -312,8 +312,8 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
     public async Task ConfirmBooking_AsAdmin_ShouldConfirmBooking()
     {
         // Arrange
-        var adminToken = TokenProvider.GenerateToken(1, "admin@example.com", "Administrator");
-        var userToken = TokenProvider.GenerateToken(2, "user@example.com");
+        var adminToken = TokenProvider.GenerateToken(4, "admin@example.com", "Administrator");
+        var userToken = TokenProvider.GenerateToken(5, "user@example.com");
 
         var accommodationId = await CreateTestSleepingAccommodationAsync();
 
@@ -481,30 +481,5 @@ public class BookingsControllerIntegrationTests : IntegrationTestBase
         var accommodation = result!.Accommodations.FirstOrDefault(a => a.Id == accommodationId);
         accommodation.Should().NotBeNull();
         accommodation!.AvailableCapacity.Should().Be(2); // 4 - 2 = 2 verfügbare Plätze
-    }
-
-    private async Task<Guid> CreateTestSleepingAccommodationAsync()
-    {
-        return await WithScopeAsync(async serviceProvider =>
-        {
-            var context = serviceProvider.GetRequiredService<BookingDbContext>();
-            
-            var accommodation = new SleepingAccommodationReadModel
-            {
-                Id = Guid.NewGuid(),
-                Name = "Test Zimmer",
-                Type = AccommodationType.Room,
-                MaxCapacity = 4,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                ChangedAt = null,
-                LastEventVersion = 1
-            };
-            
-            context.SleepingAccommodationReadModels.Add(accommodation);
-            await context.SaveChangesAsync();
-            
-            return accommodation.Id;
-        });
     }
 }

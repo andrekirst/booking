@@ -122,7 +122,13 @@ public class StartupValidationTests : IntegrationTestBase
         
         // Assert - This is a bit indirect, but we can verify the interceptor is working
         // by creating an entity and checking if audit fields are set
-        var booking = new Booking.Api.Domain.Entities.Booking();
+        var booking = new Booking.Api.Domain.Entities.Booking
+        {
+            UserId = 1, // Use existing test user
+            StartDate = DateTime.UtcNow.AddDays(1),
+            EndDate = DateTime.UtcNow.AddDays(2),
+            Notes = "Test Booking"
+        };
         context.Bookings.Add(booking);
         
         // The AuditInterceptor should work when we save
