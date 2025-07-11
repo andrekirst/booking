@@ -325,7 +325,7 @@ export default function BookingForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors resize-none"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors resize-none text-gray-900 placeholder-gray-500"
             placeholder="Besondere Wünsche oder Anmerkungen..."
             maxLength={500}
           />
