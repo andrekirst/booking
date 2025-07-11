@@ -217,6 +217,7 @@ export default function BookingForm({
           onDateChange={handleDateChange}
           warning={errors.dates?.includes('Verfügbarkeitsprüfung') ? errors.dates : undefined}
           error={errors.dates && !errors.dates.includes('Verfügbarkeitsprüfung') ? errors.dates : undefined}
+          availability={availability?.accommodations}
         />
       </div>
 
