@@ -36,19 +36,6 @@ export default function SleepingAccommodationsPage() {
     }
   };
 
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der Schlafmöglichkeiten');
-      }
-
-      const data = await response.json();
-      setAccommodations(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleEdit = (id: string) => {
     router.push(`/admin/sleeping-accommodations/${id}/edit`);
   };
