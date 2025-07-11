@@ -266,6 +266,7 @@ git checkout BRANCH-NAME
 
 ## Entwicklungs-Erinnerungen
 - Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
+- **WICHTIG - Pipeline-Validierung**: Nach jedem Commit und Push MUSS gewartet werden, bis alle GitHub Actions/Pipelines erfolgreich durchgelaufen sind, bevor eine Aufgabe als "abgeschlossen" markiert wird. Dies gilt besonders für PR-Fixes und kritische Änderungen.
 
 ## 13. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**

@@ -144,7 +144,7 @@ export default function AccommodationSelector({
           const availabilityInfo = getAvailabilityInfo(accommodation.id);
           const maxPersons = getMaxPersonCount(accommodation.id);
           const currentPersons = getCurrentPersonCount(accommodation.id);
-          const isUnavailable = availability && availabilityInfo && !availabilityInfo.isAvailable && maxPersons === 0;
+          const isUnavailable = Boolean(availability && availabilityInfo && !availabilityInfo.isAvailable && maxPersons === 0);
 
           return (
             <div

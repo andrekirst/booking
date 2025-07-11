@@ -11,10 +11,11 @@ const RealDate = Date;
 // @ts-expect-error - Mocking global Date constructor for testing
 global.Date = class extends RealDate {
   constructor(...args: unknown[]) {
+    super();
     if (args.length === 0) {
       return new RealDate(mockToday);
     }
-    return new RealDate(...args);
+    return new RealDate(...(args as ConstructorParameters<typeof RealDate>));
   }
   
   static now() {
@@ -26,7 +27,7 @@ global.Date = class extends RealDate {
   }
   
   static UTC(...args: unknown[]) {
-    return RealDate.UTC(...args);
+    return RealDate.UTC(...(args as Parameters<typeof RealDate.UTC>));
   }
 };
 
