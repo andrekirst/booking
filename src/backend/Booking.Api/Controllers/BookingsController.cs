@@ -240,6 +240,25 @@ public class BookingsController(IMediator mediator) : ControllerBase
         });
     }
 
+    [HttpPost("projections/rebuild")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<ActionResult> RebuildProjections()
+    {
+        try
+        {
+            var projectionService = HttpContext.RequestServices
+                .GetRequiredService<Services.Projections.IProjectionService<Domain.Aggregates.BookingAggregate, Domain.ReadModels.BookingReadModel>>();
+            
+            await projectionService.RebuildAllAsync();
+            
+            return Ok(new { Message = "All booking projections have been rebuilt successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "Failed to rebuild projections", Error = ex.Message });
+        }
+    }
+
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst("user_id")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
