@@ -106,7 +106,7 @@ describe('BookingDetailPage', () => {
       });
 
       // Booking overview should be visible
-      expect(screen.getByText('Übersicht')).toBeInTheDocument();
+      expect(screen.getByText('4 Personen')).toBeInTheDocument();
       expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
       
       // Accommodations should still show skeleton
@@ -159,7 +159,7 @@ describe('BookingDetailPage', () => {
       });
 
       // Booking data should still be visible
-      expect(screen.getByText('Übersicht')).toBeInTheDocument();
+      expect(screen.getByText('4 Personen')).toBeInTheDocument();
       
       // Error message for accommodations should be shown
       expect(screen.getByText('Namen konnten nicht geladen werden')).toBeInTheDocument();

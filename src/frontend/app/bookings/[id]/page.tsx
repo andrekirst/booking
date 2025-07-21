@@ -30,15 +30,26 @@ const BookingOverviewSkeleton = () => (
 
 const AccommodationsSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-xl p-6">
-    <div className="h-6 bg-gray-200 rounded w-40 mb-4 animate-pulse"></div>
-    <div className="space-y-3">
+    <div className="h-6 bg-gray-200 rounded w-40 mb-6 animate-pulse"></div>
+    <div className="grid gap-4">
       {[...Array(2)].map((_, i) => (
-        <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex items-center">
-            <div className="w-6 h-6 bg-gray-300 rounded mr-3 animate-pulse"></div>
-            <div className="h-5 bg-gray-300 rounded w-32 animate-pulse"></div>
+        <div key={i} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-200 rounded-lg animate-pulse"></div>
+              </div>
+              <div className="ml-4">
+                <div className="h-5 bg-gray-300 rounded w-32 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="flex items-center px-3 py-1.5 bg-white rounded-full shadow-sm border border-indigo-200">
+                <div className="w-4 h-4 bg-indigo-200 rounded mr-2 animate-pulse"></div>
+                <div className="h-4 bg-indigo-200 rounded w-16 animate-pulse"></div>
+              </div>
+            </div>
           </div>
-          <div className="h-6 bg-blue-200 rounded-full w-20 animate-pulse"></div>
         </div>
       ))}
     </div>
@@ -342,8 +353,6 @@ export default function BookingDetailPage() {
                 <BookingOverviewSkeleton />
               ) : booking && (
                 <div className="bg-white rounded-2xl shadow-xl p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Übersicht</h2>
-                  
                   {/* Hauptinformation */}
                   <div className="text-center mb-6">
                     <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -373,30 +382,43 @@ export default function BookingDetailPage() {
                 <AccommodationsSkeleton />
               ) : booking && (
                 <div className="bg-white rounded-2xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Schlafmöglichkeiten</h2>
                     {accommodationsError && (
-                      <div className="text-sm text-red-600 bg-red-50 px-2 py-1 rounded">
+                      <div className="text-sm text-red-600 bg-red-50 px-3 py-1.5 rounded-md border border-red-200">
                         Namen konnten nicht geladen werden
                       </div>
                     )}
                   </div>
-                  <div className="space-y-3">
+                  <div className="grid gap-4">
                     {booking.bookingItems.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center">
-                          <svg className="w-6 h-6 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8" />
-                          </svg>
-                          <div>
-                            <h3 className="font-medium text-gray-900">{getAccommodationName(item.sleepingAccommodationId)}</h3>
+                      <div key={index} className="group relative bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 hover:shadow-md">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8" />
+                                </svg>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <h3 className="font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">
+                                {getAccommodationName(item.sleepingAccommodationId)}
+                              </h3>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {item.personCount} {item.personCount === 1 ? 'Person' : 'Personen'}
-                          </span>
+                          <div className="flex items-center">
+                            <div className="flex items-center px-3 py-1.5 bg-white rounded-full shadow-sm border border-indigo-200">
+                              <svg className="w-4 h-4 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              <span className="text-sm font-semibold text-indigo-700">
+                                {item.personCount} {item.personCount === 1 ? 'Person' : 'Personen'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
