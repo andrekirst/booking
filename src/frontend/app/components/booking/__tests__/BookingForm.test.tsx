@@ -8,7 +8,13 @@ jest.mock('../../../../lib/api/client');
 
 // Mock DateRangePicker to simplify testing
 jest.mock('../DateRangePicker', () => {
-  return function MockedDateRangePicker({ onDateChange, startDate, endDate }: any) {
+  interface MockDateRangePickerProps {
+    onDateChange: (startDate: string, endDate: string) => void;
+    startDate: string;
+    endDate: string;
+  }
+  
+  return function MockedDateRangePicker({ onDateChange, startDate, endDate }: MockDateRangePickerProps) {
     return (
       <div data-testid="date-range-picker">
         <input 
