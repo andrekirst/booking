@@ -31,9 +31,9 @@ test.describe('API Client Tests', () => {
   test('should fetch bookings when authenticated', async ({ apiClient }) => {
     await setupAuthenticatedUser(apiClient);
     
-    const response = await apiClient.getBookings();
-    expect(response.bookings).toBeInstanceOf(Array);
-    expect(response.count).toBeGreaterThanOrEqual(0);
+    const bookings = await apiClient.getBookings();
+    expect(bookings).toBeInstanceOf(Array);
+    expect(bookings.length).toBeGreaterThanOrEqual(0);
   });
 
   test('should handle API errors gracefully', async ({ apiClient }) => {

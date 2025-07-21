@@ -38,6 +38,8 @@
     "eslint-config-next": "15.3.5",
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4",
+    "jest-fetch-mock": "^3.0.3",
+    "msw": "^2.10.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
