@@ -13,7 +13,8 @@ public class BookingProjectionService(
 {
     public async Task ProjectAsync(Guid aggregateId, int fromVersion = 0, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Projecting booking {AggregateId} from version {FromVersion}", aggregateId, fromVersion);
+        logger.LogInformation("BookingProjectionService: Starting projection for booking {AggregateId} from version {FromVersion}", 
+            aggregateId, fromVersion);
 
         // Get existing read model or create new one
         var readModel = await context.BookingReadModels
@@ -21,8 +22,13 @@ public class BookingProjectionService(
 
         if (readModel == null)
         {
+            logger.LogInformation("BookingProjectionService: Creating new read model for booking {AggregateId}", aggregateId);
             readModel = new BookingReadModel { Id = aggregateId };
             context.BookingReadModels.Add(readModel);
+        }
+        else
+        {
+            logger.LogInformation("BookingProjectionService: Found existing read model for booking {AggregateId}", aggregateId);
         }
 
         // Get all events from the specified version onwards
@@ -35,10 +41,13 @@ public class BookingProjectionService(
 
         if (events.Count == 0)
         {
-            logger.LogDebug("No events found for booking {AggregateId} from version {FromVersion}",
+            logger.LogWarning("BookingProjectionService: No events found for booking {AggregateId} from version {FromVersion}",
                 aggregateId, fromVersion);
             return;
         }
+        
+        logger.LogInformation("BookingProjectionService: Found {EventCount} events to process for booking {AggregateId}", 
+            events.Count, aggregateId);
 
         // Get all event appliers for BookingReadModel
         var eventAppliers = serviceProvider.GetServices<IEventApplier<BookingReadModel>>()

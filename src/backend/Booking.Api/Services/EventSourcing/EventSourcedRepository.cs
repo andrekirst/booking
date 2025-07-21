@@ -1,8 +1,12 @@
 using Booking.Api.Domain.Common;
+using Microsoft.Extensions.Logging;
 
 namespace Booking.Api.Services.EventSourcing;
 
-public class EventSourcedRepository<T>(IEventStore eventStore, IEventDispatcher eventDispatcher) : IEventSourcedRepository<T>
+public class EventSourcedRepository<T>(
+    IEventStore eventStore, 
+    IEventDispatcher eventDispatcher,
+    ILogger<EventSourcedRepository<T>> logger) : IEventSourcedRepository<T>
     where T : AggregateRoot, new()
 {
     public async Task<T?> GetByIdAsync(Guid id)
@@ -33,8 +37,13 @@ public class EventSourcedRepository<T>(IEventStore eventStore, IEventDispatcher 
             aggregate.MarkEventsAsCommitted(events.Count);
             
             // Publish events for read model projections
+            logger.LogInformation("Publishing {Count} events for aggregate {AggregateId} of type {AggregateType}", 
+                events.Count, aggregate.Id, aggregateTypeName);
+            
             foreach (var domainEvent in events)
             {
+                logger.LogDebug("Publishing event {EventType} for aggregate {AggregateId}", 
+                    domainEvent.EventType, aggregate.Id);
                 await eventDispatcher.PublishAsync(domainEvent);
             }
             

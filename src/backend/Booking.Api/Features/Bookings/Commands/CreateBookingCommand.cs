@@ -1,7 +1,9 @@
 using Booking.Api.Features.Bookings.DTOs;
 using Booking.Api.Domain.Aggregates;
 using Booking.Api.Domain.ValueObjects;
+using Booking.Api.Domain.ReadModels;
 using Booking.Api.Services.EventSourcing;
+using Booking.Api.Services.Projections;
 using MediatR;
 
 namespace Booking.Api.Features.Bookings.Commands;
@@ -10,6 +12,7 @@ public record CreateBookingCommand(int UserId, CreateBookingDto BookingDto) : IR
 
 public class CreateBookingCommandHandler(
     IEventSourcedRepository<BookingAggregate> repository,
+    IProjectionService<BookingAggregate, BookingReadModel> projectionService,
     ILogger<CreateBookingCommandHandler> logger) 
     : IRequestHandler<CreateBookingCommand, BookingDto>
 {
@@ -36,6 +39,19 @@ public class CreateBookingCommandHandler(
         await repository.SaveAsync(aggregate);
 
         logger.LogInformation("Successfully created booking {BookingId}", bookingId);
+        
+        // TEMPORARY: Manually trigger projection until event handlers are working
+        logger.LogInformation("TEMPORARY: Manually triggering projection for booking {BookingId}", bookingId);
+        try
+        {
+            await projectionService.ProjectAsync(bookingId, 0, cancellationToken);
+            logger.LogInformation("TEMPORARY: Successfully projected booking {BookingId}", bookingId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "TEMPORARY: Failed to project booking {BookingId}", bookingId);
+            // Don't fail the command if projection fails
+        }
 
         // Return a basic DTO - in a real implementation, you'd query the read model
         return new BookingDto(
