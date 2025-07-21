@@ -10,13 +10,11 @@ export default function NewBookingPage() {
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
 
   const handleSuccess = (bookingId: string) => {
-    console.log('NewBookingPage: Booking created with ID:', bookingId);
     setCreatedBookingId(bookingId);
     setIsCreated(true);
     
     // Redirect to booking details after a short delay
     setTimeout(() => {
-      console.log('NewBookingPage: Redirecting to:', `/bookings/${bookingId}`);
       router.push(`/bookings/${bookingId}`);
     }, 2000);
   };

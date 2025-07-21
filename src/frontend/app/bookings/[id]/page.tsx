@@ -15,7 +15,6 @@ export default function BookingDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchBooking = async () => {
-    console.log('BookingDetailPage: bookingId =', bookingId);
     if (!bookingId) {
       setError('Ungültige Buchungs-ID');
       setIsLoading(false);
@@ -26,9 +25,7 @@ export default function BookingDetailPage() {
     setError(null);
 
     try {
-      console.log('BookingDetailPage: Fetching booking with ID:', bookingId);
       const data = await apiClient.getBookingById(bookingId);
-      console.log('BookingDetailPage: Booking data received:', data);
       setBooking(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchung:', err);

@@ -1,14 +1,151 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '../../lib/api/client';
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [isRebuilding, setIsRebuilding] = useState(false);
+  const [rebuildMessage, setRebuildMessage] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [isLoadingDebug, setIsLoadingDebug] = useState(false);
+
+  const handleDebugEvents = async () => {
+    setIsLoadingDebug(true);
+    try {
+      const result = await apiClient.debugBookingEvents();
+      setDebugInfo(result);
+    } catch (error) {
+      console.error('Failed to load debug info:', error);
+      setDebugInfo({ error: error instanceof Error ? error.message : 'Unbekannter Fehler' });
+    } finally {
+      setIsLoadingDebug(false);
+    }
+  };
+
+  const handleRebuildProjections = async () => {
+    setIsRebuilding(true);
+    setRebuildMessage(null);
+    
+    try {
+      const result = await apiClient.rebuildBookingProjections();
+      setRebuildMessage(`✅ ${result.message}`);
+      // Refresh debug info after rebuild
+      if (debugInfo) {
+        await handleDebugEvents();
+      }
+    } catch (error) {
+      console.error('Failed to rebuild projections:', error);
+      setRebuildMessage(`❌ Fehler beim Neu-Aufbau der Projections: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+    } finally {
+      setIsRebuilding(false);
+    }
+  };
 
   return (
     <div>
       <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
       
+      {/* Debug/Admin Actions */}
+      <div className="mb-8 p-6 bg-yellow-50 border border-yellow-200 rounded-2xl">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">🔧 Debug Actions</h3>
+        
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <button
+              onClick={handleDebugEvents}
+              disabled={isLoadingDebug}
+              className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors"
+            >
+              {isLoadingDebug ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Lade Debug-Info...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Event Store Debug
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleRebuildProjections}
+              disabled={isRebuilding}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors"
+            >
+              {isRebuilding ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Projections werden neu aufgebaut...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Projections neu aufbauen
+                </>
+              )}
+            </button>
+          </div>
+          
+          <div className="text-sm text-gray-600">
+            <p><strong>Debug:</strong> Zeigt Event Store Status an</p>
+            <p><strong>Rebuild:</strong> Baut alle Booking Read-Models neu auf</p>
+          </div>
+          
+          {rebuildMessage && (
+            <div className="p-3 bg-white rounded-lg border">
+              <p className="text-sm font-mono">{rebuildMessage}</p>
+            </div>
+          )}
+          
+          {debugInfo && (
+            <div className="p-4 bg-white rounded-lg border">
+              <h4 className="font-semibold mb-2">📊 Event Store Status:</h4>
+              {debugInfo.error ? (
+                <p className="text-red-600 font-mono text-sm">❌ {debugInfo.error}</p>
+              ) : (
+                <div className="space-y-2 text-sm">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-blue-50 p-3 rounded">
+                      <div className="font-medium text-blue-800">Total Events</div>
+                      <div className="text-2xl font-bold text-blue-900">{debugInfo.totalEvents}</div>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded">
+                      <div className="font-medium text-green-800">Booking Events</div>
+                      <div className="text-2xl font-bold text-green-900">{debugInfo.bookingEvents}</div>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded">
+                      <div className="font-medium text-purple-800">Read Models</div>
+                      <div className="text-2xl font-bold text-purple-900">{debugInfo.readModels}</div>
+                    </div>
+                  </div>
+                  
+                  {debugInfo.recentEvents && debugInfo.recentEvents.length > 0 && (
+                    <div className="mt-4">
+                      <h5 className="font-medium mb-2">Recent Events:</h5>
+                      <div className="bg-gray-50 p-3 rounded font-mono text-xs">
+                        {debugInfo.recentEvents.map((event: any, index: number) => (
+                          <div key={index} className="mb-1">
+                            {event.eventType} (v{event.version}) - {event.aggregateId} - {new Date(event.timestamp).toLocaleString()}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Schlafmöglichkeiten Card */}
         <div

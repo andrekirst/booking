@@ -257,9 +257,9 @@ public class BookingsController(IMediator mediator) : ControllerBase
             
             var recentEvents = await context.EventStoreEvents
                 .Where(e => e.AggregateType == "BookingAggregate")
-                .OrderByDescending(e => e.OccurredAt)
+                .OrderByDescending(e => e.Timestamp)
                 .Take(5)
-                .Select(e => new { e.Id, e.AggregateId, e.EventType, e.Version, e.OccurredAt })
+                .Select(e => new { e.Id, e.AggregateId, e.EventType, e.Version, e.Timestamp })
                 .ToListAsync();
             
             return Ok(new { 
