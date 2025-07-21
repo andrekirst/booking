@@ -8,17 +8,22 @@ import { apiClient } from '../../../lib/api/client';
 // Skeleton components
 const BookingOverviewSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-xl p-6">
-    <div className="h-6 bg-gray-200 rounded w-24 mb-4 animate-pulse"></div>
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center mb-2">
-            <div className="w-5 h-5 bg-blue-200 rounded mr-2 animate-pulse"></div>
-            <div className="h-4 bg-blue-200 rounded w-20 animate-pulse"></div>
-          </div>
-          <div className="h-6 bg-blue-300 rounded w-32 animate-pulse"></div>
-        </div>
-      ))}
+    <div className="h-6 bg-gray-200 rounded w-24 mb-6 animate-pulse"></div>
+    
+    {/* Hauptinformation Skeleton */}
+    <div className="text-center mb-6">
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+        <div className="w-6 h-6 bg-purple-200 rounded mr-2 animate-pulse"></div>
+        <div className="h-8 bg-gray-300 rounded w-32 animate-pulse"></div>
+        <div className="h-6 bg-gray-200 rounded w-8 mx-2 animate-pulse"></div>
+        <div className="w-6 h-6 bg-green-200 rounded mr-2 animate-pulse"></div>
+        <div className="h-8 bg-gray-300 rounded w-24 animate-pulse"></div>
+      </div>
+    </div>
+    
+    {/* Buchungs-ID Skeleton */}
+    <div className="text-center pt-4 border-t border-gray-100">
+      <div className="h-4 bg-gray-200 rounded w-48 mx-auto animate-pulse"></div>
     </div>
   </div>
 );
@@ -337,35 +342,28 @@ export default function BookingDetailPage() {
                 <BookingOverviewSkeleton />
               ) : booking && (
                 <div className="bg-white rounded-2xl shadow-xl p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Übersicht</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="flex items-center mb-2">
-                        <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-                        </svg>
-                        <span className="text-sm font-medium text-blue-800">Buchungs-ID</span>
-                      </div>
-                      <p className="text-blue-900 font-mono text-sm">{booking.id}</p>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Übersicht</h2>
+                  
+                  {/* Hauptinformation */}
+                  <div className="text-center mb-6">
+                    <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                      <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="text-2xl font-bold text-gray-900">{booking.totalPersons} Personen</span>
+                      <span className="text-lg text-gray-500 mx-2">für</span>
+                      <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      </svg>
+                      <span className="text-2xl font-bold text-gray-900">{booking.numberOfNights} {booking.numberOfNights === 1 ? 'Nacht' : 'Nächte'}</span>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <div className="flex items-center mb-2">
-                        <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                        <span className="text-sm font-medium text-green-800">Nächte</span>
-                      </div>
-                      <p className="text-green-900 text-xl font-semibold">{booking.numberOfNights}</p>
-                    </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <div className="flex items-center mb-2">
-                        <svg className="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span className="text-sm font-medium text-purple-800">Personen</span>
-                      </div>
-                      <p className="text-purple-900 text-xl font-semibold">{booking.totalPersons}</p>
-                    </div>
+                  </div>
+                  
+                  {/* Buchungs-ID */}
+                  <div className="text-center pt-4 border-t border-gray-100">
+                    <p className="text-sm text-gray-500 font-mono truncate">
+                      ID: {booking.id}
+                    </p>
                   </div>
                 </div>
               )}

@@ -102,12 +102,12 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(mockBooking.id)).toBeInTheDocument();
+        expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
       });
 
       // Booking overview should be visible
       expect(screen.getByText('Übersicht')).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument(); // Number of nights
+      expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
       
       // Accommodations should still show skeleton
       const skeletonElements = document.querySelectorAll('.animate-pulse');
@@ -155,11 +155,10 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
+        expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
       });
 
       // Booking data should still be visible
-      expect(screen.getByText(mockBooking.id)).toBeInTheDocument();
       expect(screen.getByText('Übersicht')).toBeInTheDocument();
       
       // Error message for accommodations should be shown
@@ -217,7 +216,7 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
+        expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
       });
 
       // Check header information
@@ -225,9 +224,9 @@ describe('BookingDetailPage', () => {
       expect(screen.getByText('Bestätigt')).toBeInTheDocument();
 
       // Check overview section
-      expect(screen.getByText(mockBooking.id)).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument(); // Number of nights
-      expect(screen.getByText('4')).toBeInTheDocument(); // Total persons
+      expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
+      expect(screen.getByText('4 Personen')).toBeInTheDocument(); // Total persons
+      expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
     });
 
     it('should display accommodations correctly', async () => {
@@ -310,10 +309,8 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
+        expect(screen.getByText('Bestätigt')).toBeInTheDocument();
       });
-
-      expect(screen.getByText('Bestätigt')).toBeInTheDocument();
     });
 
     it('should show correct badge for cancelled status', async () => {
