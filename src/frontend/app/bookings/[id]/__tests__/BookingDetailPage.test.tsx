@@ -13,6 +13,7 @@ jest.mock('next/navigation', () => ({
 jest.mock('../../../../lib/api/client', () => ({
   apiClient: {
     getBookingById: jest.fn(),
+    getSleepingAccommodations: jest.fn(),
   },
 }));
 
@@ -35,7 +36,7 @@ const mockBooking: Booking = {
       personCount: 2,
     },
     {
-      sleepingAccommodationId: '789e0123-e89b-12d3-a456-426614174002', 
+      sleepingAccommodationId: '789e1234-e89b-12d3-a456-426614174002', 
       sleepingAccommodationName: 'Gästezimmer',
       personCount: 2,
     },
@@ -45,16 +46,43 @@ const mockBooking: Booking = {
   changedAt: '2024-03-02T15:30:00Z',
 };
 
+const mockAccommodations = [
+  {
+    id: '456e7890-e89b-12d3-a456-426614174001',
+    name: 'Hauptschlafzimmer',
+    maxCapacity: 2,
+    description: 'Gemütliches Hauptschlafzimmer',
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    changedAt: null,
+  },
+  {
+    id: '789e1234-e89b-12d3-a456-426614174002',
+    name: 'Gästezimmer',
+    maxCapacity: 2,
+    description: 'Komfortables Gästezimmer',
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    changedAt: null,
+  },
+];
+
 describe('BookingDetailPage', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+    
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
     (useParams as jest.Mock).mockReturnValue({ id: mockBooking.id });
-    jest.clearAllMocks();
+    
+    // Default successful mocks
+    (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
+    (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
   });
 
   describe('Loading State', () => {
     it('should show loading spinner while fetching booking', () => {
       (apiClient.getBookingById as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      (apiClient.getSleepingAccommodations as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
       render(<BookingDetailPage />);
 

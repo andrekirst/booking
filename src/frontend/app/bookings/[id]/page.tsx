@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Booking, BookingStatus } from '../../../lib/types/api';
+import { Booking, BookingStatus, SleepingAccommodation } from '../../../lib/types/api';
 import { apiClient } from '../../../lib/api/client';
 
 export default function BookingDetailPage() {
@@ -11,6 +11,7 @@ export default function BookingDetailPage() {
   const bookingId = params?.id as string;
 
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [accommodations, setAccommodations] = useState<SleepingAccommodation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +26,14 @@ export default function BookingDetailPage() {
     setError(null);
 
     try {
-      const data = await apiClient.getBookingById(bookingId);
-      setBooking(data);
+      // Parallel API calls for booking and accommodations
+      const [bookingData, accommodationsData] = await Promise.all([
+        apiClient.getBookingById(bookingId),
+        apiClient.getSleepingAccommodations()
+      ]);
+      
+      setBooking(bookingData);
+      setAccommodations(accommodationsData);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchung:', err);
       const errorMessage = err && typeof err === 'object' && 'message' in err 
@@ -46,6 +53,11 @@ export default function BookingDetailPage() {
   useEffect(() => {
     fetchBooking();
   }, [bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getAccommodationName = (accommodationId: string): string => {
+    const accommodation = accommodations.find(acc => acc.id === accommodationId);
+    return accommodation?.name || 'Unbekannter Schlafplatz';
+  };
 
   const getStatusBadge = (status: BookingStatus) => {
     switch (status) {
@@ -256,7 +268,7 @@ export default function BookingDetailPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8" />
                         </svg>
                         <div>
-                          <h3 className="font-medium text-gray-900">{item.sleepingAccommodationName}</h3>
+                          <h3 className="font-medium text-gray-900">{getAccommodationName(item.sleepingAccommodationId)}</h3>
                         </div>
                       </div>
                       <div className="text-right">
