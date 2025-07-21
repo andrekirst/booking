@@ -60,9 +60,9 @@ const HistorySkeleton = () => (
 const ActionsSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-xl p-6">
     <div className="h-6 bg-gray-200 rounded w-16 mb-4 animate-pulse"></div>
-    <div className="space-y-3">
-      <div className="h-10 bg-blue-200 rounded-lg w-full animate-pulse"></div>
-      <div className="h-10 bg-red-200 rounded-lg w-full animate-pulse"></div>
+    <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0">
+      <div className="h-10 bg-red-200 rounded-lg w-full sm:w-32 animate-pulse"></div>
+      <div className="h-10 bg-blue-200 rounded-lg w-full sm:w-32 animate-pulse"></div>
     </div>
   </div>
 );
@@ -421,17 +421,7 @@ export default function BookingDetailPage() {
               ) : booking && (
                 <div className="bg-white rounded-2xl shadow-xl p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Aktionen</h2>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => router.push(`/bookings/${booking.id}/edit`)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-                      disabled={booking.status === BookingStatus.Cancelled}
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Bearbeiten
-                    </button>
+                  <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0">
                     {booking.status !== BookingStatus.Cancelled && (
                       <button
                         onClick={() => {
@@ -440,7 +430,7 @@ export default function BookingDetailPage() {
                             console.log('Cancel booking:', booking.id);
                           }
                         }}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -448,6 +438,16 @@ export default function BookingDetailPage() {
                         Stornieren
                       </button>
                     )}
+                    <button
+                      onClick={() => router.push(`/bookings/${booking.id}/edit`)}
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+                      disabled={booking.status === BookingStatus.Cancelled}
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Bearbeiten
+                    </button>
                   </div>
                 </div>
               )}
