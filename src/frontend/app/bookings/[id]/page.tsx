@@ -257,7 +257,6 @@ export default function BookingDetailPage() {
                         </svg>
                         <div>
                           <h3 className="font-medium text-gray-900">{item.sleepingAccommodationName}</h3>
-                          <p className="text-sm text-gray-600">Schlafplatz-ID: {item.sleepingAccommodationId}</p>
                         </div>
                       </div>
                       <div className="text-right">
