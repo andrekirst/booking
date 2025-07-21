@@ -275,6 +275,7 @@ public class BookingsController(IMediator mediator) : ControllerBase
         }
     }
 
+
     [HttpPost("projections/rebuild")]
     [Authorize(Roles = "Administrator")]
     public async Task<ActionResult> RebuildProjections()

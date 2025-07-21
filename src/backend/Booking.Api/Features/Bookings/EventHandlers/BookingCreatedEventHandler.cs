@@ -13,12 +13,12 @@ public class BookingCreatedEventHandler(
 {
     public async Task Handle(BookingCreatedEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling BookingCreatedEvent for booking {BookingId}", notification.BookingId);
+        logger.LogDebug("Handling BookingCreatedEvent for booking {BookingId}", notification.BookingId);
         
         try
         {
             await projectionService.ProjectAsync(notification.BookingId, cancellationToken: cancellationToken);
-            logger.LogInformation("Successfully projected booking {BookingId}", notification.BookingId);
+            logger.LogDebug("Successfully projected booking {BookingId}", notification.BookingId);
         }
         catch (Exception ex)
         {

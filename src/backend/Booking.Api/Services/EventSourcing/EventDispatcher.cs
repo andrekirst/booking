@@ -10,19 +10,18 @@ public class EventDispatcher(
 {
     public async Task PublishAsync(DomainEvent domainEvent)
     {
-        logger.LogInformation("EventDispatcher: Publishing {EventType} event with ID {EventId}", 
+        logger.LogDebug("Publishing {EventType} event with ID {EventId}", 
             domainEvent.EventType, domainEvent.Id);
         
         try
         {
             await mediator.Publish(domainEvent);
-            logger.LogInformation("EventDispatcher: Successfully published {EventType} event", 
-                domainEvent.EventType);
+            logger.LogDebug("Successfully published {EventType} event", domainEvent.EventType);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "EventDispatcher: Failed to publish {EventType} event", 
-                domainEvent.EventType);
+            logger.LogError(ex, "Failed to publish {EventType} event with ID {EventId}", 
+                domainEvent.EventType, domainEvent.Id);
             throw;
         }
     }

@@ -23,7 +23,11 @@ public class BookingProjectionService(
         if (readModel == null)
         {
             logger.LogInformation("BookingProjectionService: Creating new read model for booking {AggregateId}", aggregateId);
-            readModel = new BookingReadModel { Id = aggregateId };
+            readModel = new BookingReadModel 
+            { 
+                Id = aggregateId,
+                LastEventVersion = -1 // Initialize to -1 so first event (version 0) gets processed
+            };
             context.BookingReadModels.Add(readModel);
         }
         else
@@ -41,7 +45,7 @@ public class BookingProjectionService(
 
         if (events.Count == 0)
         {
-            logger.LogWarning("BookingProjectionService: No events found for booking {AggregateId} from version {FromVersion}",
+            logger.LogWarning("No events found for booking {AggregateId} from version {FromVersion}",
                 aggregateId, fromVersion);
             return;
         }
