@@ -6,6 +6,7 @@ using Booking.Api.Attributes;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Booking.Api.Controllers;
@@ -238,6 +239,40 @@ public class BookingsController(IMediator mediator) : ControllerBase
             TotalPersons = createDto.BookingItems.Sum(x => x.PersonCount),
             AccommodationCount = createDto.BookingItems.Count
         });
+    }
+
+    [HttpGet("debug/events")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<ActionResult> DebugEvents()
+    {
+        try
+        {
+            var context = HttpContext.RequestServices.GetRequiredService<Data.BookingDbContext>();
+            
+            var totalEvents = await context.EventStoreEvents.CountAsync();
+            var bookingEvents = await context.EventStoreEvents
+                .Where(e => e.AggregateType == "BookingAggregate")
+                .CountAsync();
+            var readModels = await context.BookingReadModels.CountAsync();
+            
+            var recentEvents = await context.EventStoreEvents
+                .Where(e => e.AggregateType == "BookingAggregate")
+                .OrderByDescending(e => e.OccurredAt)
+                .Take(5)
+                .Select(e => new { e.Id, e.AggregateId, e.EventType, e.Version, e.OccurredAt })
+                .ToListAsync();
+            
+            return Ok(new { 
+                TotalEvents = totalEvents,
+                BookingEvents = bookingEvents,
+                ReadModels = readModels,
+                RecentEvents = recentEvents
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "Debug failed", Error = ex.Message });
+        }
     }
 
     [HttpPost("projections/rebuild")]
