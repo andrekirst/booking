@@ -79,15 +79,52 @@ describe('BookingDetailPage', () => {
     (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
   });
 
-  describe('Loading State', () => {
-    it('should show loading spinner while fetching booking', () => {
+  describe('Loading States', () => {
+    it('should show skeleton loading states while fetching data', () => {
+      (useParams as jest.Mock).mockReturnValue({ id: mockBooking.id });
       (apiClient.getBookingById as jest.Mock).mockImplementation(() => new Promise(() => {}));
       (apiClient.getSleepingAccommodations as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
       render(<BookingDetailPage />);
 
-      expect(screen.getByText('Buchung wird geladen...')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      // Check for skeleton loading elements
+      expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
+      
+      // Verify skeleton elements are present (checking for animate-pulse class)
+      const skeletonElements = document.querySelectorAll('.animate-pulse');
+      expect(skeletonElements.length).toBeGreaterThan(0);
+    });
+
+    it('should show booking data when booking loads but accommodations are still loading', async () => {
+      (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
+      (apiClient.getSleepingAccommodations as jest.Mock).mockImplementation(() => new Promise(() => {}));
+
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(mockBooking.id)).toBeInTheDocument();
+      });
+
+      // Booking overview should be visible
+      expect(screen.getByText('Übersicht')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument(); // Number of nights
+      
+      // Accommodations should still show skeleton
+      const skeletonElements = document.querySelectorAll('.animate-pulse');
+      expect(skeletonElements.length).toBeGreaterThan(0);
+    });
+
+    it('should show accommodations data when accommodations load but booking is still loading', async () => {
+      (useParams as jest.Mock).mockReturnValue({ id: mockBooking.id });
+      (apiClient.getBookingById as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
+
+      render(<BookingDetailPage />);
+
+      // Since booking is still loading, the whole page should show skeletons
+      // because accommodation display depends on booking data
+      const skeletonElements = document.querySelectorAll('.animate-pulse');
+      expect(skeletonElements.length).toBeGreaterThan(0);
     });
   });
 
@@ -96,6 +133,7 @@ describe('BookingDetailPage', () => {
       (apiClient.getBookingById as jest.Mock).mockRejectedValue(
         new Error('Fehler beim Laden der Buchung')
       );
+      (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
 
       render(<BookingDetailPage />);
 
@@ -106,6 +144,29 @@ describe('BookingDetailPage', () => {
       expect(screen.getByText('Fehler beim Laden der Buchung')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /neu laden/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /zurück zur übersicht/i })).toBeInTheDocument();
+    });
+
+    it('should show accommodation error while still displaying booking data', async () => {
+      (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
+      (apiClient.getSleepingAccommodations as jest.Mock).mockRejectedValue(
+        new Error('Fehler beim Laden der Schlafmöglichkeiten')
+      );
+
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
+      });
+
+      // Booking data should still be visible
+      expect(screen.getByText(mockBooking.id)).toBeInTheDocument();
+      expect(screen.getByText('Übersicht')).toBeInTheDocument();
+      
+      // Error message for accommodations should be shown
+      expect(screen.getByText('Namen konnten nicht geladen werden')).toBeInTheDocument();
+      
+      // Accommodations should show "Unbekannter Schlafplatz" as fallback
+      expect(screen.getAllByText('Unbekannter Schlafplatz')).toHaveLength(2);
     });
 
     it('should show not found message when booking is null', async () => {

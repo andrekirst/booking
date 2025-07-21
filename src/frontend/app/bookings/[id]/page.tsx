@@ -5,6 +5,68 @@ import { useRouter, useParams } from 'next/navigation';
 import { Booking, BookingStatus, SleepingAccommodation } from '../../../lib/types/api';
 import { apiClient } from '../../../lib/api/client';
 
+// Skeleton components
+const BookingOverviewSkeleton = () => (
+  <div className="bg-white rounded-2xl shadow-xl p-6">
+    <div className="h-6 bg-gray-200 rounded w-24 mb-4 animate-pulse"></div>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="bg-blue-50 rounded-lg p-4">
+          <div className="flex items-center mb-2">
+            <div className="w-5 h-5 bg-blue-200 rounded mr-2 animate-pulse"></div>
+            <div className="h-4 bg-blue-200 rounded w-20 animate-pulse"></div>
+          </div>
+          <div className="h-6 bg-blue-300 rounded w-32 animate-pulse"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const AccommodationsSkeleton = () => (
+  <div className="bg-white rounded-2xl shadow-xl p-6">
+    <div className="h-6 bg-gray-200 rounded w-40 mb-4 animate-pulse"></div>
+    <div className="space-y-3">
+      {[...Array(2)].map((_, i) => (
+        <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center">
+            <div className="w-6 h-6 bg-gray-300 rounded mr-3 animate-pulse"></div>
+            <div className="h-5 bg-gray-300 rounded w-32 animate-pulse"></div>
+          </div>
+          <div className="h-6 bg-blue-200 rounded-full w-20 animate-pulse"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const HistorySkeleton = () => (
+  <div className="bg-white rounded-2xl shadow-xl p-6">
+    <div className="h-6 bg-gray-200 rounded w-16 mb-4 animate-pulse"></div>
+    <div className="space-y-4">
+      {[...Array(2)].map((_, i) => (
+        <div key={i}>
+          <div className="h-4 bg-gray-200 rounded w-16 mb-1 animate-pulse"></div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-gray-300 rounded mr-2 animate-pulse"></div>
+            <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const ActionsSkeleton = () => (
+  <div className="bg-white rounded-2xl shadow-xl p-6">
+    <div className="h-6 bg-gray-200 rounded w-16 mb-4 animate-pulse"></div>
+    <div className="space-y-3">
+      <div className="h-10 bg-blue-200 rounded-lg w-full animate-pulse"></div>
+      <div className="h-10 bg-red-200 rounded-lg w-full animate-pulse"></div>
+    </div>
+  </div>
+);
+
 export default function BookingDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -12,41 +74,55 @@ export default function BookingDetailPage() {
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [accommodations, setAccommodations] = useState<SleepingAccommodation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [bookingLoading, setBookingLoading] = useState(true);
+  const [accommodationsLoading, setAccommodationsLoading] = useState(true);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [accommodationsError, setAccommodationsError] = useState<string | null>(null);
 
   const fetchBooking = async () => {
     if (!bookingId) {
-      setError('Ungültige Buchungs-ID');
-      setIsLoading(false);
+      setBookingError('Ungültige Buchungs-ID');
+      setBookingLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    // Reset loading states
+    setBookingLoading(true);
+    setAccommodationsLoading(true);
+    setBookingError(null);
+    setAccommodationsError(null);
 
+    // Independent API call for booking
     try {
-      // Parallel API calls for booking and accommodations
-      const [bookingData, accommodationsData] = await Promise.all([
-        apiClient.getBookingById(bookingId),
-        apiClient.getSleepingAccommodations()
-      ]);
-      
+      const bookingData = await apiClient.getBookingById(bookingId);
       setBooking(bookingData);
-      setAccommodations(accommodationsData);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchung:', err);
       const errorMessage = err && typeof err === 'object' && 'message' in err 
         ? String((err as { message: string }).message) 
         : 'Fehler beim Laden der Buchung';
-      setError(errorMessage);
+      setBookingError(errorMessage);
       
       // Handle authentication errors
       if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
         router.push('/login');
       }
     } finally {
-      setIsLoading(false);
+      setBookingLoading(false);
+    }
+
+    // Independent API call for accommodations
+    try {
+      const accommodationsData = await apiClient.getSleepingAccommodations();
+      setAccommodations(accommodationsData);
+    } catch (err: unknown) {
+      console.error('Fehler beim Laden der Schlafmöglichkeiten:', err);
+      const errorMessage = err && typeof err === 'object' && 'message' in err 
+        ? String((err as { message: string }).message) 
+        : 'Fehler beim Laden der Schlafmöglichkeiten';
+      setAccommodationsError(errorMessage);
+    } finally {
+      setAccommodationsLoading(false);
     }
   };
 
@@ -123,18 +199,8 @@ export default function BookingDetailPage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" role="progressbar" aria-label="Loading"></div>
-          <span className="text-gray-600 font-medium">Buchung wird geladen...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+  // Show critical error state (booking error that prevents showing anything)
+  if (bookingError && !bookingLoading && !booking) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="max-w-md mx-auto text-center">
@@ -143,7 +209,7 @@ export default function BookingDetailPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Fehler beim Laden</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-gray-600 mb-6">{bookingError}</p>
             <div className="flex flex-col space-y-3">
               <button
                 onClick={() => window.location.reload()}
@@ -164,7 +230,8 @@ export default function BookingDetailPage() {
     );
   }
 
-  if (!booking) {
+  // Show "not found" only if booking loading is complete and still no booking
+  if (!booking && !bookingLoading && !bookingError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="max-w-md mx-auto text-center">
@@ -208,12 +275,20 @@ export default function BookingDetailPage() {
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                   Buchungsdetails
                 </h1>
-                <p className="text-lg text-gray-600">
-                  {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
-                </p>
+                {bookingLoading ? (
+                  <div className="h-7 bg-gray-200 rounded w-96 animate-pulse"></div>
+                ) : booking && (
+                  <p className="text-lg text-gray-600">
+                    {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                  </p>
+                )}
               </div>
               <div className="mt-4 sm:mt-0">
-                {getStatusBadge(booking.status)}
+                {bookingLoading ? (
+                  <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+                ) : booking && (
+                  getStatusBadge(booking.status)
+                )}
               </div>
             </div>
           </div>
@@ -223,66 +298,81 @@ export default function BookingDetailPage() {
             {/* Left Column - Main Details */}
             <div className="lg:col-span-2 space-y-6">
               {/* Booking Overview */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Übersicht</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-                      </svg>
-                      <span className="text-sm font-medium text-blue-800">Buchungs-ID</span>
+              {bookingLoading ? (
+                <BookingOverviewSkeleton />
+              ) : booking && (
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Übersicht</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-800">Buchungs-ID</span>
+                      </div>
+                      <p className="text-blue-900 font-mono text-sm">{booking.id}</p>
                     </div>
-                    <p className="text-blue-900 font-mono text-sm">{booking.id}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                      </svg>
-                      <span className="text-sm font-medium text-green-800">Nächte</span>
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <span className="text-sm font-medium text-green-800">Nächte</span>
+                      </div>
+                      <p className="text-green-900 text-xl font-semibold">{booking.numberOfNights}</p>
                     </div>
-                    <p className="text-green-900 text-xl font-semibold">{booking.numberOfNights}</p>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <svg className="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <span className="text-sm font-medium text-purple-800">Personen</span>
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <svg className="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span className="text-sm font-medium text-purple-800">Personen</span>
+                      </div>
+                      <p className="text-purple-900 text-xl font-semibold">{booking.totalPersons}</p>
                     </div>
-                    <p className="text-purple-900 text-xl font-semibold">{booking.totalPersons}</p>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Accommodations */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Schlafmöglichkeiten</h2>
-                <div className="space-y-3">
-                  {booking.bookingItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center">
-                        <svg className="w-6 h-6 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8" />
-                        </svg>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{getAccommodationName(item.sleepingAccommodationId)}</h3>
+              {accommodationsLoading ? (
+                <AccommodationsSkeleton />
+              ) : booking && (
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Schlafmöglichkeiten</h2>
+                    {accommodationsError && (
+                      <div className="text-sm text-red-600 bg-red-50 px-2 py-1 rounded">
+                        Namen konnten nicht geladen werden
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    {booking.bookingItems.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center">
+                          <svg className="w-6 h-6 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8" />
+                          </svg>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{getAccommodationName(item.sleepingAccommodationId)}</h3>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {item.personCount} {item.personCount === 1 ? 'Person' : 'Personen'}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {item.personCount} {item.personCount === 1 ? 'Person' : 'Personen'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Notes */}
-              {booking.notes && (
+              {booking && booking.notes && (
                 <div className="bg-white rounded-2xl shadow-xl p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Notizen</h2>
                   <div className="bg-blue-50 rounded-lg p-4">
@@ -295,64 +385,72 @@ export default function BookingDetailPage() {
             {/* Right Column - Metadata */}
             <div className="space-y-6">
               {/* Timestamps */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Historie</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Erstellt</label>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      <span className="text-gray-900 text-sm">{formatDateShort(booking.createdAt)}</span>
-                    </div>
-                  </div>
-                  {booking.changedAt && (
+              {bookingLoading ? (
+                <HistorySkeleton />
+              ) : booking && (
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Historie</h2>
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Geändert</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Erstellt</label>
                       <div className="flex items-center">
-                        <svg className="w-4 h-4 text-orange-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg className="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        <span className="text-gray-900 text-sm">{formatDateShort(booking.changedAt)}</span>
+                        <span className="text-gray-900 text-sm">{formatDateShort(booking.createdAt)}</span>
                       </div>
                     </div>
-                  )}
+                    {booking.changedAt && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Geändert</label>
+                        <div className="flex items-center">
+                          <svg className="w-4 h-4 text-orange-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          <span className="text-gray-900 text-sm">{formatDateShort(booking.changedAt)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Actions */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Aktionen</h2>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => router.push(`/bookings/${booking.id}/edit`)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-                    disabled={booking.status === BookingStatus.Cancelled}
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Bearbeiten
-                  </button>
-                  {booking.status !== BookingStatus.Cancelled && (
+              {bookingLoading ? (
+                <ActionsSkeleton />
+              ) : booking && (
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Aktionen</h2>
+                  <div className="space-y-3">
                     <button
-                      onClick={() => {
-                        if (confirm('Möchten Sie diese Buchung wirklich stornieren?')) {
-                          // TODO: Implement cancel booking functionality
-                          console.log('Cancel booking:', booking.id);
-                        }
-                      }}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                      onClick={() => router.push(`/bookings/${booking.id}/edit`)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                      disabled={booking.status === BookingStatus.Cancelled}
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Stornieren
+                      Bearbeiten
                     </button>
-                  )}
+                    {booking.status !== BookingStatus.Cancelled && (
+                      <button
+                        onClick={() => {
+                          if (confirm('Möchten Sie diese Buchung wirklich stornieren?')) {
+                            // TODO: Implement cancel booking functionality
+                            console.log('Cancel booking:', booking.id);
+                          }
+                        }}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Stornieren
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
