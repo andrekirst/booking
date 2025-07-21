@@ -191,6 +191,7 @@ export default function BookingForm({
       };
 
       const createdBooking = await apiClient.createBooking(bookingRequest);
+      console.log('BookingForm: Booking created successfully:', createdBooking);
       
       if (onSuccess) {
         onSuccess(createdBooking.id);
