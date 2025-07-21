@@ -181,7 +181,7 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Zeitstempel')).toBeInTheDocument();
+        expect(screen.getByText('Historie')).toBeInTheDocument();
       });
 
       expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
@@ -195,7 +195,7 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Zeitstempel')).toBeInTheDocument();
+        expect(screen.getByText('Historie')).toBeInTheDocument();
       });
 
       expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date

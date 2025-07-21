@@ -285,7 +285,7 @@ export default function BookingDetailPage() {
             <div className="space-y-6">
               {/* Timestamps */}
               <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Zeitstempel</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Historie</h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Erstellt</label>
