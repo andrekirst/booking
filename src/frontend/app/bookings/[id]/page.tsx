@@ -283,31 +283,6 @@ export default function BookingDetailPage() {
 
             {/* Right Column - Metadata */}
             <div className="space-y-6">
-              {/* Dates */}
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Termine</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Anreise</label>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-                      </svg>
-                      <span className="text-gray-900">{formatDateShort(booking.startDate)}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Abreise</label>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-                      </svg>
-                      <span className="text-gray-900">{formatDateShort(booking.endDate)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Timestamps */}
               <div className="bg-white rounded-2xl shadow-xl p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Zeitstempel</h2>
