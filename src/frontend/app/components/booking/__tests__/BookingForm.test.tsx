@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import BookingForm from '../BookingForm';
 import { apiClient } from '../../../../lib/api/client';
 import { SleepingAccommodation, BookingAvailability, AccommodationType } from '../../../../lib/types/api';
@@ -6,7 +6,38 @@ import { SleepingAccommodation, BookingAvailability, AccommodationType } from '.
 // Mock the API client
 jest.mock('../../../../lib/api/client');
 
+// Mock DateRangePicker to simplify testing
+jest.mock('../DateRangePicker', () => {
+  return function MockedDateRangePicker({ onDateChange, startDate, endDate }: any) {
+    return (
+      <div data-testid="date-range-picker">
+        <input 
+          data-testid="start-date-input"
+          type="date"
+          value={startDate}
+          onChange={(e) => onDateChange(e.target.value, endDate)}
+          placeholder="Anreise"
+        />
+        <input 
+          data-testid="end-date-input"
+          type="date"
+          value={endDate}
+          onChange={(e) => onDateChange(startDate, e.target.value)}
+          placeholder="Abreise"
+        />
+        <span>Anreise</span>
+      </div>
+    );
+  };
+});
+
 const mockedApiClient = jest.mocked(apiClient);
+
+// Mock scrollIntoView
+Object.defineProperty(Element.prototype, 'scrollIntoView', {
+  value: jest.fn(),
+  writable: true,
+});
 
 const mockAccommodations: SleepingAccommodation[] = [
   {
@@ -91,8 +122,8 @@ describe('BookingForm', () => {
     it('renders date picker section', () => {
       render(<BookingForm />);
 
-      expect(screen.getByLabelText(/anreise/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/abreise/i)).toBeInTheDocument();
+      expect(screen.getByTestId('date-range-picker')).toBeInTheDocument();
+      expect(screen.getByText(/anreise/i)).toBeInTheDocument();
     });
 
     it('initially disables submit button', () => {
@@ -138,13 +169,20 @@ describe('BookingForm', () => {
     });
 
     it('checks availability when dates are selected', async () => {
-      render(<BookingForm />);
+      await act(async () => {
+        render(<BookingForm />);
+      });
 
-      const startDateInput = screen.getByLabelText(/anreise/i);
-      const endDateInput = screen.getByLabelText(/abreise/i);
+      const startDateInput = screen.getByTestId('start-date-input');
+      const endDateInput = screen.getByTestId('end-date-input');
 
-      fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
-      fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      await act(async () => {
+        fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
+      });
+      
+      await act(async () => {
+        fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      });
 
       await waitFor(() => {
         expect(mockedApiClient.checkAvailability).toHaveBeenCalledWith('2024-07-15', '2024-07-17');
@@ -156,13 +194,20 @@ describe('BookingForm', () => {
         new Promise(resolve => setTimeout(() => resolve(mockAvailability), 100))
       );
 
-      render(<BookingForm />);
+      await act(async () => {
+        render(<BookingForm />);
+      });
 
-      const startDateInput = screen.getByLabelText(/anreise/i);
-      const endDateInput = screen.getByLabelText(/abreise/i);
+      const startDateInput = screen.getByTestId('start-date-input');
+      const endDateInput = screen.getByTestId('end-date-input');
 
-      fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
-      fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      await act(async () => {
+        fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
+      });
+      
+      await act(async () => {
+        fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      });
 
       expect(screen.getByText(/verfügbarkeit wird geprüft/i)).toBeInTheDocument();
 
@@ -174,35 +219,51 @@ describe('BookingForm', () => {
 
   describe('Accommodation Selection', () => {
     it('shows accommodation selector after dates are selected and availability is checked', async () => {
-      render(<BookingForm />);
+      await act(async () => {
+        render(<BookingForm />);
+      });
 
-      const startDateInput = screen.getByLabelText(/anreise/i);
-      const endDateInput = screen.getByLabelText(/abreise/i);
+      const startDateInput = screen.getByTestId('start-date-input');
+      const endDateInput = screen.getByTestId('end-date-input');
 
-      fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
-      fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      await act(async () => {
+        fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
+      });
+      
+      await act(async () => {
+        fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      });
 
       await waitFor(() => {
-        expect(screen.getByText(/schlafmöglichkeiten auswählen/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/schlafmöglichkeiten auswählen/i)[0]).toBeInTheDocument();
       });
     });
 
     it('clears selected accommodations when dates change', async () => {
-      render(<BookingForm />);
+      await act(async () => {
+        render(<BookingForm />);
+      });
 
       // Select dates and wait for availability check
-      const startDateInput = screen.getByLabelText(/anreise/i);
-      const endDateInput = screen.getByLabelText(/abreise/i);
+      const startDateInput = screen.getByTestId('start-date-input');
+      const endDateInput = screen.getByTestId('end-date-input');
 
-      fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
-      fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      await act(async () => {
+        fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
+      });
+      
+      await act(async () => {
+        fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      });
 
       await waitFor(() => {
-        expect(screen.getByText(/schlafmöglichkeiten auswählen/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/schlafmöglichkeiten auswählen/i)[0]).toBeInTheDocument();
       });
 
       // Change start date
-      fireEvent.change(startDateInput, { target: { value: '2024-07-20' } });
+      await act(async () => {
+        fireEvent.change(startDateInput, { target: { value: '2024-07-20' } });
+      });
 
       // Selections should be cleared (no total persons display)
       expect(screen.queryByText(/gesamt:/i)).not.toBeInTheDocument();
@@ -211,17 +272,24 @@ describe('BookingForm', () => {
 
   describe('Notes Section', () => {
     it('shows notes section when accommodations are selected', async () => {
-      render(<BookingForm />);
+      await act(async () => {
+        render(<BookingForm />);
+      });
 
       // Select dates
-      const startDateInput = screen.getByLabelText(/anreise/i);
-      const endDateInput = screen.getByLabelText(/abreise/i);
+      const startDateInput = screen.getByTestId('start-date-input');
+      const endDateInput = screen.getByTestId('end-date-input');
 
-      fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
-      fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      await act(async () => {
+        fireEvent.change(startDateInput, { target: { value: '2024-07-15' } });
+      });
+      
+      await act(async () => {
+        fireEvent.change(endDateInput, { target: { value: '2024-07-17' } });
+      });
 
       await waitFor(() => {
-        expect(screen.getByText(/schlafmöglichkeiten auswählen/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/schlafmöglichkeiten auswählen/i)[0]).toBeInTheDocument();
       });
 
       // Note: We'd need to trigger accommodation selection here, but that requires
@@ -276,14 +344,19 @@ describe('BookingForm', () => {
   });
 
   describe('Form Reset', () => {
-    it('resets form when reset button is clicked', () => {
-      render(<BookingForm />);
+    it('resets form when reset button is clicked', async () => {
+      await act(async () => {
+        render(<BookingForm />);
+      });
 
       const resetButton = screen.getByRole('button', { name: /zurücksetzen/i });
-      fireEvent.click(resetButton);
+      
+      await act(async () => {
+        fireEvent.click(resetButton);
+      });
 
-      const startDateInput = screen.getByLabelText(/anreise/i) as HTMLInputElement;
-      const endDateInput = screen.getByLabelText(/abreise/i) as HTMLInputElement;
+      const startDateInput = screen.getByTestId('start-date-input') as HTMLInputElement;
+      const endDateInput = screen.getByTestId('end-date-input') as HTMLInputElement;
 
       expect(startDateInput.value).toBe('');
       expect(endDateInput.value).toBe('');
