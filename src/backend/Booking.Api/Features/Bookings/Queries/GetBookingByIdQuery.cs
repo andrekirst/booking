@@ -28,12 +28,21 @@ public class GetBookingByIdQueryHandler(
             return null;
         }
 
-        return MapToDto(booking);
+        return await MapToDto(booking);
     }
 
-    private static BookingDto MapToDto(BookingReadModel booking)
+    private async Task<BookingDto> MapToDto(BookingReadModel booking)
     {
         var bookingItems = JsonSerializer.Deserialize<List<BookingItem>>(booking.BookingItemsJson) ?? new();
+        
+        // Load accommodation names for each booking item
+        var accommodationIds = bookingItems.Select(bi => bi.SleepingAccommodationId).Distinct().ToList();
+        var accommodations = await context.SleepingAccommodations
+            .Where(sa => accommodationIds.Contains(sa.Id))
+            .Select(sa => new { sa.Id, sa.Name })
+            .ToListAsync();
+        
+        var accommodationLookup = accommodations.ToDictionary(a => a.Id, a => a.Name);
         
         return new BookingDto(
             booking.Id,
@@ -46,7 +55,7 @@ public class GetBookingByIdQueryHandler(
             booking.Notes,
             bookingItems.Select(bi => new BookingItemDto(
                 bi.SleepingAccommodationId,
-                string.Empty, // TODO: Include accommodation name from join
+                accommodationLookup.GetValueOrDefault(bi.SleepingAccommodationId, "Unbekannter Schlafplatz"),
                 bi.PersonCount
             )).ToList(),
             booking.TotalPersons,
