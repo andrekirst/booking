@@ -10,7 +10,7 @@ public class EventStore(BookingDbContext context, IEventSerializer eventSerializ
     public async Task<List<DomainEvent>> GetEventsAsync(Guid aggregateId, int fromVersion = 0)
     {
         var eventStoreEvents = await context.EventStoreEvents
-            .Where(e => e.AggregateId == aggregateId && e.Version > fromVersion)
+            .Where(e => e.AggregateId == aggregateId && e.Version >= fromVersion)
             .OrderBy(e => e.Version)
             .ToListAsync();
 

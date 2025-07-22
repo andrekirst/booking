@@ -14,6 +14,8 @@ jest.mock('../../../../lib/api/client', () => ({
   apiClient: {
     getBookingById: jest.fn(),
     getSleepingAccommodations: jest.fn(),
+    acceptBooking: jest.fn(),
+    rejectBooking: jest.fn(),
   },
 }));
 
@@ -335,6 +337,28 @@ describe('BookingDetailPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Abgeschlossen')).toBeInTheDocument();
+      });
+    });
+
+    it('should show correct badge for accepted status', async () => {
+      const acceptedBooking = { ...mockBooking, status: BookingStatus.Accepted };
+      (apiClient.getBookingById as jest.Mock).mockResolvedValue(acceptedBooking);
+
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Angenommen')).toBeInTheDocument();
+      });
+    });
+
+    it('should show correct badge for rejected status', async () => {
+      const rejectedBooking = { ...mockBooking, status: BookingStatus.Rejected };
+      (apiClient.getBookingById as jest.Mock).mockResolvedValue(rejectedBooking);
+
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Abgelehnt')).toBeInTheDocument();
       });
     });
   });

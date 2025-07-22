@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiClient } from "@/lib/api/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,39 +22,17 @@ export default function LoginPage() {
     setMessageType(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await apiClient.login({ email, password });
+      
+      setMessage("Anmeldung erfolgreich");
+      setMessageType("success");
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store token in localStorage
-        if (data.token) {
-          localStorage.setItem("auth_token", data.token);
-        }
-        setMessage("Anmeldung erfolgreich");
-        setMessageType("success");
-
-        // Redirect to bookings page after successful login
-        setTimeout(() => {
-          router.push("/bookings");
-        }, 1000);
-      } else {
-        setMessage(data.message || "Anmeldung fehlgeschlagen");
-        setMessageType("error");
-      }
-    } catch {
-      setMessage(
-        "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
-      );
+      // Redirect to bookings page after successful login
+      setTimeout(() => {
+        router.push("/bookings");
+      }, 1000);
+    } catch (error: any) {
+      setMessage(error.message || "Anmeldung fehlgeschlagen");
       setMessageType("error");
     } finally {
       setIsLoading(false);

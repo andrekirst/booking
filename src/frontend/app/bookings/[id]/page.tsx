@@ -26,6 +26,7 @@ export default function BookingDetailPage() {
   const [accommodationsLoading, setAccommodationsLoading] = useState(true);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [accommodationsError, setAccommodationsError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchBooking = async () => {
     if (!bookingId) {
@@ -121,6 +122,24 @@ export default function BookingDetailPage() {
             Abgeschlossen
           </span>
         );
+      case BookingStatus.Accepted:
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.5-2a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z" />
+            </svg>
+            Angenommen
+          </span>
+        );
+      case BookingStatus.Rejected:
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rose-100 text-rose-800">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Abgelehnt
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
@@ -137,6 +156,38 @@ export default function BookingDetailPage() {
       month: 'long',
       year: 'numeric'
     });
+  };
+
+  const handleAcceptBooking = async () => {
+    if (!booking) return;
+    
+    setActionLoading(true);
+    try {
+      await apiClient.acceptBooking(booking.id);
+      // Refresh booking data to show updated status
+      await fetchBooking();
+    } catch (err: any) {
+      console.error('Fehler beim Annehmen der Buchung:', err);
+      alert(err.message || 'Fehler beim Annehmen der Buchung');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectBooking = async () => {
+    if (!booking) return;
+    
+    setActionLoading(true);
+    try {
+      await apiClient.rejectBooking(booking.id);
+      // Refresh booking data to show updated status
+      await fetchBooking();
+    } catch (err: any) {
+      console.error('Fehler beim Ablehnen der Buchung:', err);
+      alert(err.message || 'Fehler beim Ablehnen der Buchung');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
 
@@ -245,6 +296,8 @@ export default function BookingDetailPage() {
                 console.log('Cancel booking:', booking.id);
               }}
               onEdit={() => router.push(`/bookings/${booking.id}/edit`)}
+              onAccept={handleAcceptBooking}
+              onReject={handleRejectBooking}
             />
           )}
 
