@@ -83,6 +83,7 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Nach jedem Schritt erfolgt ein Commit und Push.
 - **WICHTIG - Schrittweise Umsetzung**: Implementiere immer nur das, was explizit besprochen und geplant wurde. Vermeide es, zusätzliche Features oder Placeholder für zukünftige Funktionen zu erstellen, da dies die Issues zu groß macht und das Testen erschwert. Jedes Feature sollte vollständig und isoliert implementiert werden.
 - **KRITISCH - Strikte Issue-Fokussierung**: Implementiere AUSSCHLIESSLICH die in der Issue-Beschreibung geforderten Funktionen. NIEMALS zusätzliche Features wie Paging, Filterung, erweiterte Parameter oder "vorsorgliche" Funktionalitäten hinzufügen, die nicht explizit gefordert wurden. Dies verursacht unnötige Analyse-Zeit beim Review und macht PRs komplexer als nötig. Regel: Wenn es nicht im Issue steht, wird es nicht implementiert.
+- **OBLIGATORISCH - Frontend & Backend Synchronisation**: Bei JEDER Aufgabe IMMER sowohl Frontend als auch Backend betrachten und synchron halten. Änderungen an APIs, Datenstrukturen oder Funktionen müssen konsistent zwischen Frontend (.NET Core API) und Backend (Next.js) implementiert werden. Vergessene Frontend-Anpassungen führen zu Runtime-Fehlern und zusätzlicher Review-Zeit.
 
 ### 4.1 Obligatorische Reihenfolge bei Issue-Bearbeitung:
 1. **Branch-Setup** (Abschnitt 11.3 + 12.1) - IMMER zuerst!
