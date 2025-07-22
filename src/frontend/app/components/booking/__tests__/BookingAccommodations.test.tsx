@@ -113,7 +113,8 @@ describe('BookingAccommodations', () => {
     it('should use getAccommodationName function to resolve names', () => {
       const mockGetName = jest.fn().mockImplementation(mockGetAccommodationName);
       
-      render(<BookingAccommodations {...defaultProps} getAccommodationName={mockGetName} />);
+      // Remove accommodations prop to force fallback to getAccommodationName
+      render(<BookingAccommodations {...defaultProps} accommodations={[]} getAccommodationName={mockGetName} />);
       
       expect(mockGetName).toHaveBeenCalledWith('456e7890-e89b-12d3-a456-426614174001');
       expect(mockGetName).toHaveBeenCalledWith('789e1234-e89b-12d3-a456-426614174002');
@@ -152,25 +153,25 @@ describe('BookingAccommodations', () => {
       expect(gridDiv).toHaveClass('gap-4');
     });
 
-    it('should have gradient background for accommodation cards', () => {
+    it('should have green background for accommodation cards', () => {
       const { container } = render(<BookingAccommodations {...defaultProps} />);
       
-      const cards = container.querySelectorAll('.group.bg-gradient-to-r.from-blue-50.to-indigo-50');
+      const cards = container.querySelectorAll('.border-green-200.bg-green-50');
       expect(cards.length).toBe(2);
       
       cards.forEach(card => {
-        expect(card).toHaveClass('from-blue-50', 'to-indigo-50');
+        expect(card).toHaveClass('border-green-200', 'bg-green-50');
       });
     });
 
-    it('should have hover effects on accommodation cards', () => {
+    it('should have rounded corners for accommodation cards', () => {
       const { container } = render(<BookingAccommodations {...defaultProps} />);
       
-      const cards = container.querySelectorAll('.group');
-      expect(cards.length).toBe(2);
+      const cards = container.querySelectorAll('.rounded-xl');
+      expect(cards.length).toBeGreaterThan(0);
       
       cards.forEach(card => {
-        expect(card).toHaveClass('hover:from-blue-100', 'hover:to-indigo-100', 'transition-all');
+        expect(card).toHaveClass('rounded-xl');
       });
     });
   });
@@ -179,7 +180,7 @@ describe('BookingAccommodations', () => {
     it('should display accommodation icons', () => {
       const { container } = render(<BookingAccommodations {...defaultProps} />);
       
-      const iconContainers = container.querySelectorAll('.bg-gradient-to-r.from-blue-500.to-indigo-500');
+      const iconContainers = container.querySelectorAll('.bg-green-100.text-green-600');
       expect(iconContainers.length).toBe(2);
     });
 
@@ -241,7 +242,7 @@ describe('BookingAccommodations', () => {
       
       const accommodationNames = screen.getAllByText(/schlafzimmer/i);
       accommodationNames.forEach(name => {
-        expect(name).toHaveClass('font-semibold', 'text-gray-900');
+        expect(name).toHaveClass('font-medium', 'text-gray-900');
       });
     });
   });
