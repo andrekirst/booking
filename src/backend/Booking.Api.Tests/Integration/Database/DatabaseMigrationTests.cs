@@ -58,7 +58,7 @@ public class DatabaseMigrationTests : IntegrationTestBase
         columns.Should().Contain(c => c.ColumnName == "EndDate" && c.DataType == "timestamp without time zone");
         columns.Should().Contain(c => c.ColumnName == "Status" && c.DataType == "integer");
         columns.Should().Contain(c => c.ColumnName == "CreatedAt" && c.DataType == "timestamp without time zone");
-        columns.Should().Contain(c => c.ColumnName == "UpdatedAt" && c.DataType == "timestamp without time zone");
+        columns.Should().Contain(c => c.ColumnName == "ChangedAt" && c.DataType == "timestamp without time zone");
     }
 
     [Fact]
