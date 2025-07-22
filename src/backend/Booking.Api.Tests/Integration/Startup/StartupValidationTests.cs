@@ -126,9 +126,8 @@ public class StartupValidationTests : IntegrationTestBase
         var accommodation = new Booking.Api.Domain.Entities.SleepingAccommodation
         {
             Name = uniqueName,
-            Description = "Test Description",
             MaxCapacity = 2,
-            AccommodationType = Booking.Api.Domain.Enums.AccommodationType.Room
+            Type = Booking.Api.Domain.Enums.AccommodationType.Room
         };
         context.SleepingAccommodations.Add(accommodation);
         
