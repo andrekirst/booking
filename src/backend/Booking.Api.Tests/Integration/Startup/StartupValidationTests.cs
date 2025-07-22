@@ -63,7 +63,10 @@ public class StartupValidationTests : IntegrationTestBase
 
         // Act & Assert - Try to query each DbSet
         await context.Users.AnyAsync().Invoking(t => t).Should().NotThrowAsync("Users DbSet should be queryable");
-        await context.Bookings.AnyAsync().Invoking(t => t).Should().NotThrowAsync("Bookings DbSet should be queryable");
+        await context.EventStoreEvents.AnyAsync().Invoking(t => t).Should().NotThrowAsync("EventStoreEvents DbSet should be queryable");
+        await context.EventStoreSnapshots.AnyAsync().Invoking(t => t).Should().NotThrowAsync("EventStoreSnapshots DbSet should be queryable");
+        await context.BookingReadModels.AnyAsync().Invoking(t => t).Should().NotThrowAsync("BookingReadModels DbSet should be queryable");
+        await context.SleepingAccommodationReadModels.AnyAsync().Invoking(t => t).Should().NotThrowAsync("SleepingAccommodationReadModels DbSet should be queryable");
     }
 
     [Fact]
@@ -120,22 +123,26 @@ public class StartupValidationTests : IntegrationTestBase
         // Act
         var changeTracker = context.ChangeTracker;
         
-        // Assert - This is a bit indirect, but we can verify the interceptor is working
-        // by creating an entity and checking if audit fields are set
-        var booking = new Booking.Api.Domain.Entities.Booking
+        // Assert - We can verify the interceptor is working
+        // by creating a user entity and checking if audit fields are set
+        var user = new Booking.Api.Domain.Entities.User
         {
-            UserId = 1, // Use existing test user
-            StartDate = DateTime.UtcNow.AddDays(1),
-            EndDate = DateTime.UtcNow.AddDays(2),
-            Notes = "Test Booking"
+            Email = "test-interceptor@example.com",
+            PasswordHash = "test-hash",
+            FirstName = "Test",
+            LastName = "User"
         };
-        context.Bookings.Add(booking);
+        context.Users.Add(user);
         
         // The AuditInterceptor should work when we save
         await context.SaveChangesAsync();
         
-        booking.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5), 
+        user.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5), 
             "AuditInterceptor should set CreatedAt");
+        
+        // Clean up
+        context.Users.Remove(user);
+        await context.SaveChangesAsync();
     }
 
     [Fact]

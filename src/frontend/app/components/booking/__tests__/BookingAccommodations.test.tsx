@@ -155,7 +155,7 @@ describe('BookingAccommodations', () => {
     it('should have gradient background for accommodation cards', () => {
       const { container } = render(<BookingAccommodations {...defaultProps} />);
       
-      const cards = container.querySelectorAll('.bg-gradient-to-r');
+      const cards = container.querySelectorAll('.group.bg-gradient-to-r.from-blue-50.to-indigo-50');
       expect(cards.length).toBe(2);
       
       cards.forEach(card => {
@@ -184,10 +184,19 @@ describe('BookingAccommodations', () => {
     });
 
     it('should display person count icons', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      const { container } = render(<BookingAccommodations {...defaultProps} />);
       
-      const icons = screen.getAllByRole('img', { hidden: true });
-      expect(icons.length).toBeGreaterThanOrEqual(4); // 2 accommodation icons + 2 person icons
+      // Check for SVG icons (accommodation icons and person icons)
+      const svgIcons = container.querySelectorAll('svg');
+      expect(svgIcons.length).toBe(4); // 2 accommodation icons + 2 person icons
+      
+      // Check that person icons are in the person count badges
+      const personCountBadges = container.querySelectorAll('.bg-white.rounded-full');
+      expect(personCountBadges.length).toBe(2);
+      personCountBadges.forEach(badge => {
+        const svg = badge.querySelector('svg');
+        expect(svg).toBeInTheDocument();
+      });
     });
   });
 
