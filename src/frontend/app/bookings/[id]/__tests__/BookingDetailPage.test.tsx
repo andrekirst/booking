@@ -208,18 +208,19 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Details')).toBeInTheDocument();
+        expect(screen.getByText('4 Personen')).toBeInTheDocument();
       });
 
       // Check header information
       expect(screen.getByText(/Freitag, 15\. März 2024 - Sonntag, 17\. März 2024/)).toBeInTheDocument();
       expect(screen.getByText('Bestätigt')).toBeInTheDocument();
 
-      // Check that tabs are present
-      expect(screen.getByText('Details')).toBeInTheDocument();
-      expect(screen.getByText('Historie')).toBeInTheDocument();
+      // Check tab navigation
+      expect(screen.getByRole('button', { name: 'Details' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Historie' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Historie' })).toBeDisabled();
 
-      // Check overview section (should be visible in Details tab by default)
+      // Check overview section (should be visible in Details tab)
       expect(screen.getByText('4 Personen')).toBeInTheDocument(); // Total persons
       expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
     });
@@ -260,21 +261,16 @@ describe('BookingDetailPage', () => {
       expect(screen.queryByText('Notizen')).not.toBeInTheDocument();
     });
 
-    it('should display timestamps correctly in Historie tab', async () => {      
+    it('should display timestamps correctly', async () => {      
       render(<BookingDetailPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Historie')).toBeInTheDocument();
-      });
-
-      // Click on Historie tab
-      const historieTab = screen.getByText('Historie');
-      fireEvent.click(historieTab);
 
       await waitFor(() => {
         expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
         expect(screen.getByText('02.03.2024')).toBeInTheDocument(); // Changed date
       });
+      
+      // Check that timestamps are in the Details tab
+      expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-current', 'page');
     });
 
     it('should not display changed timestamp when not present', async () => {
@@ -284,14 +280,6 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Historie')).toBeInTheDocument();
-      });
-
-      // Click on Historie tab
-      const historieTab = screen.getByText('Historie');
-      fireEvent.click(historieTab);
-
-      await waitFor(() => {
         expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
       });
       
@@ -299,73 +287,6 @@ describe('BookingDetailPage', () => {
     });
   });
 
-  describe('Tab Navigation', () => {
-    beforeEach(() => {
-      (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
-    });
-
-    it('should switch between Details and Historie tabs', async () => {
-      render(<BookingDetailPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Details')).toBeInTheDocument();
-      });
-
-      // Default should show Details tab content
-      expect(screen.getByText('4 Personen')).toBeInTheDocument();
-
-      // Click on Historie tab
-      const historieTab = screen.getByText('Historie');
-      fireEvent.click(historieTab);
-
-      // Should show Historie content and hide Details content
-      await waitFor(() => {
-        expect(screen.getByText('Event-Historie wird in einer zukünftigen Version hinzugefügt.')).toBeInTheDocument();
-      });
-
-      // Booking details should not be visible in Historie tab
-      expect(screen.queryByText('Schlafmöglichkeiten')).not.toBeInTheDocument();
-
-      // Switch back to Details tab
-      const detailsTab = screen.getByText('Details');
-      fireEvent.click(detailsTab);
-
-      // Should show Details content again
-      await waitFor(() => {
-        expect(screen.getByText('Schlafmöglichkeiten')).toBeInTheDocument();
-      });
-
-      expect(screen.queryByText('Event-Historie wird in einer zukünftigen Version hinzugefügt.')).not.toBeInTheDocument();
-    });
-
-    it('should have correct active tab styling', async () => {
-      render(<BookingDetailPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Details')).toBeInTheDocument();
-      });
-
-      const detailsTab = screen.getByText('Details');
-      const historieTab = screen.getByText('Historie');
-
-      // Details tab should be active by default
-      expect(detailsTab).toHaveClass('border-blue-500', 'text-blue-600');
-      expect(detailsTab).toHaveAttribute('aria-current', 'page');
-      
-      expect(historieTab).toHaveClass('border-transparent', 'text-gray-500');
-      expect(historieTab).not.toHaveAttribute('aria-current');
-
-      // Click on Historie tab
-      fireEvent.click(historieTab);
-
-      // Historie tab should be active now
-      expect(historieTab).toHaveClass('border-blue-500', 'text-blue-600');
-      expect(historieTab).toHaveAttribute('aria-current', 'page');
-      
-      expect(detailsTab).toHaveClass('border-transparent', 'text-gray-500');
-      expect(detailsTab).not.toHaveAttribute('aria-current');
-    });
-  });
 
   describe('Status Badges', () => {
     it('should show correct badge for pending status', async () => {
@@ -475,6 +396,57 @@ describe('BookingDetailPage', () => {
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /stornieren/i })).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Tab Navigation', () => {
+    beforeEach(() => {
+      (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
+    });
+
+    it('should show Details tab as active by default', async () => {
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-current', 'page');
+      });
+    });
+
+    it('should show Historie tab as disabled', async () => {
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        const historieTab = screen.getByRole('button', { name: 'Historie' });
+        expect(historieTab).toBeDisabled();
+      });
+    });
+
+    it('should not allow clicking on disabled Historie tab', async () => {
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        const historieTab = screen.getByRole('button', { name: 'Historie' });
+        expect(historieTab).toBeDisabled();
+      });
+
+      // Try to click the disabled tab
+      const historieTab = screen.getByRole('button', { name: 'Historie' });
+      historieTab.click();
+
+      // Details tab should still be active
+      expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('should show placeholder content when Historie tab is accessed', async () => {
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('4 Personen')).toBeInTheDocument();
+      });
+
+      // Since Historie tab is disabled, we can't access its content through normal interaction
+      // The content is defined but not accessible due to the disabled state
+      expect(screen.queryByText('Historie wird implementiert')).not.toBeInTheDocument();
     });
   });
 

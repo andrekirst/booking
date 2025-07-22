@@ -20,6 +20,25 @@ const mockTabs: Tab[] = [
   }
 ];
 
+const mockTabsWithDisabled: Tab[] = [
+  {
+    id: 'tab1',
+    label: 'Erster Tab',
+    content: <div>Inhalt des ersten Tabs</div>
+  },
+  {
+    id: 'tab2',
+    label: 'Zweiter Tab',
+    content: <div>Inhalt des zweiten Tabs</div>,
+    disabled: true
+  },
+  {
+    id: 'tab3',
+    label: 'Dritter Tab',
+    content: <div>Inhalt des dritten Tabs</div>
+  }
+];
+
 describe('Tabs', () => {
   describe('Rendering', () => {
     it('rendert alle Tab-Label korrekt', () => {
@@ -167,6 +186,72 @@ describe('Tabs', () => {
       tabs.forEach(tab => {
         expect(tab).toHaveClass('transition-colors', 'duration-200');
       });
+    });
+  });
+
+  describe('Disabled Tabs', () => {
+    it('rendert deaktivierte Tabs mit disabled-Attribut', () => {
+      render(<Tabs tabs={mockTabsWithDisabled} />);
+      
+      const disabledTab = screen.getByText('Zweiter Tab');
+      expect(disabledTab).toBeDisabled();
+    });
+
+    it('wendet disabled-Styles auf deaktivierte Tabs an', () => {
+      render(<Tabs tabs={mockTabsWithDisabled} />);
+      
+      const disabledTab = screen.getByText('Zweiter Tab');
+      expect(disabledTab).toHaveClass('text-gray-400', 'cursor-not-allowed');
+    });
+
+    it('verhindert Klicks auf deaktivierte Tabs', () => {
+      render(<Tabs tabs={mockTabsWithDisabled} />);
+      
+      const firstTab = screen.getByText('Erster Tab');
+      const disabledTab = screen.getByText('Zweiter Tab');
+      
+      // Erster Tab sollte aktiv sein
+      expect(firstTab).toHaveClass('border-blue-500', 'text-blue-600');
+      
+      // Klick auf deaktiverten Tab sollte nichts ändern
+      fireEvent.click(disabledTab);
+      
+      // Erster Tab sollte immer noch aktiv sein
+      expect(firstTab).toHaveClass('border-blue-500', 'text-blue-600');
+      expect(screen.getByText('Inhalt des ersten Tabs')).toBeInTheDocument();
+      expect(screen.queryByText('Inhalt des zweiten Tabs')).not.toBeInTheDocument();
+    });
+
+    it('überspringt deaktivierte Tabs bei der Standard-Tab-Auswahl', () => {
+      const tabsWithFirstDisabled: Tab[] = [
+        {
+          id: 'tab1',
+          label: 'Erster Tab',
+          content: <div>Inhalt des ersten Tabs</div>,
+          disabled: true
+        },
+        {
+          id: 'tab2',
+          label: 'Zweiter Tab',
+          content: <div>Inhalt des zweiten Tabs</div>
+        }
+      ];
+
+      render(<Tabs tabs={tabsWithFirstDisabled} />);
+      
+      // Zweiter Tab sollte aktiv sein, da der erste deaktiviert ist
+      const secondTab = screen.getByText('Zweiter Tab');
+      expect(secondTab).toHaveClass('border-blue-500', 'text-blue-600');
+      expect(screen.getByText('Inhalt des zweiten Tabs')).toBeInTheDocument();
+    });
+
+    it('verwendet ersten nicht-deaktivierten Tab wenn Standard-Tab deaktiviert ist', () => {
+      render(<Tabs tabs={mockTabsWithDisabled} defaultTab="tab2" />);
+      
+      // Erster Tab sollte aktiv sein, da der Standard-Tab deaktiviert ist
+      const firstTab = screen.getByText('Erster Tab');
+      expect(firstTab).toHaveClass('border-blue-500', 'text-blue-600');
+      expect(screen.getByText('Inhalt des ersten Tabs')).toBeInTheDocument();
     });
   });
 });

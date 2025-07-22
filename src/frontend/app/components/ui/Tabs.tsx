@@ -6,6 +6,7 @@ export interface Tab {
   id: string;
   label: string;
   content: ReactNode;
+  disabled?: boolean;
 }
 
 interface TabsProps {
@@ -14,8 +15,15 @@ interface TabsProps {
 }
 
 export default function Tabs({ tabs, defaultTab }: TabsProps) {
-  const validDefaultTab = defaultTab && tabs.find(tab => tab.id === defaultTab) ? defaultTab : tabs[0]?.id || '';
-  const [activeTab, setActiveTab] = useState(validDefaultTab);
+  // Find the first non-disabled tab or use the specified default if it's not disabled
+  const getValidDefaultTab = () => {
+    if (defaultTab && tabs.find(tab => tab.id === defaultTab && !tab.disabled)) {
+      return defaultTab;
+    }
+    return tabs.find(tab => !tab.disabled)?.id || '';
+  };
+  
+  const [activeTab, setActiveTab] = useState(getValidDefaultTab());
 
   if (tabs.length === 0) {
     return null;
@@ -29,12 +37,15 @@ export default function Tabs({ tabs, defaultTab }: TabsProps) {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => !tab.disabled && setActiveTab(tab.id)}
+              disabled={tab.disabled}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
                 ${activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : tab.disabled
+                  ? 'border-transparent text-gray-400 cursor-not-allowed'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 cursor-pointer'
                 }
                 transition-colors duration-200
               `}

@@ -273,27 +273,28 @@ export default function BookingDetailPage() {
                           getAccommodationName={getAccommodationName}
                         />
                         {booking.notes && <BookingNotes notes={booking.notes} />}
-                      </div>
-                    )
-                  },
-                  {
-                    id: 'history',
-                    label: 'Historie',
-                    content: (
-                      <div className="space-y-6">
                         <BookingHistory
                           createdAt={booking.createdAt}
                           changedAt={booking.changedAt}
                         />
-                        {/* TODO: Add event history here when available */}
-                        <div className="text-gray-500 text-center py-8">
-                          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p>Event-Historie wird in einer zukünftigen Version hinzugefügt.</p>
-                        </div>
                       </div>
                     )
+                  },
+                  {
+                    id: 'historie',
+                    label: 'Historie',
+                    content: (
+                      <div className="py-12 text-center">
+                        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Historie wird implementiert</h3>
+                        <p className="text-gray-500">
+                          Die Verlaufshistorie der Buchung wird in einer zukünftigen Version verfügbar sein.
+                        </p>
+                      </div>
+                    ),
+                    disabled: true
                   }
                 ]}
                 defaultTab="details"
