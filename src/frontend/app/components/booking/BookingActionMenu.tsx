@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../../../lib/types/api';
+import ConfirmationModal from '../../../components/ui/ConfirmationModal';
 
 interface BookingActionMenuProps {
   booking: Booking;
@@ -13,6 +14,9 @@ interface BookingActionMenuProps {
 
 export default function BookingActionMenu({ booking, onCancel, onEdit, onAccept, onReject }: BookingActionMenuProps) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
   useEffect(() => {
     // Check if user is admin by parsing JWT token
@@ -30,21 +34,30 @@ export default function BookingActionMenu({ booking, onCancel, onEdit, onAccept,
   }, []);
 
   const handleCancelClick = () => {
-    if (confirm('Möchten Sie diese Buchung wirklich stornieren?')) {
-      onCancel();
-    }
+    setShowCancelModal(true);
   };
 
   const handleAcceptClick = () => {
-    if (confirm('Möchten Sie diese Buchung wirklich annehmen?')) {
-      onAccept?.();
-    }
+    setShowAcceptModal(true);
   };
 
   const handleRejectClick = () => {
-    if (confirm('Möchten Sie diese Buchung wirklich ablehnen?')) {
-      onReject?.();
-    }
+    setShowRejectModal(true);
+  };
+
+  const confirmCancel = () => {
+    onCancel();
+    setShowCancelModal(false);
+  };
+
+  const confirmAccept = () => {
+    onAccept?.();
+    setShowAcceptModal(false);
+  };
+
+  const confirmReject = () => {
+    onReject?.();
+    setShowRejectModal(false);
   };
 
   return (
@@ -99,6 +112,40 @@ export default function BookingActionMenu({ booking, onCancel, onEdit, onAccept,
           Bearbeiten
         </button>
       </div>
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={confirmCancel}
+        title="Buchung stornieren"
+        message="Möchten Sie diese Buchung wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden."
+        confirmText="Stornieren"
+        cancelText="Abbrechen"
+        type="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={showAcceptModal}
+        onClose={() => setShowAcceptModal(false)}
+        onConfirm={confirmAccept}
+        title="Buchung annehmen"
+        message="Möchten Sie diese Buchung annehmen? Die Buchung wird dadurch bestätigt und für den Gast freigegeben."
+        confirmText="Annehmen"
+        cancelText="Abbrechen"
+        type="info"
+      />
+
+      <ConfirmationModal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        onConfirm={confirmReject}
+        title="Buchung ablehnen"
+        message="Möchten Sie diese Buchung ablehnen? Der Gast wird über die Ablehnung informiert."
+        confirmText="Ablehnen"
+        cancelText="Abbrechen"
+        type="danger"
+      />
     </div>
   );
 }

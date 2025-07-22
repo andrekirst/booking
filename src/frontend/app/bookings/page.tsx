@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 
 interface BookingCardProps {
   booking: Booking;
@@ -182,6 +183,9 @@ export default function BookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -236,23 +240,43 @@ export default function BookingsPage() {
     router.push('/bookings/new');
   };
 
-  const handleAcceptBooking = async (bookingId: string) => {
+  const handleAcceptBooking = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setShowAcceptModal(true);
+  };
+
+  const handleRejectBooking = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setShowRejectModal(true);
+  };
+
+  const confirmAcceptBooking = async () => {
+    if (!selectedBookingId) return;
+    
     try {
-      await apiClient.acceptBooking(bookingId);
+      await apiClient.acceptBooking(selectedBookingId);
       await fetchBookings(); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error accepting booking:', error);
       setError('Fehler beim Annehmen der Buchung');
+    } finally {
+      setShowAcceptModal(false);
+      setSelectedBookingId(null);
     }
   };
 
-  const handleRejectBooking = async (bookingId: string) => {
+  const confirmRejectBooking = async () => {
+    if (!selectedBookingId) return;
+    
     try {
-      await apiClient.rejectBooking(bookingId);
+      await apiClient.rejectBooking(selectedBookingId);
       await fetchBookings(); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error rejecting booking:', error);
       setError('Fehler beim Ablehnen der Buchung');
+    } finally {
+      setShowRejectModal(false);
+      setSelectedBookingId(null);
     }
   };
 
@@ -363,6 +387,35 @@ export default function BookingsPage() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showAcceptModal}
+        onClose={() => {
+          setShowAcceptModal(false);
+          setSelectedBookingId(null);
+        }}
+        onConfirm={confirmAcceptBooking}
+        title="Buchung annehmen"
+        message="Möchten Sie diese Buchung annehmen? Die Buchung wird dadurch bestätigt und für den Gast freigegeben."
+        confirmText="Annehmen"
+        cancelText="Abbrechen"
+        type="info"
+      />
+
+      <ConfirmationModal
+        isOpen={showRejectModal}
+        onClose={() => {
+          setShowRejectModal(false);
+          setSelectedBookingId(null);
+        }}
+        onConfirm={confirmRejectBooking}
+        title="Buchung ablehnen"
+        message="Möchten Sie diese Buchung ablehnen? Der Gast wird über die Ablehnung informiert."
+        confirmText="Ablehnen"
+        cancelText="Abbrechen"
+        type="danger"
+      />
     </div>
   );
 }
