@@ -502,6 +502,108 @@ echo "📁 Workspace: $WORKTREE_DIR"
 echo "🌿 Branch: $BRANCH_NAME"
 ```
 
+### 13.9 Claude Code Instanzen - WICHTIG
+
+#### Separate Sessions erforderlich
+**KRITISCH**: Jeder Agent benötigt eine EIGENE Claude Code Session/Instanz!
+
+#### Warum separate Instanzen?
+- **Context Isolation**: Jede Session hat eigenen, unabhängigen Kontext
+- **Echte Parallelität**: Gleichzeitige Ausführung ohne Wartezeiten
+- **Keine Interferenz**: Agenten können sich nicht gegenseitig stören
+- **Token-Management**: Separate Limits pro Session
+
+#### Praktisches Multi-Session Setup
+
+**Option 1: Multiple Terminal-Fenster** (Empfohlen)
+```bash
+# Terminal 1 - Agent 1
+cd /home/user/booking
+claude  # Startet Claude Session für Agent 1
+
+# Terminal 2 - Agent 2  
+cd /home/user/booking-agent2
+claude  # Startet SEPARATE Claude Session für Agent 2
+
+# Terminal 3 - Agent 3
+cd /home/user/booking-agent3
+claude  # Startet DRITTE Claude Session für Agent 3
+```
+
+**Option 2: Terminal Multiplexer (tmux)**
+```bash
+# Erstelle tmux Session mit mehreren Windows
+tmux new-session -s multi-agent -n agent1 -c /home/user/booking
+tmux new-window -n agent2 -c /home/user/booking-agent2
+tmux new-window -n agent3 -c /home/user/booking-agent3
+
+# In jedem Window: claude starten
+```
+
+**Option 3: VS Code Multi-Workspace**
+- Öffne jedes Worktree in separatem VS Code Fenster
+- Nutze Claude Code Extension in jedem Fenster separat
+- Alternativ: VS Code Workspace mit mehreren Ordnern
+
+#### Kosten & Subscription
+**⚠️ WICHTIG**: Multi-Agent bedeutet multiplizierte Kosten!
+
+- **Claude Pro**: Bei 3-4 Agenten $100-200/Monat empfohlen
+- **API Usage**: Kann schnell mehrere hundert Dollar/Monat erreichen
+- **Token Limits**: Jede Session zählt gegen dein Limit
+
+#### Session-Koordination
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   AGENT 1   │     │   AGENT 2   │     │   AGENT 3   │
+│   Claude    │     │   Claude    │     │   Claude    │
+│  Session 1  │     │  Session 2  │     │  Session 3  │
+└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+       │                   │                   │
+       ▼                   ▼                   ▼
+┌─────────────────────────────────────────────────────┐
+│                    Git Repository                    │
+│  Branch: main    feat/33-ui    feat/34-api         │
+└─────────────────────────────────────────────────────┘
+```
+
+#### FAQ - Häufige Fragen
+
+**F: Kann ich eine Claude Session für alle Agenten verwenden?**
+A: NEIN! Das würde Context-Mixing verursachen und die Parallelität zerstören.
+
+**F: Wie viele parallele Sessions sind möglich?**
+A: Technisch unbegrenzt, praktisch durch Subscription/Kosten limitiert (empfohlen: 2-4).
+
+**F: Wie gebe ich verschiedenen Agenten unterschiedliche Anweisungen?**
+A: In jedem Terminal/Session separat. Jeder Agent erhält eigene Instruktionen.
+
+**F: Was passiert bei Session-Timeout?**
+A: Jede Session hat eigenen Timeout. Bei Bedarf in jeweiligem Terminal neu starten.
+
+#### Best Practice Beispiel
+```bash
+# Vorbereitung: 3 Issues für parallele Bearbeitung
+# Issue #40: Backend API
+# Issue #41: Frontend UI  
+# Issue #42: Tests
+
+# Setup alle Worktrees
+./scripts/setup-multi-agent.sh 40 backend-api 2
+./scripts/setup-multi-agent.sh 41 frontend-ui 3
+./scripts/setup-multi-agent.sh 42 tests 4
+
+# Starte 3 separate Terminals
+# Terminal 1: cd booking && claude
+#   -> "Implementiere die Backend API für Feature X"
+# Terminal 2: cd ../booking-agent2 && claude  
+#   -> "Erstelle die Frontend-Komponenten für Feature X"
+# Terminal 3: cd ../booking-agent3 && claude
+#   -> "Schreibe Tests für Feature X"
+
+# Alle arbeiten GLEICHZEITIG ohne Konflikte!
+```
+
 ## 14. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
