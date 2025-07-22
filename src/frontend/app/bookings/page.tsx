@@ -9,9 +9,12 @@ import CreateBookingButton from '../components/CreateBookingButton';
 interface BookingCardProps {
   booking: Booking;
   onClick: () => void;
+  userRole?: string | null;
+  onAccept?: (bookingId: string) => void;
+  onReject?: (bookingId: string) => void;
 }
 
-function BookingCard({ booking, onClick }: BookingCardProps) {
+function BookingCard({ booking, onClick, userRole, onAccept, onReject }: BookingCardProps) {
   const getStatusBadge = (status: BookingStatus) => {
     switch (status) {
       case BookingStatus.Pending:
@@ -48,6 +51,24 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Abgeschlossen
+          </span>
+        );
+      case BookingStatus.Accepted:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+            </svg>
+            Angenommen
+          </span>
+        );
+      case BookingStatus.Rejected:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Abgelehnt
           </span>
         );
       default:
@@ -110,14 +131,46 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
 
       </div>
 
-      {/* Action Button */}
+      {/* Action Buttons */}
       <div className="bg-gray-50 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Details anzeigen</span>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
+        {userRole === 'Administrator' && booking.status === BookingStatus.Pending ? (
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAccept?.(booking.id);
+                }}
+                className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition-colors"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Annehmen
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReject?.(booking.id);
+                }}
+                className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg transition-colors"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Ablehnen
+              </button>
+            </div>
+            <span className="text-xs text-gray-500">Admin-Aktionen</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Details anzeigen</span>
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -181,6 +234,26 @@ export default function BookingsPage() {
 
   const handleCreateBooking = () => {
     router.push('/bookings/new');
+  };
+
+  const handleAcceptBooking = async (bookingId: string) => {
+    try {
+      await apiClient.acceptBooking(bookingId);
+      await fetchBookings(); // Refresh bookings to show updated status
+    } catch (error) {
+      console.error('Error accepting booking:', error);
+      setError('Fehler beim Annehmen der Buchung');
+    }
+  };
+
+  const handleRejectBooking = async (bookingId: string) => {
+    try {
+      await apiClient.rejectBooking(bookingId);
+      await fetchBookings(); // Refresh bookings to show updated status
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      setError('Fehler beim Ablehnen der Buchung');
+    }
   };
 
   if (isLoading) {
@@ -281,6 +354,9 @@ export default function BookingsPage() {
                   key={booking.id}
                   booking={booking}
                   onClick={() => router.push(`/bookings/${booking.id}`)}
+                  userRole={userRole}
+                  onAccept={handleAcceptBooking}
+                  onReject={handleRejectBooking}
                 />
               ))}
             </div>
