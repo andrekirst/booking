@@ -10,7 +10,8 @@ namespace Booking.Api.Application.Auth.Commands;
 
 public class RegisterCommandHandler(
     BookingDbContext context,
-    IPasswordService passwordService) : ICommandHandler<RegisterCommand, RegisterResult>
+    IPasswordService passwordService,
+    IEmailService emailService) : ICommandHandler<RegisterCommand, RegisterResult>
 {
     public async Task<RegisterResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
@@ -45,6 +46,12 @@ public class RegisterCommandHandler(
         
         context.Users.Add(user);
         await context.SaveChangesAsync(cancellationToken);
+        
+        // Send verification email
+        await emailService.SendEmailVerificationAsync(user.Email, user.FirstName, verificationToken);
+        
+        // Send admin notification
+        await emailService.SendAdminNotificationAsync(user.Email, user.FirstName, user.LastName);
         
         return new RegisterResult(
             true, 

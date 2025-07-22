@@ -1,11 +1,12 @@
 using Booking.Api.Application.Common.Interfaces;
 using Booking.Api.Data;
+using Booking.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
 namespace Booking.Api.Application.Auth.Commands;
 
-public class ResendVerificationCommandHandler(BookingDbContext context) : ICommandHandler<ResendVerificationCommand, ResendVerificationResult>
+public class ResendVerificationCommandHandler(BookingDbContext context, IEmailService emailService) : ICommandHandler<ResendVerificationCommand, ResendVerificationResult>
 {
     public async Task<ResendVerificationResult> Handle(ResendVerificationCommand request, CancellationToken cancellationToken)
     {
@@ -31,6 +32,9 @@ public class ResendVerificationCommandHandler(BookingDbContext context) : IComma
         user.ChangedAt = DateTime.UtcNow;
         
         await context.SaveChangesAsync(cancellationToken);
+        
+        // Send new verification email
+        await emailService.SendEmailVerificationAsync(user.Email, user.FirstName, verificationToken);
         
         return new ResendVerificationResult(
             true, 
