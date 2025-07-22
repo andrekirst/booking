@@ -33,24 +33,32 @@ public class DatabaseMigrationTests : IntegrationTestBase
 
         // Assert - Verify all expected tables exist
         tables.Should().Contain("Users");
-        tables.Should().Contain("Bookings");
+        tables.Should().Contain("SleepingAccommodations");
+        tables.Should().Contain("EventStoreEvents");
+        tables.Should().Contain("EventStoreSnapshots");
+        tables.Should().Contain("SleepingAccommodationReadModels");
+        tables.Should().Contain("BookingReadModels");
         tables.Should().Contain("__EFMigrationsHistory");
     }
 
     [Fact]
-    public async Task BookingsTable_ShouldHaveCorrectSchema()
+    public async Task BookingReadModelsTable_ShouldHaveCorrectSchema()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
 
-        // Act - Get column information for Bookings table
-        var columns = await GetTableColumnsAsync(context, "Bookings");
+        // Act - Get column information for BookingReadModels table
+        var columns = await GetTableColumnsAsync(context, "BookingReadModels");
 
         // Assert - Verify all expected columns exist
         columns.Should().Contain(c => c.ColumnName == "Id" && c.DataType == "uuid");
+        columns.Should().Contain(c => c.ColumnName == "UserId" && c.DataType == "integer");
+        columns.Should().Contain(c => c.ColumnName == "StartDate" && c.DataType == "timestamp without time zone");
+        columns.Should().Contain(c => c.ColumnName == "EndDate" && c.DataType == "timestamp without time zone");
+        columns.Should().Contain(c => c.ColumnName == "Status" && c.DataType == "integer");
         columns.Should().Contain(c => c.ColumnName == "CreatedAt" && c.DataType == "timestamp without time zone");
-        columns.Should().Contain(c => c.ColumnName == "ChangedAt" && c.DataType == "timestamp without time zone");
+        columns.Should().Contain(c => c.ColumnName == "UpdatedAt" && c.DataType == "timestamp without time zone");
     }
 
     [Fact]

@@ -120,28 +120,26 @@ public class StartupValidationTests : IntegrationTestBase
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
 
-        // Act
-        var changeTracker = context.ChangeTracker;
-        
-        // Assert - We can verify the interceptor is working
-        // by creating a user entity and checking if audit fields are set
-        var user = new Booking.Api.Domain.Entities.User
+        // Act & Assert - We can verify the interceptor is working
+        // by creating a SleepingAccommodation entity and checking if audit fields are set
+        var uniqueName = $"Test Room {Guid.NewGuid()}";
+        var accommodation = new Booking.Api.Domain.Entities.SleepingAccommodation
         {
-            Email = "test-interceptor@example.com",
-            PasswordHash = "test-hash",
-            FirstName = "Test",
-            LastName = "User"
+            Name = uniqueName,
+            Description = "Test Description",
+            MaxCapacity = 2,
+            AccommodationType = Booking.Api.Domain.Enums.AccommodationType.Room
         };
-        context.Users.Add(user);
+        context.SleepingAccommodations.Add(accommodation);
         
         // The AuditInterceptor should work when we save
         await context.SaveChangesAsync();
         
-        user.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5), 
+        accommodation.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5), 
             "AuditInterceptor should set CreatedAt");
         
         // Clean up
-        context.Users.Remove(user);
+        context.SleepingAccommodations.Remove(accommodation);
         await context.SaveChangesAsync();
     }
 
