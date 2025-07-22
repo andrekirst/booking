@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import BookingAccommodations from '../BookingAccommodations';
-import { Booking, BookingStatus, SleepingAccommodation } from '../../../../lib/types/api';
+import { Booking, BookingStatus, SleepingAccommodation, AccommodationType } from '../../../../lib/types/api';
 
 const mockBooking: Booking = {
   id: '123e4567-e89b-12d3-a456-426614174000',
@@ -33,8 +33,8 @@ const mockAccommodations: SleepingAccommodation[] = [
   {
     id: '456e7890-e89b-12d3-a456-426614174001',
     name: 'Hauptschlafzimmer',
+    type: AccommodationType.Room,
     maxCapacity: 2,
-    description: 'Gemütliches Hauptschlafzimmer',
     isActive: true,
     createdAt: '2024-01-01T00:00:00Z',
     changedAt: undefined,
@@ -42,8 +42,8 @@ const mockAccommodations: SleepingAccommodation[] = [
   {
     id: '789e1234-e89b-12d3-a456-426614174002',
     name: 'Gästezimmer',
+    type: AccommodationType.Room,
     maxCapacity: 2,
-    description: 'Komfortables Gästezimmer',
     isActive: true,
     createdAt: '2024-01-01T00:00:00Z',
     changedAt: undefined,
