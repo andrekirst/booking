@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
-import ConfirmationModal from '../components/ui/ConfirmationModal';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface BookingCardProps {
   booking: Booking;
