@@ -424,23 +424,9 @@ export class MockApiClient implements ApiClient {
     return this.token;
   }
 
-  // Admin debug methods
-  async debugBookingEvents(): Promise<{
-    totalEvents: number;
-    readModels: number;
-    recentEvents?: Array<{
-      eventType: string;
-      version: number;
-      aggregateId: string;
-      timestamp: string;
-    }>;
-    bookingEvents?: Array<{
-      eventType: string;
-      version: number;
-      aggregateId: string;
-      timestamp: string;
-    }>;
-  }> {
+  // Admin debug methods  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async debugBookingEvents(): Promise<any> {
     await this.delay(500);
     if (!this.authenticated) {
       throw new ApiError('Unauthorized', 401);

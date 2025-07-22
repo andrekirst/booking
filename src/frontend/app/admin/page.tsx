@@ -30,7 +30,7 @@ export default function AdminDashboard() {
     setIsLoadingDebug(true);
     try {
       const result = await apiClient.debugBookingEvents();
-      setDebugInfo(result);
+      setDebugInfo(result as unknown as DebugInfo);
     } catch (error) {
       console.error('Failed to load debug info:', error);
       setDebugInfo({ error: error instanceof Error ? error.message : 'Unbekannter Fehler' });
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="bg-green-50 p-3 rounded">
                       <div className="font-medium text-green-800">Booking Events</div>
-                      <div className="text-2xl font-bold text-green-900">{debugInfo.bookingEvents}</div>
+                      <div className="text-2xl font-bold text-green-900">{debugInfo.bookingEvents?.length || 0}</div>
                     </div>
                     <div className="bg-purple-50 p-3 rounded">
                       <div className="font-medium text-purple-800">Read Models</div>
