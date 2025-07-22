@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { useRouter, useParams } from 'next/navigation';
 import BookingDetailPage from '../page';
 import { apiClient } from '../../../../lib/api/client';

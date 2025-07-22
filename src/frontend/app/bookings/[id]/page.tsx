@@ -7,7 +7,6 @@ import { apiClient } from '../../../lib/api/client';
 import BookingOverview from '../../components/booking/BookingOverview';
 import BookingAccommodations from '../../components/booking/BookingAccommodations';
 import BookingNotes from '../../components/booking/BookingNotes';
-import BookingHistory from '../../components/booking/BookingHistory';
 import BookingActionMenu from '../../components/booking/BookingActionMenu';
 import BookingOverviewSkeleton from '../../components/booking/skeletons/BookingOverviewSkeleton';
 import BookingAccommodationsSkeleton from '../../components/booking/skeletons/BookingAccommodationsSkeleton';
