@@ -136,11 +136,7 @@ export default function BookingsPage() {
 
     try {
       const data = await apiClient.getBookings();
-      // Sort bookings by start date (newest first)
-      const sortedBookings = data.sort((a, b) => 
-        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-      );
-      setBookings(sortedBookings);
+      setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
       const errorMessage = err && typeof err === 'object' && 'message' in err 
