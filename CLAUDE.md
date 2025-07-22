@@ -262,8 +262,8 @@ git checkout BRANCH-NAME
 #### ✅ Phase 4: Abschluss
 - [ ] Finale Tests durchführen
 - [ ] Branch pushen mit `git push origin BRANCH-NAME`
-- [ ] Pull Request erstellen mit `gh pr create`
-- [ ] PR-Details ausfüllen (Summary, Test Plan, etc.)
+- [ ] Pull Request erstellen mit Issue-Verknüpfung (siehe Abschnitt 12.4)
+- [ ] PR-Details ausfüllen (Summary, Test Plan, Issue-Referenz)
 
 ### 12.2 Notfall-Checkliste bei Branch-Problemen
 **Falls du feststellst, dass du auf dem falschen Branch arbeitest:**
@@ -278,6 +278,73 @@ git checkout BRANCH-NAME
 - **Vor jedem Commit**: Überprüfe mit `git status` den Branch
 - **Vor jedem Push**: Bestätige dass du auf dem richtigen Branch bist
 - **Vor PR-Erstellung**: Verifiziere dass alle Änderungen zum Issue gehören
+
+### 12.4 OBLIGATORISCH - Pull Request Issue-Verknüpfung
+**JEDER Pull Request MUSS mit seinem zugehörigen Issue verknüpft werden:**
+
+#### Schritt 1: Issue-Referenz im PR-Body
+**IMMER eine der folgenden Keywords verwenden:**
+```bash
+# Schließt Issue automatisch bei PR-Merge:
+gh pr create --title "feat: implement feature X" --body "Fixes #30"
+gh pr create --title "fix: resolve bug Y" --body "Closes #30" 
+gh pr create --title "docs: update documentation Z" --body "Resolves #30"
+```
+
+#### Schritt 2: PR-Body Template
+**Standard-Template für alle PRs:**
+```markdown
+## Summary
+[Kurze Beschreibung der Änderungen]
+
+### Implementation Details  
+- [Detail 1]
+- [Detail 2]
+
+### Test Plan
+- [x] Test 1 erfolgreich
+- [x] Test 2 erfolgreich
+
+Fixes #[ISSUE-NUMMER]
+```
+
+#### Schritt 3: Automatische Verknüpfung verifizieren
+- ✅ GitHub zeigt "linked issues" in PR-Sidebar
+- ✅ Issue erhält "linked pull request" Referenz
+- ✅ Issue wird automatisch geschlossen bei PR-Merge
+
+#### WICHTIGE Keywords für automatisches Issue-Closing:
+- `Fixes #123` - Schließt Issue #123 
+- `Closes #123` - Schließt Issue #123
+- `Resolves #123` - Schließt Issue #123
+- `Fixes: #123` - Schließt Issue #123 (mit Doppelpunkt)
+
+#### Beispiel-Kommandos:
+```bash
+# Interaktiv mit Issue-Referenz im Body
+gh pr create --title "feat: add user authentication" --body "$(cat <<'EOF'
+## Summary
+Implements user authentication with JWT tokens
+
+### Changes
+- Add login/logout endpoints
+- JWT token validation middleware  
+- User session management
+
+### Test Plan
+- [x] Login functionality tested
+- [x] Token validation tested  
+- [x] Logout functionality tested
+
+Fixes #25
+EOF
+)"
+
+# Mit --fill und nachträglicher Issue-Referenz
+gh pr create --fill --body-file <(echo "Fixes #25")
+```
+
+**REGEL: Ohne Issue-Verknüpfung wird KEIN PR akzeptiert!**
 
 ## Entwicklungs-Erinnerungen
 - Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
