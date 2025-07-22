@@ -261,28 +261,32 @@ describe('BookingDetailPage', () => {
       expect(screen.queryByText('Notizen')).not.toBeInTheDocument();
     });
 
-    it('should display timestamps correctly', async () => {      
+    it('should not display timestamps in Details tab anymore', async () => {      
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
-        expect(screen.getByText('02.03.2024')).toBeInTheDocument(); // Changed date
+        expect(screen.getByText('4 Personen')).toBeInTheDocument();
       });
       
-      // Check that timestamps are in the Details tab
-      expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-current', 'page');
+      // Timestamps should no longer be in the Details tab
+      expect(screen.queryByText('01.03.2024')).not.toBeInTheDocument();
+      expect(screen.queryByText('02.03.2024')).not.toBeInTheDocument();
+      expect(screen.queryByText('Zeitstempel')).not.toBeInTheDocument();
     });
 
-    it('should not display changed timestamp when not present', async () => {
+    it('should not display timestamp section anymore', async () => {
       const bookingWithoutChangedAt = { ...mockBooking, changedAt: undefined };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(bookingWithoutChangedAt);
 
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
+        expect(screen.getByText('4 Personen')).toBeInTheDocument();
       });
       
+      // No timestamp information should be displayed in Details tab
+      expect(screen.queryByText('01.03.2024')).not.toBeInTheDocument();
+      expect(screen.queryByText('Erstellt')).not.toBeInTheDocument();
       expect(screen.queryByText('Geändert')).not.toBeInTheDocument();
     });
   });

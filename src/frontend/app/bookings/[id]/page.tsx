@@ -273,10 +273,6 @@ export default function BookingDetailPage() {
                           getAccommodationName={getAccommodationName}
                         />
                         {booking.notes && <BookingNotes notes={booking.notes} />}
-                        <BookingHistory
-                          createdAt={booking.createdAt}
-                          changedAt={booking.changedAt}
-                        />
                       </div>
                     )
                   },
