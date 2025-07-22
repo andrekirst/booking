@@ -14,6 +14,19 @@ public class User : IAuditableEntity, ISoftDeletable
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ChangedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    
+    // Registration and Email Verification
+    public bool EmailVerified { get; set; } = false;
+    public string? EmailVerificationToken { get; set; }
+    public DateTime? EmailVerificationTokenExpiry { get; set; }
+    public DateTime? RegistrationDate { get; set; }
+    public DateTime? EmailVerifiedAt { get; set; }
+    
+    // Administrator Approval for Booking Rights
+    public bool IsApprovedForBooking { get; set; } = false;
+    public DateTime? ApprovedForBookingAt { get; set; }
+    public int? ApprovedById { get; set; }
+    public User? ApprovedBy { get; set; }
 }
 
 public enum UserRole
