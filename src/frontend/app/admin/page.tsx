@@ -15,6 +15,8 @@ interface DebugInfo {
   totalEvents?: number;
   readModels?: number;
   recentEvents?: DebugEvent[];
+  bookingEvents?: DebugEvent[];
+  error?: string;
 }
 
 export default function AdminDashboard() {

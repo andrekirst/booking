@@ -5,6 +5,8 @@ import { Booking, BookingStatus, SleepingAccommodation } from '../../../../lib/t
 const mockBooking: Booking = {
   id: '123e4567-e89b-12d3-a456-426614174000',
   userId: 1,
+  userName: 'Test User',
+  userEmail: 'test@example.com',
   startDate: '2024-03-15T00:00:00Z',
   endDate: '2024-03-17T00:00:00Z',
   numberOfNights: 2,
@@ -35,7 +37,7 @@ const mockAccommodations: SleepingAccommodation[] = [
     description: 'Gemütliches Hauptschlafzimmer',
     isActive: true,
     createdAt: '2024-01-01T00:00:00Z',
-    changedAt: null,
+    changedAt: undefined,
   },
   {
     id: '789e1234-e89b-12d3-a456-426614174002',
@@ -44,7 +46,7 @@ const mockAccommodations: SleepingAccommodation[] = [
     description: 'Komfortables Gästezimmer',
     isActive: true,
     createdAt: '2024-01-01T00:00:00Z',
-    changedAt: null,
+    changedAt: undefined,
   },
 ];
 

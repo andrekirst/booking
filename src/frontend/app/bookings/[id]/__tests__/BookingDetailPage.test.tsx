@@ -24,6 +24,8 @@ const mockRouter = {
 const mockBooking: Booking = {
   id: '123e4567-e89b-12d3-a456-426614174000',
   userId: 1,
+  userName: 'Test User',
+  userEmail: 'test@example.com',
   startDate: '2024-03-15T00:00:00Z',
   endDate: '2024-03-17T00:00:00Z',
   numberOfNights: 2,
