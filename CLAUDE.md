@@ -350,7 +350,261 @@ gh pr create --fill --body-file <(echo "Fixes #25")
 - Benutze das Options-Pattern, anstatt direkt von IConfiguration zu lesen
 - **WICHTIG - Pipeline-Validierung**: Nach jedem Commit und Push MUSS gewartet werden, bis alle GitHub Actions/Pipelines erfolgreich durchgelaufen sind, bevor eine Aufgabe als "abgeschlossen" markiert wird. Dies gilt besonders für PR-Fixes und kritische Änderungen.
 
-## 13. Kommunikation
+## 13. Multi-Agent-Entwicklung mit Git Worktrees
+
+### 13.1 Übersicht
+**Ziel**: Mehrere Claude Code Agenten arbeiten parallel an verschiedenen Issues mit isolierten Workspaces für 2.8-4.4x höhere Entwicklungsgeschwindigkeit.
+
+### 13.2 Git Worktrees Setup
+
+#### Basis-Setup für Multi-Agent-Entwicklung
+```bash
+# Haupt-Repository (Agent 1)
+/home/user/git/github/andrekirst/booking/
+
+# Worktree für Agent 2 erstellen
+git worktree add ../booking-agent2 feat/33-feature-xyz
+
+# Worktree für Agent 3 erstellen  
+git worktree add ../booking-agent3 feat/34-backend-api
+
+# Worktree für Agent 4 erstellen
+git worktree add ../booking-agent4 feat/35-tests
+```
+
+#### Verzeichnisstruktur nach Setup
+```
+/home/user/git/github/andrekirst/
+├── booking/          (main workspace - Agent 1)
+├── booking-agent2/   (worktree - Agent 2)
+├── booking-agent3/   (worktree - Agent 3)
+└── booking-agent4/   (worktree - Agent 4)
+```
+
+### 13.3 Agent-Koordination-Protokoll
+
+#### Issue-Zuweisung
+**REGEL**: Jeder Agent bearbeitet GENAU EIN Issue in seinem Worktree.
+
+1. **Agent 1** (Haupt-Workspace): Koordination + Issue #A
+2. **Agent 2** (Worktree 1): Issue #B (z.B. Frontend)
+3. **Agent 3** (Worktree 2): Issue #C (z.B. Backend)
+4. **Agent 4** (Worktree 3): Issue #D (z.B. Tests)
+
+#### Konflikt-Vermeidung
+- **File-Level-Assignment**: Agenten arbeiten an unterschiedlichen Files
+- **Feature-Isolation**: Klare Trennung von Features pro Agent
+- **Communication**: Regelmäßige Sync über CLAUDE.md Updates
+
+### 13.4 Multi-Agent Workflow
+
+#### Schritt 1: Worktree erstellen
+```bash
+# Für neues Issue #36 mit Agent 2
+git worktree add ../booking-agent2 -b feat/36-user-profile origin/main
+cd ../booking-agent2
+```
+
+#### Schritt 2: Claude Code Session starten
+```bash
+# In jedem Worktree separate Claude Code Session
+cd /path/to/booking-agent2
+claude # Startet neue Claude Session für Agent 2
+```
+
+#### Schritt 3: Context-Isolation sicherstellen
+- Jeder Worktree hat eigene `.claude/settings.local.json`
+- Keine geteilten Kontexte zwischen Agenten
+- Branch-spezifische Arbeit ohne Interferenz
+
+#### Schritt 4: Koordinierte Integration
+```bash
+# Agent 1 koordiniert Merges
+cd /path/to/booking
+git fetch --all
+git merge origin/feat/36-user-profile
+git merge origin/feat/37-api-enhancement
+```
+
+### 13.5 Best Practices für Multi-Agent-Entwicklung
+
+#### DO's ✅
+- **Klare Issue-Zuweisung**: Ein Agent = Ein Issue = Ein Branch
+- **Regelmäßige Pulls**: `git fetch --all` in allen Worktrees
+- **Feature-Isolation**: Keine überlappenden Änderungen
+- **Dokumentation**: Jeder Agent dokumentiert seine Änderungen
+- **Communication**: Updates in gemeinsamer CLAUDE.md
+
+#### DON'Ts ❌
+- **Gleiche Files**: Mehrere Agenten ändern gleiche Datei
+- **Branch-Hopping**: Agent wechselt zwischen Branches
+- **Context-Mixing**: Geteilte .claude Settings
+- **Unkontrollierte Merges**: Ohne Koordination mergen
+
+### 13.6 Performance-Monitoring
+
+#### Metriken
+- **Development Speed**: Ziel 3x Improvement
+- **Parallel Issues**: 2-4 gleichzeitige Entwicklungsströme
+- **Merge Success Rate**: >95% konfliktfreie Merges
+- **Agent Efficiency**: <10% Koordinations-Overhead
+
+#### Tracking
+```bash
+# Aktive Worktrees anzeigen
+git worktree list
+
+# Branch-Status aller Agenten
+git branch -a | grep feat/
+
+# Merge-Readiness prüfen
+git log --oneline --graph --all
+```
+
+### 13.7 Troubleshooting
+
+#### Problem: Merge-Konflikte
+**Lösung**: Strikte File-Assignment + Feature-Isolation
+
+#### Problem: Context-Bleeding
+**Lösung**: Separate .claude Verzeichnisse pro Worktree
+
+#### Problem: Worktree-Fehler
+```bash
+# Worktree aufräumen
+git worktree prune
+
+# Beschädigten Worktree entfernen
+git worktree remove booking-agent2 --force
+```
+
+### 13.8 Automation Scripts
+
+#### Multi-Agent Setup Script
+```bash
+#!/bin/bash
+# setup-multi-agent.sh
+ISSUE_NUMBER=$1
+FEATURE_NAME=$2
+AGENT_NUMBER=$3
+
+BRANCH_NAME="feat/${ISSUE_NUMBER}-${FEATURE_NAME}"
+WORKTREE_DIR="../booking-agent${AGENT_NUMBER}"
+
+# Worktree erstellen
+git worktree add $WORKTREE_DIR -b $BRANCH_NAME origin/main
+
+# Claude Settings kopieren
+cp -r .claude $WORKTREE_DIR/
+
+echo "✅ Agent $AGENT_NUMBER setup für Issue #$ISSUE_NUMBER"
+echo "📁 Workspace: $WORKTREE_DIR"
+echo "🌿 Branch: $BRANCH_NAME"
+```
+
+### 13.9 Claude Code Instanzen - WICHTIG
+
+#### Separate Sessions erforderlich
+**KRITISCH**: Jeder Agent benötigt eine EIGENE Claude Code Session/Instanz!
+
+#### Warum separate Instanzen?
+- **Context Isolation**: Jede Session hat eigenen, unabhängigen Kontext
+- **Echte Parallelität**: Gleichzeitige Ausführung ohne Wartezeiten
+- **Keine Interferenz**: Agenten können sich nicht gegenseitig stören
+- **Token-Management**: Separate Limits pro Session
+
+#### Praktisches Multi-Session Setup
+
+**Option 1: Multiple Terminal-Fenster** (Empfohlen)
+```bash
+# Terminal 1 - Agent 1
+cd /home/user/booking
+claude  # Startet Claude Session für Agent 1
+
+# Terminal 2 - Agent 2  
+cd /home/user/booking-agent2
+claude  # Startet SEPARATE Claude Session für Agent 2
+
+# Terminal 3 - Agent 3
+cd /home/user/booking-agent3
+claude  # Startet DRITTE Claude Session für Agent 3
+```
+
+**Option 2: Terminal Multiplexer (tmux)**
+```bash
+# Erstelle tmux Session mit mehreren Windows
+tmux new-session -s multi-agent -n agent1 -c /home/user/booking
+tmux new-window -n agent2 -c /home/user/booking-agent2
+tmux new-window -n agent3 -c /home/user/booking-agent3
+
+# In jedem Window: claude starten
+```
+
+**Option 3: VS Code Multi-Workspace**
+- Öffne jedes Worktree in separatem VS Code Fenster
+- Nutze Claude Code Extension in jedem Fenster separat
+- Alternativ: VS Code Workspace mit mehreren Ordnern
+
+#### Kosten & Subscription
+**⚠️ WICHTIG**: Multi-Agent bedeutet multiplizierte Kosten!
+
+- **Claude Pro**: Bei 3-4 Agenten $100-200/Monat empfohlen
+- **API Usage**: Kann schnell mehrere hundert Dollar/Monat erreichen
+- **Token Limits**: Jede Session zählt gegen dein Limit
+
+#### Session-Koordination
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   AGENT 1   │     │   AGENT 2   │     │   AGENT 3   │
+│   Claude    │     │   Claude    │     │   Claude    │
+│  Session 1  │     │  Session 2  │     │  Session 3  │
+└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+       │                   │                   │
+       ▼                   ▼                   ▼
+┌─────────────────────────────────────────────────────┐
+│                    Git Repository                    │
+│  Branch: main    feat/33-ui    feat/34-api         │
+└─────────────────────────────────────────────────────┘
+```
+
+#### FAQ - Häufige Fragen
+
+**F: Kann ich eine Claude Session für alle Agenten verwenden?**
+A: NEIN! Das würde Context-Mixing verursachen und die Parallelität zerstören.
+
+**F: Wie viele parallele Sessions sind möglich?**
+A: Technisch unbegrenzt, praktisch durch Subscription/Kosten limitiert (empfohlen: 2-4).
+
+**F: Wie gebe ich verschiedenen Agenten unterschiedliche Anweisungen?**
+A: In jedem Terminal/Session separat. Jeder Agent erhält eigene Instruktionen.
+
+**F: Was passiert bei Session-Timeout?**
+A: Jede Session hat eigenen Timeout. Bei Bedarf in jeweiligem Terminal neu starten.
+
+#### Best Practice Beispiel
+```bash
+# Vorbereitung: 3 Issues für parallele Bearbeitung
+# Issue #40: Backend API
+# Issue #41: Frontend UI  
+# Issue #42: Tests
+
+# Setup alle Worktrees
+./scripts/setup-multi-agent.sh 40 backend-api 2
+./scripts/setup-multi-agent.sh 41 frontend-ui 3
+./scripts/setup-multi-agent.sh 42 tests 4
+
+# Starte 3 separate Terminals
+# Terminal 1: cd booking && claude
+#   -> "Implementiere die Backend API für Feature X"
+# Terminal 2: cd ../booking-agent2 && claude  
+#   -> "Erstelle die Frontend-Komponenten für Feature X"
+# Terminal 3: cd ../booking-agent3 && claude
+#   -> "Schreibe Tests für Feature X"
+
+# Alle arbeiten GLEICHZEITIG ohne Konflikte!
+```
+
+## 14. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
