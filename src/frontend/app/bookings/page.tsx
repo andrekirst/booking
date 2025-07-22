@@ -82,9 +82,6 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               </h3>
               {getStatusBadge(booking.status)}
             </div>
-            <p className="text-sm text-gray-600">
-              Buchungs-ID: {booking.id.slice(0, 8)}...
-            </p>
           </div>
         </div>
 
@@ -110,22 +107,7 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           </div>
         </div>
 
-        {/* Notes */}
-        {booking.notes && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <span className="font-medium">Notizen:</span> {booking.notes}
-            </p>
-          </div>
-        )}
 
-        {/* Creation Date */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
-            Erstellt am {formatDate(booking.createdAt)}
-            {booking.changedAt && ` • Zuletzt geändert am ${formatDate(booking.changedAt)}`}
-          </p>
-        </div>
       </div>
 
       {/* Action Button */}

@@ -106,9 +106,6 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               </h3>
               {getStatusBadge(booking.status)}
             </div>
-            <p className="text-sm text-gray-600">
-              Buchungs-ID: {booking.id.slice(0, 8)}...
-            </p>
           </div>
         </div>
 
@@ -134,22 +131,6 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           </div>
         </div>
 
-        {/* Notes */}
-        {booking.notes && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <span className="font-medium">Notizen:</span> {booking.notes}
-            </p>
-          </div>
-        )}
-
-        {/* Creation Date */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
-            Erstellt am {formatDate(booking.createdAt)}
-            {booking.changedAt && ` • Zuletzt geändert am ${formatDate(booking.changedAt)}`}
-          </p>
-        </div>
       </div>
 
       {/* Action Button */}
@@ -179,11 +160,6 @@ describe('BookingCard', () => {
       expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument();
     });
 
-    it('should display booking ID (truncated)', () => {
-      render(<BookingCard booking={mockBooking} onClick={mockOnClick} />);
-      
-      expect(screen.getByText('Buchungs-ID: 123e4567...')).toBeInTheDocument();
-    });
 
     it('should display number of nights correctly (plural)', () => {
       render(<BookingCard booking={mockBooking} onClick={mockOnClick} />);
@@ -227,38 +203,6 @@ describe('BookingCard', () => {
       expect(screen.getByText('1 Schlafmöglichkeit')).toBeInTheDocument();
     });
 
-    it('should display notes when present', () => {
-      render(<BookingCard booking={mockBooking} onClick={mockOnClick} />);
-      
-      expect(screen.getByText('Notizen:')).toBeInTheDocument();
-      expect(screen.getByText('Test notes')).toBeInTheDocument();
-    });
-
-    it('should not display notes when not present', () => {
-      const bookingWithoutNotes = { ...mockBooking, notes: undefined };
-      render(<BookingCard booking={bookingWithoutNotes} onClick={mockOnClick} />);
-      
-      expect(screen.queryByText('Notizen:')).not.toBeInTheDocument();
-    });
-
-    it('should display creation date', () => {
-      render(<BookingCard booking={mockBooking} onClick={mockOnClick} />);
-      
-      expect(screen.getByText(/Erstellt am 01\.03\.2024/)).toBeInTheDocument();
-    });
-
-    it('should display changed date when present', () => {
-      render(<BookingCard booking={mockBooking} onClick={mockOnClick} />);
-      
-      expect(screen.getByText(/Zuletzt geändert am 02\.03\.2024/)).toBeInTheDocument();
-    });
-
-    it('should not display changed date when not present', () => {
-      const bookingWithoutChangedAt = { ...mockBooking, changedAt: undefined };
-      render(<BookingCard booking={bookingWithoutChangedAt} onClick={mockOnClick} />);
-      
-      expect(screen.queryByText(/Zuletzt geändert/)).not.toBeInTheDocument();
-    });
   });
 
   describe('Status Badges', () => {
@@ -360,9 +304,8 @@ describe('BookingCard', () => {
     it('should format dates in German locale', () => {
       render(<BookingCard booking={mockBooking} onClick={mockOnClick} />);
       
-      // Check German date format (DD.MM.YYYY)
+      // Check German date format (DD.MM.YYYY) for booking dates
       expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument();
-      expect(screen.getByText(/01\.03\.2024/)).toBeInTheDocument();
     });
   });
 
