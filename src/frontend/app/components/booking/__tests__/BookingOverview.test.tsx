@@ -37,11 +37,6 @@ describe('BookingOverview', () => {
       expect(screen.getByText('1 Nacht')).toBeInTheDocument();
     });
 
-    it('should display booking ID', () => {
-      render(<BookingOverview booking={mockBooking} />);
-      
-      expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
-    });
 
     it('should display persons and nights with connecting word', () => {
       render(<BookingOverview booking={mockBooking} />);
@@ -76,13 +71,6 @@ describe('BookingOverview', () => {
       expect(centerDiv).toBeInTheDocument();
     });
 
-    it('should have border separator for booking ID', () => {
-      const { container } = render(<BookingOverview booking={mockBooking} />);
-      
-      const borderDiv = container.querySelector('.border-t');
-      expect(borderDiv).toBeInTheDocument();
-      expect(borderDiv).toHaveClass('border-gray-200');
-    });
   });
 
   describe('Data variations', () => {
@@ -98,24 +86,15 @@ describe('BookingOverview', () => {
       expect(screen.getByText('14 Nächte')).toBeInTheDocument();
     });
 
-    it('should handle long booking IDs', () => {
-      const longIdBooking = { 
-        ...mockBooking, 
-        id: 'very-long-booking-id-that-might-overflow-the-container-width-123456789'
-      };
-      render(<BookingOverview booking={longIdBooking} />);
-      
-      expect(screen.getByText(`ID: ${longIdBooking.id}`)).toBeInTheDocument();
-    });
   });
 
   describe('Accessibility', () => {
     it('should use proper semantic structure', () => {
       render(<BookingOverview booking={mockBooking} />);
       
-      // Check that the booking ID text has proper truncate class for overflow
-      const bookingIdElement = screen.getByText(`ID: ${mockBooking.id}`);
-      expect(bookingIdElement).toHaveClass('truncate');
+      // Check that the component renders without errors
+      expect(screen.getByText('4 Personen')).toBeInTheDocument();
+      expect(screen.getByText('2 Nächte')).toBeInTheDocument();
     });
 
     it('should have proper font styling for readability', () => {

@@ -148,11 +148,10 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
+        expect(screen.getByText('4 Personen')).toBeInTheDocument();
       });
 
       // Booking data should still be visible
-      expect(screen.getByText('4 Personen')).toBeInTheDocument();
       
       // Error message for accommodations should be shown
       expect(screen.getByText('Namen konnten nicht geladen werden')).toBeInTheDocument();
@@ -221,7 +220,6 @@ describe('BookingDetailPage', () => {
       expect(screen.getByText('Historie')).toBeInTheDocument();
 
       // Check overview section (should be visible in Details tab by default)
-      expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
       expect(screen.getByText('4 Personen')).toBeInTheDocument(); // Total persons
       expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
     });
@@ -314,7 +312,6 @@ describe('BookingDetailPage', () => {
       });
 
       // Default should show Details tab content
-      expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
       expect(screen.getByText('4 Personen')).toBeInTheDocument();
 
       // Click on Historie tab

@@ -23,13 +23,6 @@ export default function BookingOverview({ booking }: BookingOverviewProps) {
           <span className="text-2xl font-bold text-gray-900">{booking.numberOfNights} {booking.numberOfNights === 1 ? 'Nacht' : 'Nächte'}</span>
         </div>
       </div>
-      
-      {/* Buchungs-ID */}
-      <div className="text-center pt-4 border-t border-gray-200">
-        <p className="text-sm text-gray-500 font-mono truncate">
-          ID: {booking.id}
-        </p>
-      </div>
     </div>
   );
 }
