@@ -44,7 +44,7 @@ public class GetBookingsQueryHandler(
         }
 
         var bookings = await query
-            .OrderByDescending(b => b.CreatedAt)
+            .OrderByDescending(b => b.StartDate)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
