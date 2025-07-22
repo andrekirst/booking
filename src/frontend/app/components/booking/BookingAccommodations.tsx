@@ -11,7 +11,6 @@ interface BookingAccommodationsProps {
 
 export default function BookingAccommodations({ 
   booking, 
-  accommodations, 
   accommodationsError, 
   getAccommodationName 
 }: BookingAccommodationsProps) {

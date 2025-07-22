@@ -139,13 +139,6 @@ export default function BookingDetailPage() {
     });
   };
 
-  const formatDateShort = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
 
   // Show critical error state (booking error that prevents showing anything)
   if (bookingError && !bookingLoading && !booking) {

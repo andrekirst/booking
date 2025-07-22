@@ -111,7 +111,7 @@ describe('BookingOverview', () => {
 
   describe('Accessibility', () => {
     it('should use proper semantic structure', () => {
-      const { container } = render(<BookingOverview booking={mockBooking} />);
+      render(<BookingOverview booking={mockBooking} />);
       
       // Check that the booking ID text has proper truncate class for overflow
       const bookingIdElement = screen.getByText(`ID: ${mockBooking.id}`);
