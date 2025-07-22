@@ -31,6 +31,19 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Hohe Sicherheitsstandards (Gerät hinter Fritzbox)
 - Entity Framework Core für Datenbankzugriff
 
+### Performance-Grundsätze
+**WICHTIG - Backend-First Prinzip**: Datenverarbeitung wie Sortierung, Filterung, Paginierung und Aggregation muss IMMER backend-seitig implementiert werden. Dies reduziert:
+- Netzwerk-Traffic (kleinere Datenmengen)
+- Client-seitige Verarbeitungszeit
+- Speicherverbrauch im Browser
+- Besonders kritisch auf schwacher Hardware (Raspberry Pi)
+
+**Beispiele:**
+- ❌ Client: `data.sort((a, b) => new Date(b.date) - new Date(a.date))`
+- ✅ Backend: API-Endpoint mit `ORDER BY startDate DESC`
+- ❌ Client: `data.filter(item => item.status === 'active')`
+- ✅ Backend: API-Parameter `?status=active`
+
 ## 1. Anforderungen aus requirements.md nutzen
 - Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.
 - Neue Issues, Features oder Tasks werden auf Basis der Anforderungen in `requirements.md` erstellt.
