@@ -242,7 +242,7 @@ describe('BookingCard', () => {
     });
 
     it('should display unknown status badge for invalid status', () => {
-      const unknownBooking = { ...mockBooking, status: 'Invalid' as BookingStatus };
+      const unknownBooking = { ...mockBooking, status: 'Invalid' as unknown as BookingStatus };
       render(<BookingCard booking={unknownBooking} onClick={mockOnClick} />);
       
       const badge = screen.getByText('Unbekannt');
