@@ -46,7 +46,7 @@ public class GetBookingByIdQueryHandler(
             booking.Notes,
             bookingItems.Select(bi => new BookingItemDto(
                 bi.SleepingAccommodationId,
-                string.Empty, // TODO: Include accommodation name from join
+                string.Empty, // Frontend will resolve names via separate API call
                 bi.PersonCount
             )).ToList(),
             booking.TotalPersons,

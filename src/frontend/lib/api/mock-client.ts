@@ -423,6 +423,55 @@ export class MockApiClient implements ApiClient {
   getToken(): string | null {
     return this.token;
   }
+
+  // Admin debug methods  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async debugBookingEvents(): Promise<any> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    // Mock debug information
+    return {
+      totalEvents: 42,
+      readModels: 15,
+      recentEvents: [
+        {
+          eventType: 'BookingCreated',
+          version: 1,
+          aggregateId: '123e4567-e89b-12d3-a456-426614174000',
+          timestamp: '2025-01-15T10:00:00Z',
+        },
+        {
+          eventType: 'BookingConfirmed',
+          version: 2,
+          aggregateId: '123e4567-e89b-12d3-a456-426614174000',
+          timestamp: '2025-01-15T11:00:00Z',
+        }
+      ],
+      bookingEvents: [
+        {
+          eventType: 'BookingCreated',
+          version: 1,
+          aggregateId: '123e4567-e89b-12d3-a456-426614174000',
+          timestamp: '2025-01-15T10:00:00Z',
+        }
+      ]
+    };
+  }
+
+  async rebuildBookingProjections(): Promise<{ message: string; rebuiltCount: number }> {
+    await this.delay(2000); // Simulate longer operation
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    return {
+      message: 'Projections successfully rebuilt',
+      rebuiltCount: 15
+    };
+  }
 }
 
 export const mockApiClient = new MockApiClient();

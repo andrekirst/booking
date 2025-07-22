@@ -38,6 +38,10 @@ export interface ApiClient {
   // Health check
   healthCheck(): Promise<{ status: string }>;
 
+  // Admin functions
+  debugBookingEvents(): Promise<{ totalEvents: number; bookingEvents: number; readModels: number; recentEvents: Array<{ eventType: string; version: number; aggregateId: string; timestamp: string }> }>;
+  rebuildBookingProjections(): Promise<{ message: string }>;
+
   // Token management
   setToken(token: string): void;
   getToken(): string | null;
@@ -261,6 +265,16 @@ export class HttpApiClient implements ApiClient {
 
   async healthCheck(): Promise<{ status: string }> {
     return this.request<{ status: string }>("/health");
+  }
+
+  async debugBookingEvents(): Promise<{ totalEvents: number; bookingEvents: number; readModels: number; recentEvents: Array<{ eventType: string; version: number; aggregateId: string; timestamp: string }> }> {
+    return this.request<{ totalEvents: number; bookingEvents: number; readModels: number; recentEvents: Array<{ eventType: string; version: number; aggregateId: string; timestamp: string }> }>("/bookings/debug/events");
+  }
+
+  async rebuildBookingProjections(): Promise<{ message: string }> {
+    return this.request<{ message: string }>("/bookings/projections/rebuild", {
+      method: "POST",
+    });
   }
 
   // Utility methods

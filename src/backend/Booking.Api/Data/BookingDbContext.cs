@@ -7,14 +7,13 @@ namespace Booking.Api.Data;
 public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();
-    public DbSet<Domain.Entities.Booking> Bookings => Set<Domain.Entities.Booking>();
     public DbSet<SleepingAccommodation> SleepingAccommodations => Set<SleepingAccommodation>();
     
     // Event Sourcing Tables
     public DbSet<EventStoreEvent> EventStoreEvents => Set<EventStoreEvent>();
     public DbSet<EventStoreSnapshot> EventStoreSnapshots => Set<EventStoreSnapshot>();
     
-    // Read Models
+    // Read Models (Event Sourcing)
     public DbSet<SleepingAccommodationReadModel> SleepingAccommodationReadModels => Set<SleepingAccommodationReadModel>();
     public DbSet<BookingReadModel> BookingReadModels => Set<BookingReadModel>();
 

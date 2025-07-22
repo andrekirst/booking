@@ -125,7 +125,7 @@ public class CancelBookingCommandHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert - Just verify logging occurred
-        _logger.ReceivedWithAnyArgs(2).LogInformation(default(string)!, default(object[]));
+        _logger.ReceivedWithAnyArgs(2).LogInformation(default(string)!, Array.Empty<object>());
     }
 
     [Fact]

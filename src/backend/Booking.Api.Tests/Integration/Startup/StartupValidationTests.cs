@@ -63,7 +63,10 @@ public class StartupValidationTests : IntegrationTestBase
 
         // Act & Assert - Try to query each DbSet
         await context.Users.AnyAsync().Invoking(t => t).Should().NotThrowAsync("Users DbSet should be queryable");
-        await context.Bookings.AnyAsync().Invoking(t => t).Should().NotThrowAsync("Bookings DbSet should be queryable");
+        await context.EventStoreEvents.AnyAsync().Invoking(t => t).Should().NotThrowAsync("EventStoreEvents DbSet should be queryable");
+        await context.EventStoreSnapshots.AnyAsync().Invoking(t => t).Should().NotThrowAsync("EventStoreSnapshots DbSet should be queryable");
+        await context.BookingReadModels.AnyAsync().Invoking(t => t).Should().NotThrowAsync("BookingReadModels DbSet should be queryable");
+        await context.SleepingAccommodationReadModels.AnyAsync().Invoking(t => t).Should().NotThrowAsync("SleepingAccommodationReadModels DbSet should be queryable");
     }
 
     [Fact]
@@ -117,25 +120,26 @@ public class StartupValidationTests : IntegrationTestBase
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
 
-        // Act
-        var changeTracker = context.ChangeTracker;
-        
-        // Assert - This is a bit indirect, but we can verify the interceptor is working
-        // by creating an entity and checking if audit fields are set
-        var booking = new Booking.Api.Domain.Entities.Booking
+        // Act & Assert - We can verify the interceptor is working
+        // by creating a SleepingAccommodation entity and checking if audit fields are set
+        var uniqueName = $"Test Room {Guid.NewGuid()}";
+        var accommodation = new Booking.Api.Domain.Entities.SleepingAccommodation
         {
-            UserId = 1, // Use existing test user
-            StartDate = DateTime.UtcNow.AddDays(1),
-            EndDate = DateTime.UtcNow.AddDays(2),
-            Notes = "Test Booking"
+            Name = uniqueName,
+            MaxCapacity = 2,
+            Type = Booking.Api.Domain.Enums.AccommodationType.Room
         };
-        context.Bookings.Add(booking);
+        context.SleepingAccommodations.Add(accommodation);
         
         // The AuditInterceptor should work when we save
         await context.SaveChangesAsync();
         
-        booking.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5), 
+        accommodation.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5), 
             "AuditInterceptor should set CreatedAt");
+        
+        // Clean up
+        context.SleepingAccommodations.Remove(accommodation);
+        await context.SaveChangesAsync();
     }
 
     [Fact]

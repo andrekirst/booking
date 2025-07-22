@@ -50,12 +50,18 @@ export default function NewBookingPage() {
             Sie werden automatisch zu den Buchungsdetails weitergeleitet...
           </p>
           
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
             <button
               onClick={() => router.push(`/bookings/${createdBookingId}`)}
               className="w-full inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 transition-colors"
             >
               Zu den Buchungsdetails
+            </button>
+            <button
+              onClick={() => router.push('/bookings')}
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2 transition-colors"
+            >
+              Zur Buchungsübersicht
             </button>
           </div>
         </div>
