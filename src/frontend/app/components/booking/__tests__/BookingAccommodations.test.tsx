@@ -141,7 +141,7 @@ describe('BookingAccommodations', () => {
       const { container } = render(<BookingAccommodations {...defaultProps} />);
       
       const mainDiv = container.firstChild as HTMLElement;
-      expect(mainDiv).toHaveClass('bg-white', 'rounded-2xl', 'shadow-xl', 'p-6');
+      expect(mainDiv).toHaveClass('mb-8');
     });
 
     it('should use grid layout for accommodation items', () => {

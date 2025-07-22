@@ -8,7 +8,7 @@ interface BookingOverviewProps {
 
 export default function BookingOverview({ booking }: BookingOverviewProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-6">
+    <div className="mb-8">
       {/* Hauptinformation */}
       <div className="text-center mb-6">
         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -25,7 +25,7 @@ export default function BookingOverview({ booking }: BookingOverviewProps) {
       </div>
       
       {/* Buchungs-ID */}
-      <div className="text-center pt-4 border-t border-gray-100">
+      <div className="text-center pt-4 border-t border-gray-200">
         <p className="text-sm text-gray-500 font-mono truncate">
           ID: {booking.id}
         </p>

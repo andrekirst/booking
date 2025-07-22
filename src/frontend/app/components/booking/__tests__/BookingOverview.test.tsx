@@ -66,7 +66,7 @@ describe('BookingOverview', () => {
       const { container } = render(<BookingOverview booking={mockBooking} />);
       
       const mainDiv = container.firstChild as HTMLElement;
-      expect(mainDiv).toHaveClass('bg-white', 'rounded-2xl', 'shadow-xl', 'p-6');
+      expect(mainDiv).toHaveClass('mb-8');
     });
 
     it('should center align content', () => {
@@ -81,7 +81,7 @@ describe('BookingOverview', () => {
       
       const borderDiv = container.querySelector('.border-t');
       expect(borderDiv).toBeInTheDocument();
-      expect(borderDiv).toHaveClass('border-gray-100');
+      expect(borderDiv).toHaveClass('border-gray-200');
     });
   });
 
