@@ -9,11 +9,7 @@ using Booking.Api.Domain.ValueObjects;
 namespace Booking.Api.Features.Bookings.Queries;
 
 public record GetBookingsQuery(
-    int? UserId = null,
-    DateTime? StartDate = null,
-    DateTime? EndDate = null,
-    int PageNumber = 1,
-    int PageSize = 20
+    int? UserId = null
 ) : IRequest<List<BookingDto>>;
 
 public class GetBookingsQueryHandler(
@@ -23,8 +19,7 @@ public class GetBookingsQueryHandler(
 {
     public async Task<List<BookingDto>> Handle(GetBookingsQuery request, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Getting bookings for user {UserId}, date range {StartDate} - {EndDate}",
-            request.UserId, request.StartDate, request.EndDate);
+        logger.LogInformation("Getting bookings for user {UserId}", request.UserId);
 
         var query = context.BookingReadModels.AsQueryable();
 
@@ -33,20 +28,8 @@ public class GetBookingsQueryHandler(
             query = query.Where(b => b.UserId == request.UserId.Value);
         }
 
-        if (request.StartDate.HasValue)
-        {
-            query = query.Where(b => b.EndDate >= request.StartDate.Value);
-        }
-
-        if (request.EndDate.HasValue)
-        {
-            query = query.Where(b => b.StartDate <= request.EndDate.Value);
-        }
-
         var bookings = await query
-            .OrderByDescending(b => b.CreatedAt)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .OrderBy(b => b.StartDate)
             .ToListAsync(cancellationToken);
 
         return bookings.Select(MapToDto).ToList();

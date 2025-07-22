@@ -31,6 +31,19 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Hohe Sicherheitsstandards (Gerät hinter Fritzbox)
 - Entity Framework Core für Datenbankzugriff
 
+### Performance-Grundsätze
+**WICHTIG - Backend-First Prinzip**: Datenverarbeitung wie Sortierung, Filterung, Paginierung und Aggregation muss IMMER backend-seitig implementiert werden. Dies reduziert:
+- Netzwerk-Traffic (kleinere Datenmengen)
+- Client-seitige Verarbeitungszeit
+- Speicherverbrauch im Browser
+- Besonders kritisch auf schwacher Hardware (Raspberry Pi)
+
+**Beispiele:**
+- ❌ Client: `data.sort((a, b) => new Date(b.date) - new Date(a.date))`
+- ✅ Backend: API-Endpoint mit `ORDER BY startDate DESC`
+- ❌ Client: `data.filter(item => item.status === 'active')`
+- ✅ Backend: API-Parameter `?status=active`
+
 ## 1. Anforderungen aus requirements.md nutzen
 - Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.
 - Neue Issues, Features oder Tasks werden auf Basis der Anforderungen in `requirements.md` erstellt.
@@ -69,6 +82,8 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - Die Umsetzung erfolgt Schritt für Schritt entlang dieses Plans.
 - Nach jedem Schritt erfolgt ein Commit und Push.
 - **WICHTIG - Schrittweise Umsetzung**: Implementiere immer nur das, was explizit besprochen und geplant wurde. Vermeide es, zusätzliche Features oder Placeholder für zukünftige Funktionen zu erstellen, da dies die Issues zu groß macht und das Testen erschwert. Jedes Feature sollte vollständig und isoliert implementiert werden.
+- **KRITISCH - Strikte Issue-Fokussierung**: Implementiere AUSSCHLIESSLICH die in der Issue-Beschreibung geforderten Funktionen. NIEMALS zusätzliche Features wie Paging, Filterung, erweiterte Parameter oder "vorsorgliche" Funktionalitäten hinzufügen, die nicht explizit gefordert wurden. Dies verursacht unnötige Analyse-Zeit beim Review und macht PRs komplexer als nötig. Regel: Wenn es nicht im Issue steht, wird es nicht implementiert.
+- **OBLIGATORISCH - Frontend & Backend Synchronisation**: Bei JEDER Aufgabe IMMER sowohl Frontend als auch Backend betrachten und synchron halten. Änderungen an APIs, Datenstrukturen oder Funktionen müssen konsistent zwischen Frontend (.NET Core API) und Backend (Next.js) implementiert werden. Vergessene Frontend-Anpassungen führen zu Runtime-Fehlern und zusätzlicher Review-Zeit.
 
 ### 4.1 Obligatorische Reihenfolge bei Issue-Bearbeitung:
 1. **Branch-Setup** (Abschnitt 11.3 + 12.1) - IMMER zuerst!
