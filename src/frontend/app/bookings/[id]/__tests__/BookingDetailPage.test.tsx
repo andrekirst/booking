@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useRouter, useParams } from 'next/navigation';
 import BookingDetailPage from '../page';
 import { apiClient } from '../../../../lib/api/client';
@@ -101,15 +101,8 @@ describe('BookingDetailPage', () => {
 
       render(<BookingDetailPage />);
 
-      await waitFor(() => {
-        expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
-      });
-
-      // Booking overview should be visible
-      expect(screen.getByText('4 Personen')).toBeInTheDocument();
-      expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
-      
-      // Accommodations should still show skeleton
+      // Since accommodations are still loading, the whole content will show skeleton
+      // because the tabs are not rendered until both booking and accommodations are loaded
       const skeletonElements = document.querySelectorAll('.animate-pulse');
       expect(skeletonElements.length).toBeGreaterThan(0);
     });
@@ -216,14 +209,18 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
+        expect(screen.getByText('Details')).toBeInTheDocument();
       });
 
       // Check header information
       expect(screen.getByText(/Freitag, 15\. März 2024 - Sonntag, 17\. März 2024/)).toBeInTheDocument();
       expect(screen.getByText('Bestätigt')).toBeInTheDocument();
 
-      // Check overview section
+      // Check that tabs are present
+      expect(screen.getByText('Details')).toBeInTheDocument();
+      expect(screen.getByText('Historie')).toBeInTheDocument();
+
+      // Check overview section (should be visible in Details tab by default)
       expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
       expect(screen.getByText('4 Personen')).toBeInTheDocument(); // Total persons
       expect(screen.getByText('2 Nächte')).toBeInTheDocument(); // Number of nights
@@ -265,15 +262,21 @@ describe('BookingDetailPage', () => {
       expect(screen.queryByText('Notizen')).not.toBeInTheDocument();
     });
 
-    it('should display timestamps correctly', async () => {
+    it('should display timestamps correctly in Historie tab', async () => {      
       render(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Historie')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
-      expect(screen.getByText('02.03.2024')).toBeInTheDocument(); // Changed date
+      // Click on Historie tab
+      const historieTab = screen.getByText('Historie');
+      fireEvent.click(historieTab);
+
+      await waitFor(() => {
+        expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
+        expect(screen.getByText('02.03.2024')).toBeInTheDocument(); // Changed date
+      });
     });
 
     it('should not display changed timestamp when not present', async () => {
@@ -286,8 +289,84 @@ describe('BookingDetailPage', () => {
         expect(screen.getByText('Historie')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
+      // Click on Historie tab
+      const historieTab = screen.getByText('Historie');
+      fireEvent.click(historieTab);
+
+      await waitFor(() => {
+        expect(screen.getByText('01.03.2024')).toBeInTheDocument(); // Created date
+      });
+      
       expect(screen.queryByText('Geändert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Tab Navigation', () => {
+    beforeEach(() => {
+      (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
+    });
+
+    it('should switch between Details and Historie tabs', async () => {
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Details')).toBeInTheDocument();
+      });
+
+      // Default should show Details tab content
+      expect(screen.getByText(`ID: ${mockBooking.id}`)).toBeInTheDocument();
+      expect(screen.getByText('4 Personen')).toBeInTheDocument();
+
+      // Click on Historie tab
+      const historieTab = screen.getByText('Historie');
+      fireEvent.click(historieTab);
+
+      // Should show Historie content and hide Details content
+      await waitFor(() => {
+        expect(screen.getByText('Event-Historie wird in einer zukünftigen Version hinzugefügt.')).toBeInTheDocument();
+      });
+
+      // Booking details should not be visible in Historie tab
+      expect(screen.queryByText('Schlafmöglichkeiten')).not.toBeInTheDocument();
+
+      // Switch back to Details tab
+      const detailsTab = screen.getByText('Details');
+      fireEvent.click(detailsTab);
+
+      // Should show Details content again
+      await waitFor(() => {
+        expect(screen.getByText('Schlafmöglichkeiten')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText('Event-Historie wird in einer zukünftigen Version hinzugefügt.')).not.toBeInTheDocument();
+    });
+
+    it('should have correct active tab styling', async () => {
+      render(<BookingDetailPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Details')).toBeInTheDocument();
+      });
+
+      const detailsTab = screen.getByText('Details');
+      const historieTab = screen.getByText('Historie');
+
+      // Details tab should be active by default
+      expect(detailsTab).toHaveClass('border-blue-500', 'text-blue-600');
+      expect(detailsTab).toHaveAttribute('aria-current', 'page');
+      
+      expect(historieTab).toHaveClass('border-transparent', 'text-gray-500');
+      expect(historieTab).not.toHaveAttribute('aria-current');
+
+      // Click on Historie tab
+      fireEvent.click(historieTab);
+
+      // Historie tab should be active now
+      expect(historieTab).toHaveClass('border-blue-500', 'text-blue-600');
+      expect(historieTab).toHaveAttribute('aria-current', 'page');
+      
+      expect(detailsTab).toHaveClass('border-transparent', 'text-gray-500');
+      expect(detailsTab).not.toHaveAttribute('aria-current');
     });
   });
 

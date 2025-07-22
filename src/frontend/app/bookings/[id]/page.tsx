@@ -13,6 +13,7 @@ import BookingOverviewSkeleton from '../../components/booking/skeletons/BookingO
 import BookingAccommodationsSkeleton from '../../components/booking/skeletons/BookingAccommodationsSkeleton';
 import BookingHistorySkeleton from '../../components/booking/skeletons/BookingHistorySkeleton';
 import BookingActionMenuSkeleton from '../../components/booking/skeletons/BookingActionMenuSkeleton';
+import Tabs from '../../components/ui/Tabs';
 
 
 export default function BookingDetailPage() {
@@ -249,47 +250,55 @@ export default function BookingDetailPage() {
           )}
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Main Details */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Booking Overview */}
-              {bookingLoading ? (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            {(bookingLoading || accommodationsLoading) ? (
+              <div className="space-y-6">
                 <BookingOverviewSkeleton />
-              ) : booking && (
-                <BookingOverview booking={booking} />
-              )}
-
-              {/* Accommodations */}
-              {accommodationsLoading ? (
                 <BookingAccommodationsSkeleton />
-              ) : booking && (
-                <BookingAccommodations
-                  booking={booking}
-                  accommodations={accommodations}
-                  accommodationsError={accommodationsError}
-                  getAccommodationName={getAccommodationName}
-                />
-              )}
-
-              {/* Notes */}
-              {booking && booking.notes && (
-                <BookingNotes notes={booking.notes} />
-              )}
-            </div>
-
-            {/* Right Column - Metadata */}
-            <div className="space-y-6">
-              {/* Timestamps */}
-              {bookingLoading ? (
                 <BookingHistorySkeleton />
-              ) : booking && (
-                <BookingHistory
-                  createdAt={booking.createdAt}
-                  changedAt={booking.changedAt}
-                />
-              )}
-
-            </div>
+              </div>
+            ) : booking && (
+              <Tabs
+                tabs={[
+                  {
+                    id: 'details',
+                    label: 'Details',
+                    content: (
+                      <div className="space-y-6">
+                        <BookingOverview booking={booking} />
+                        <BookingAccommodations
+                          booking={booking}
+                          accommodations={accommodations}
+                          accommodationsError={accommodationsError}
+                          getAccommodationName={getAccommodationName}
+                        />
+                        {booking.notes && <BookingNotes notes={booking.notes} />}
+                      </div>
+                    )
+                  },
+                  {
+                    id: 'history',
+                    label: 'Historie',
+                    content: (
+                      <div className="space-y-6">
+                        <BookingHistory
+                          createdAt={booking.createdAt}
+                          changedAt={booking.changedAt}
+                        />
+                        {/* TODO: Add event history here when available */}
+                        <div className="text-gray-500 text-center py-8">
+                          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p>Event-Historie wird in einer zukünftigen Version hinzugefügt.</p>
+                        </div>
+                      </div>
+                    )
+                  }
+                ]}
+                defaultTab="details"
+              />
+            )}
           </div>
         </div>
       </div>
