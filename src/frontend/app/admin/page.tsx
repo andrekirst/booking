@@ -4,11 +4,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '../../lib/api/client';
 
+interface DebugEvent {
+  eventType: string;
+  version: number;
+  aggregateId: string;
+  timestamp: string;
+}
+
+interface DebugInfo {
+  totalEvents?: number;
+  readModels?: number;
+  recentEvents?: DebugEvent[];
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [isRebuilding, setIsRebuilding] = useState(false);
   const [rebuildMessage, setRebuildMessage] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [isLoadingDebug, setIsLoadingDebug] = useState(false);
 
   const handleDebugEvents = async () => {
@@ -131,7 +144,7 @@ export default function AdminDashboard() {
                     <div className="mt-4">
                       <h5 className="font-medium mb-2">Recent Events:</h5>
                       <div className="bg-gray-50 p-3 rounded font-mono text-xs">
-                        {debugInfo.recentEvents.map((event: any, index: number) => (
+                        {debugInfo.recentEvents.map((event, index) => (
                           <div key={index} className="mb-1">
                             {event.eventType} (v{event.version}) - {event.aggregateId} - {new Date(event.timestamp).toLocaleString()}
                           </div>
