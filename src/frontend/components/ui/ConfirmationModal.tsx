@@ -93,7 +93,7 @@ export default function ConfirmationModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-gray-500 bg-opacity-25 transition-opacity"
+        className="fixed inset-0 bg-gray-500 bg-opacity-10 transition-opacity"
         onClick={onClose}
       ></div>
 

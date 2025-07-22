@@ -79,7 +79,7 @@ describe('ConfirmationModal', () => {
       render(<ConfirmationModal {...defaultProps} />);
       
       // Find backdrop by class (the overlay div)
-      const backdrop = document.querySelector('.bg-gray-500.bg-opacity-25');
+      const backdrop = document.querySelector('.bg-gray-500.bg-opacity-10');
       expect(backdrop).toBeInTheDocument();
       
       if (backdrop) {
