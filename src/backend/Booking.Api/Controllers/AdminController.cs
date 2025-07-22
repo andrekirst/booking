@@ -1,5 +1,6 @@
 using Booking.Api.Application.Users.Commands;
 using Booking.Api.Application.Users.Queries;
+using static Booking.Api.Controllers.AuthController;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,4 +51,3 @@ public class AdminController : ControllerBase
 }
 
 public record ApproveUserResponse(string Message);
-public record ErrorResponse(string Message);
