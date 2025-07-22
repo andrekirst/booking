@@ -36,7 +36,7 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnBookingsSortedByStartDateDescending()
+    public async Task Handle_ShouldReturnBookingsSortedByStartDateAscending()
     {
         // Arrange
         var userId = fixture.Create<int>();
@@ -60,9 +60,9 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
 
         // Assert
         result.Should().HaveCount(3);
-        result[0].StartDate.Should().Be(newestBooking.StartDate);
+        result[0].StartDate.Should().Be(olderBooking.StartDate);
         result[1].StartDate.Should().Be(newerBooking.StartDate);
-        result[2].StartDate.Should().Be(olderBooking.StartDate);
+        result[2].StartDate.Should().Be(newestBooking.StartDate);
     }
 
     [Fact]
@@ -233,9 +233,9 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
 
         // Assert
         result.Should().HaveCount(2);
-        // Should be sorted by StartDate descending, so page 2 (items 3-4) should be Jan 3 and Jan 2
+        // Should be sorted by StartDate ascending, so page 2 (items 3-4) should be Jan 3 and Jan 4
         result[0].StartDate.Should().Be(new DateTime(2024, 1, 3));
-        result[1].StartDate.Should().Be(new DateTime(2024, 1, 2));
+        result[1].StartDate.Should().Be(new DateTime(2024, 1, 4));
     }
 
     [Fact]
@@ -294,15 +294,15 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
 
         // Assert
         page1.Should().HaveCount(2);
-        page1[0].StartDate.Should().Be(new DateTime(2024, 5, 1)); // Newest first
-        page1[1].StartDate.Should().Be(new DateTime(2024, 4, 1));
+        page1[0].StartDate.Should().Be(new DateTime(2024, 1, 1)); // Oldest first
+        page1[1].StartDate.Should().Be(new DateTime(2024, 2, 1));
 
         page2.Should().HaveCount(2);
         page2[0].StartDate.Should().Be(new DateTime(2024, 3, 1));
-        page2[1].StartDate.Should().Be(new DateTime(2024, 2, 1));
+        page2[1].StartDate.Should().Be(new DateTime(2024, 4, 1));
 
         page3.Should().HaveCount(1);
-        page3[0].StartDate.Should().Be(new DateTime(2024, 1, 1)); // Oldest last
+        page3[0].StartDate.Should().Be(new DateTime(2024, 5, 1)); // Newest last
     }
 
     private BookingReadModel CreateBookingReadModel(int userId, DateTime startDate, DateTime? endDate = null)
