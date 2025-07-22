@@ -89,7 +89,7 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
         </div>
 
         {/* Booking Details */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="flex items-center text-sm text-gray-600">
             <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -102,18 +102,11 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
             </svg>
             <span>{booking.totalPersons} {booking.totalPersons === 1 ? 'Person' : 'Personen'}</span>
           </div>
-        </div>
-
-        {/* Accommodations */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Schlafmöglichkeiten:</p>
-          <div className="space-y-1">
-            {booking.bookingItems.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
-                <span className="text-gray-900">{item.sleepingAccommodationName}</span>
-                <span className="text-gray-600">{item.personCount} {item.personCount === 1 ? 'Person' : 'Personen'}</span>
-              </div>
-            ))}
+          <div className="flex items-center text-sm text-gray-600">
+            <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2-2v16m14 0V9a2 2 0 00-2-2H9a2 2 0 00-2-2v12a2 2 0 002 2h10a2 2 0 002-2z" />
+            </svg>
+            <span>{booking.bookingItems.length} {booking.bookingItems.length === 1 ? 'Schlafmöglichkeit' : 'Schlafmöglichkeiten'}</span>
           </div>
         </div>
 
