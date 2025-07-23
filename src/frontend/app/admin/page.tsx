@@ -62,10 +62,28 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('management');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isRebuilding, setIsRebuilding] = useState(false);
   const [rebuildMessage, setRebuildMessage] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [isLoadingDebug, setIsLoadingDebug] = useState(false);
+
+  const handleTabChange = (newTab: TabId) => {
+    if (newTab === activeTab) return;
+    
+    setIsTransitioning(true);
+    
+    // Short delay to allow fade-out animation
+    setTimeout(() => {
+      setActiveTab(newTab);
+      setSidebarOpen(false); // Close mobile menu after selection
+      
+      // Allow fade-in animation
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 150);
+  };
 
   const handleDebugEvents = async () => {
     setIsLoadingDebug(true);
@@ -359,10 +377,7 @@ export default function AdminDashboard() {
             {tabs.map((tab) => (
               <li key={tab.id}>
                 <button
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setSidebarOpen(false); // Close mobile menu after selection
-                  }}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                     activeTab === tab.id
                       ? 'bg-blue-50 text-blue-700'
@@ -399,7 +414,13 @@ export default function AdminDashboard() {
         </div>
 
         <div className="p-4 lg:p-8">
-          {renderTabContent()}
+          <div className={`transition-all duration-300 ease-in-out ${
+            isTransitioning 
+              ? 'opacity-0 transform translate-x-4' 
+              : 'opacity-100 transform translate-x-0'
+          }`}>
+            {renderTabContent()}
+          </div>
         </div>
       </div>
     </div>
