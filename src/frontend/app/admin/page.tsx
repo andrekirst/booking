@@ -179,10 +179,19 @@ export default function AdminDashboard() {
       return;
     }
 
+    // Check if basic required fields are filled
+    if (!formData.smtpHost || !formData.smtpUsername || !formData.fromEmail) {
+      setEmailMessage('❌ Bitte füllen Sie mindestens SMTP Server, Benutzername und Absender-E-Mail aus, bevor Sie testen.');
+      return;
+    }
+
     setIsTestingEmail(true);
     setEmailMessage(null);
     
     try {
+      // First save current settings temporarily for testing
+      await apiClient.updateEmailSettings(formData);
+      
       const response = await apiClient.testEmailSettings({
         toEmail: testEmail,
         subject: 'Test E-Mail vom Booking System',
@@ -422,39 +431,40 @@ export default function AdminDashboard() {
             </form>
 
             {/* Test Email Section */}
-            {emailSettings?.isConfigured && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h4 className="text-md font-medium text-gray-900 mb-4">E-Mail-Konfiguration testen</h4>
-                <div className="flex gap-3">
-                  <input
-                    type="email"
-                    value={testEmail}
-                    onChange={(e) => setTestEmail(e.target.value)}
-                    placeholder="test@example.com"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <button
-                    onClick={handleTestEmail}
-                    disabled={isTestingEmail || !testEmail}
-                    className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors"
-                  >
-                    {isTestingEmail ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                        Sende...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Test-E-Mail senden
-                      </>
-                    )}
-                  </button>
-                </div>
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h4 className="text-md font-medium text-gray-900 mb-2">E-Mail-Konfiguration testen</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                Testen Sie Ihre E-Mail-Einstellungen, bevor Sie sie speichern. Die Einstellungen werden temporär gespeichert für den Test.
+              </p>
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  placeholder="test@example.com"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  onClick={handleTestEmail}
+                  disabled={isTestingEmail || !testEmail}
+                  className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors"
+                >
+                  {isTestingEmail ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Sende...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Test-E-Mail senden
+                    </>
+                  )}
+                </button>
               </div>
-            )}
+            </div>
 
             {/* Status Message */}
             {emailMessage && (
