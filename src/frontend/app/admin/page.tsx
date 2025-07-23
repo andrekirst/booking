@@ -307,7 +307,7 @@ export default function AdminDashboard() {
                   value={formData.smtpHost}
                   onChange={(e) => handleInputChange('smtpHost', e.target.value)}
                   placeholder="z.B. smtp.gmail.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
                   value={formData.smtpPort}
                   onChange={(e) => handleInputChange('smtpPort', parseInt(e.target.value))}
                   placeholder="587"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -339,7 +339,7 @@ export default function AdminDashboard() {
                   value={formData.smtpUsername}
                   onChange={(e) => handleInputChange('smtpUsername', e.target.value)}
                   placeholder="Ihr E-Mail-Benutzername"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
                   value={formData.smtpPassword}
                   onChange={(e) => handleInputChange('smtpPassword', e.target.value)}
                   placeholder="Ihr E-Mail-Passwort"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -371,7 +371,7 @@ export default function AdminDashboard() {
                   value={formData.fromName}
                   onChange={(e) => handleInputChange('fromName', e.target.value)}
                   placeholder="Booking System"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -387,7 +387,7 @@ export default function AdminDashboard() {
                   value={formData.fromEmail}
                   onChange={(e) => handleInputChange('fromEmail', e.target.value)}
                   placeholder="noreply@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -442,7 +442,7 @@ export default function AdminDashboard() {
                   value={testEmail}
                   onChange={(e) => setTestEmail(e.target.value)}
                   placeholder="test@example.com"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
                 <button
                   onClick={handleTestEmail}
