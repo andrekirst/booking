@@ -5,6 +5,8 @@ import {
   ErrorResponse,
   LoginRequest,
   LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
   SleepingAccommodation,
   UpdateBookingRequest,
 } from "../types/api";
@@ -13,6 +15,7 @@ import { ApiError } from "./errors";
 export interface ApiClient {
   // Auth endpoints
   login(credentials: LoginRequest): Promise<LoginResponse>;
+  register(request: RegisterRequest): Promise<RegisterResponse>;
   logout(): Promise<void>;
 
   // Booking endpoints
@@ -168,6 +171,15 @@ export class HttpApiClient implements ApiClient {
     if (typeof window !== "undefined") {
       localStorage.setItem("auth_token", response.token);
     }
+
+    return response;
+  }
+
+  async register(request: RegisterRequest): Promise<RegisterResponse> {
+    const response = await this.request<RegisterResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
 
     return response;
   }

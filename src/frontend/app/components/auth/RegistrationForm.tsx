@@ -95,28 +95,19 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
         setErrors({});
 
         try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: formData.email,
-                    password: formData.password,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName
-                }),
+            await apiClient.register({
+                email: formData.email,
+                password: formData.password,
+                firstName: formData.firstName,
+                lastName: formData.lastName
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                onSuccess?.(formData.email);
-            } else {
-                setErrors({ general: data.message || 'Registrierung fehlgeschlagen' });
-            }
-        } catch (error) {
-            setErrors({ general: 'Ein Netzwerkfehler ist aufgetreten. Bitte versuchen Sie es erneut.' });
+            onSuccess?.(formData.email);
+        } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'message' in error 
+                ? String((error as { message: string }).message) 
+                : 'Registrierung fehlgeschlagen';
+            setErrors({ general: errorMessage });
         } finally {
             setIsSubmitting(false);
         }

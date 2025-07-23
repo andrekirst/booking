@@ -8,7 +8,9 @@ import {
   BookingStatus,
   CreateBookingRequest,
   LoginRequest, 
-  LoginResponse, 
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
   SleepingAccommodation,
   AccommodationType,
   UpdateBookingRequest
@@ -126,6 +128,36 @@ export class MockApiClient implements ApiClient {
     return {
       token: `mock-jwt-token-${user.id}`,
       user,
+    };
+  }
+
+  async register(request: RegisterRequest): Promise<RegisterResponse> {
+    // Simulate network delay
+    await this.delay(800);
+
+    // Check if user already exists
+    const existingUser = this.mockUsers.find(u => u.email === request.email);
+    if (existingUser) {
+      throw new ApiError('Email already registered', 400);
+    }
+
+    // Create new user
+    const newUser: User = {
+      id: `mock-user-${Date.now()}`,
+      email: request.email,
+      firstName: request.firstName,
+      lastName: request.lastName,
+      role: UserRole.Member,
+      isActive: false, // Needs admin approval
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add to mock users
+    this.mockUsers.push(newUser);
+
+    return {
+      message: 'Registration successful. Please check your email for verification.',
+      userId: newUser.id,
     };
   }
 
