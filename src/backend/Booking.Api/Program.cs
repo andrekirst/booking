@@ -85,6 +85,8 @@ public class Program
         builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingUpdatedEventApplier>();
         builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingCancelledEventApplier>();
         builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingConfirmedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingAcceptedEventApplier>();
+        builder.Services.AddScoped<IEventApplier<BookingReadModel>, BookingRejectedEventApplier>();
         
         
         // Configure JwtSettings with Options pattern

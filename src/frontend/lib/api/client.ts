@@ -22,6 +22,8 @@ export interface ApiClient {
   updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking>;
   cancelBooking(id: string): Promise<void>;
   confirmBooking(id: string): Promise<void>;
+  acceptBooking(id: string): Promise<void>;
+  rejectBooking(id: string): Promise<void>;
   checkAvailability(
     startDate: string,
     endDate: string,
@@ -210,6 +212,18 @@ export class HttpApiClient implements ApiClient {
 
   async confirmBooking(id: string): Promise<void> {
     await this.request<void>(`/bookings/${id}/confirm`, {
+      method: "POST",
+    });
+  }
+
+  async acceptBooking(id: string): Promise<void> {
+    await this.request<void>(`/bookings/${id}/accept`, {
+      method: "POST",
+    });
+  }
+
+  async rejectBooking(id: string): Promise<void> {
+    await this.request<void>(`/bookings/${id}/reject`, {
       method: "POST",
     });
   }

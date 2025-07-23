@@ -255,6 +255,36 @@ export class MockApiClient implements ApiClient {
     booking.changedAt = new Date().toISOString();
   }
 
+  async acceptBooking(id: string): Promise<void> {
+    await this.delay(200);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const booking = this.mockBookings.find(b => b.id === id);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    booking.status = BookingStatus.Accepted;
+    booking.changedAt = new Date().toISOString();
+  }
+
+  async rejectBooking(id: string): Promise<void> {
+    await this.delay(200);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const booking = this.mockBookings.find(b => b.id === id);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    booking.status = BookingStatus.Rejected;
+    booking.changedAt = new Date().toISOString();
+  }
+
   async checkAvailability(startDate: string, endDate: string, excludeBookingId?: string): Promise<BookingAvailability> {
     await this.delay(300);
     if (!this.authenticated) {

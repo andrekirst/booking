@@ -187,6 +187,50 @@ public class BookingsController(IMediator mediator) : ControllerBase
         }
     }
 
+    [HttpPost("{id:guid}/accept")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<ActionResult> AcceptBooking(Guid id)
+    {
+        var command = new AcceptBookingCommand(id);
+        
+        try
+        {
+            var success = await mediator.Send(command);
+            if (!success)
+            {
+                return NotFound();
+            }
+            
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
+    [HttpPost("{id:guid}/reject")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<ActionResult> RejectBooking(Guid id)
+    {
+        var command = new RejectBookingCommand(id);
+        
+        try
+        {
+            var success = await mediator.Send(command);
+            if (!success)
+            {
+                return NotFound();
+            }
+            
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
     [HttpGet("availability")]
     public async Task<ActionResult<BookingAvailabilityDto>> CheckAvailability(
         [FromQuery] DateTime startDate,

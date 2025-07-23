@@ -122,6 +122,36 @@ public class BookingAggregate : AggregateRoot
         ApplyEvent(cancelledEvent);
     }
 
+    public void Accept()
+    {
+        if (Status != BookingStatus.Pending)
+        {
+            throw new InvalidOperationException($"Cannot accept booking with status {Status}");
+        }
+
+        var acceptedEvent = new BookingAcceptedEvent
+        {
+            BookingId = Id
+        };
+
+        ApplyEvent(acceptedEvent);
+    }
+
+    public void Reject()
+    {
+        if (Status != BookingStatus.Pending)
+        {
+            throw new InvalidOperationException($"Cannot reject booking with status {Status}");
+        }
+
+        var rejectedEvent = new BookingRejectedEvent
+        {
+            BookingId = Id
+        };
+
+        ApplyEvent(rejectedEvent);
+    }
+
     protected override void Apply(DomainEvent domainEvent)
     {
         switch (domainEvent)
@@ -149,6 +179,14 @@ public class BookingAggregate : AggregateRoot
 
             case BookingCancelledEvent:
                 Status = BookingStatus.Cancelled;
+                break;
+
+            case BookingAcceptedEvent:
+                Status = BookingStatus.Accepted;
+                break;
+
+            case BookingRejectedEvent:
+                Status = BookingStatus.Rejected;
                 break;
         }
     }
