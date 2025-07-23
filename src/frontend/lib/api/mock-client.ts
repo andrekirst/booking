@@ -11,9 +11,13 @@ import {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse,
   SleepingAccommodation,
   AccommodationType,
-  UpdateBookingRequest
+  UpdateBookingRequest,
+  VerifyEmailRequest,
+  VerifyEmailResponse
 } from '../types/api';
 
 export class MockApiClient implements ApiClient {
@@ -158,6 +162,49 @@ export class MockApiClient implements ApiClient {
     return {
       message: 'Registration successful. Please check your email for verification.',
       userId: newUser.id,
+    };
+  }
+
+  async verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    // Simulate network delay
+    await this.delay(600);
+
+    // Mock token validation (in real app, this would be validated server-side)
+    if (!request.token || request.token.length < 20) {
+      throw new ApiError('Invalid or expired verification token', 400);
+    }
+
+    // Find user by token (simplified mock logic)
+    const user = this.mockUsers.find(u => !u.isActive);
+    if (!user) {
+      throw new ApiError('Verification token not found or already used', 400);
+    }
+
+    // Mark user as email verified (in real app, would set EmailVerified = true)
+    user.isActive = true;
+
+    return {
+      message: 'E-Mail-Adresse erfolgreich bestätigt.',
+      requiresApproval: true // In mock, always requires admin approval
+    };
+  }
+
+  async resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse> {
+    // Simulate network delay
+    await this.delay(800);
+
+    // Check if user exists
+    const user = this.mockUsers.find(u => u.email === request.email);
+    if (!user) {
+      throw new ApiError('No account found with this email address', 404);
+    }
+
+    if (user.isActive) {
+      throw new ApiError('This email address is already verified', 400);
+    }
+
+    return {
+      message: 'Ein neuer Bestätigungslink wurde an Ihre E-Mail-Adresse gesendet.'
     };
   }
 

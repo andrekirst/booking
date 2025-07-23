@@ -29,6 +29,23 @@ export interface RegisterResponse {
   userId: string;
 }
 
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+  requiresApproval: boolean;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  message: string;
+}
+
 export interface User {
   id: string;
   email: string;

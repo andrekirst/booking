@@ -7,8 +7,12 @@ import {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse,
   SleepingAccommodation,
   UpdateBookingRequest,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
 } from "../types/api";
 import { ApiError } from "./errors";
 
@@ -16,6 +20,8 @@ export interface ApiClient {
   // Auth endpoints
   login(credentials: LoginRequest): Promise<LoginResponse>;
   register(request: RegisterRequest): Promise<RegisterResponse>;
+  verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse>;
+  resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse>;
   logout(): Promise<void>;
 
   // Booking endpoints
@@ -177,6 +183,24 @@ export class HttpApiClient implements ApiClient {
 
   async register(request: RegisterRequest): Promise<RegisterResponse> {
     const response = await this.request<RegisterResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    return response;
+  }
+
+  async verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    const response = await this.request<VerifyEmailResponse>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    return response;
+  }
+
+  async resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse> {
+    const response = await this.request<ResendVerificationResponse>("/auth/resend-verification", {
       method: "POST",
       body: JSON.stringify(request),
     });

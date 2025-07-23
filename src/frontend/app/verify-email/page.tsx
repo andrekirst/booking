@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useApi } from '@/contexts/ApiContext';
 
 type VerificationStatus = 'loading' | 'success' | 'error' | 'invalid';
 
 export default function VerifyEmailPage() {
+    const { apiClient } = useApi();
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<VerificationStatus>('loading');
     const [message, setMessage] = useState('');
@@ -26,27 +28,16 @@ export default function VerifyEmailPage() {
 
     const verifyEmail = async (token: string) => {
         try {
-            const response = await fetch('/api/auth/verify-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ token }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setStatus('success');
-                setMessage(data.message);
-                setRequiresApproval(data.requiresApproval);
-            } else {
-                setStatus('error');
-                setMessage(data.message || 'Bestätigung fehlgeschlagen.');
-            }
-        } catch (error) {
+            const data = await apiClient.verifyEmail({ token });
+            setStatus('success');
+            setMessage(data.message);
+            setRequiresApproval(data.requiresApproval);
+        } catch (error: unknown) {
             setStatus('error');
-            setMessage('Ein Netzwerkfehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+            const errorMessage = error && typeof error === 'object' && 'message' in error 
+                ? String((error as { message: string }).message) 
+                : 'Bestätigung fehlgeschlagen.';
+            setMessage(errorMessage);
         }
     };
 
@@ -172,6 +163,7 @@ export default function VerifyEmailPage() {
 }
 
 function ResendVerificationForm() {
+    const { apiClient } = useApi();
     const [email, setEmail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState('');
@@ -190,26 +182,15 @@ function ResendVerificationForm() {
         setMessage('');
 
         try {
-            const response = await fetch('/api/auth/resend-verification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setMessage(data.message);
-                setIsSuccess(true);
-                setEmail('');
-            } else {
-                setMessage(data.message || 'Fehler beim Senden des Bestätigungslinks.');
-                setIsSuccess(false);
-            }
-        } catch (error) {
-            setMessage('Ein Netzwerkfehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+            const data = await apiClient.resendVerification({ email });
+            setMessage(data.message);
+            setIsSuccess(true);
+            setEmail('');
+        } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'message' in error 
+                ? String((error as { message: string }).message) 
+                : 'Fehler beim Senden des Bestätigungslinks.';
+            setMessage(errorMessage);
             setIsSuccess(false);
         } finally {
             setIsSubmitting(false);
