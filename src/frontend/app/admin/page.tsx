@@ -79,6 +79,15 @@ export default function AdminDashboard() {
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState('');
+  const [formData, setFormData] = useState<UpdateEmailSettingsRequest>({
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUsername: '',
+    smtpPassword: '',
+    fromName: 'Booking System',
+    fromEmail: '',
+    useTls: true
+  });
 
   const handleTabChange = (newTab: TabId) => {
     if (newTab === activeTab) return;
@@ -111,6 +120,16 @@ export default function AdminDashboard() {
     try {
       const settings = await apiClient.getEmailSettings();
       setEmailSettings(settings);
+      // Update form data when settings are loaded
+      setFormData({
+        smtpHost: settings.smtpHost,
+        smtpPort: settings.smtpPort,
+        smtpUsername: settings.smtpUsername,
+        smtpPassword: settings.smtpPassword,
+        fromName: settings.fromName,
+        fromEmail: settings.fromEmail,
+        useTls: settings.useTls
+      });
     } catch (error) {
       console.error('Failed to load email settings:', error);
       setEmailMessage(error instanceof Error ? error.message : 'Fehler beim Laden der E-Mail-Einstellungen');
@@ -127,12 +146,31 @@ export default function AdminDashboard() {
       const response = await apiClient.updateEmailSettings(settings);
       setEmailSettings(response.settings);
       setEmailMessage(`✅ ${response.message}`);
+      // Update form data with saved settings
+      setFormData({
+        smtpHost: response.settings.smtpHost,
+        smtpPort: response.settings.smtpPort,
+        smtpUsername: response.settings.smtpUsername,
+        smtpPassword: response.settings.smtpPassword,
+        fromName: response.settings.fromName,
+        fromEmail: response.settings.fromEmail,
+        useTls: response.settings.useTls
+      });
     } catch (error) {
       console.error('Failed to save email settings:', error);
       setEmailMessage(`❌ ${error instanceof Error ? error.message : 'Fehler beim Speichern der E-Mail-Einstellungen'}`);
     } finally {
       setIsSavingEmailSettings(false);
     }
+  };
+
+  const handleInputChange = (field: keyof UpdateEmailSettingsRequest, value: string | number | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSaveEmailSettings(formData);
   };
 
   const handleTestEmail = async () => {
@@ -235,40 +273,6 @@ export default function AdminDashboard() {
   );
 
   const renderSettingsTab = () => {
-    const [formData, setFormData] = useState<UpdateEmailSettingsRequest>({
-      smtpHost: emailSettings?.smtpHost || '',
-      smtpPort: emailSettings?.smtpPort || 587,
-      smtpUsername: emailSettings?.smtpUsername || '',
-      smtpPassword: emailSettings?.smtpPassword || '',
-      fromName: emailSettings?.fromName || 'Booking System',
-      fromEmail: emailSettings?.fromEmail || '',
-      useTls: emailSettings?.useTls ?? true
-    });
-
-    // Update form data when email settings change
-    useEffect(() => {
-      if (emailSettings) {
-        setFormData({
-          smtpHost: emailSettings.smtpHost,
-          smtpPort: emailSettings.smtpPort,
-          smtpUsername: emailSettings.smtpUsername,
-          smtpPassword: emailSettings.smtpPassword,
-          fromName: emailSettings.fromName,
-          fromEmail: emailSettings.fromEmail,
-          useTls: emailSettings.useTls
-        });
-      }
-    }, [emailSettings]);
-
-    const handleInputChange = (field: keyof UpdateEmailSettingsRequest, value: string | number | boolean) => {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      handleSaveEmailSettings(formData);
-    };
-
     return (
       <div className="max-w-2xl space-y-6">
         <div>
