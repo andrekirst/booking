@@ -356,18 +356,18 @@ export class HttpApiClient implements ApiClient {
 
   // Email Settings
   async getEmailSettings(): Promise<EmailSettings> {
-    return this.request<EmailSettings>("/api/admin/email-settings");
+    return this.request<EmailSettings>("/admin/email-settings");
   }
 
   async updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse> {
-    return this.request<EmailSettingsResponse>("/api/admin/email-settings", {
+    return this.request<EmailSettingsResponse>("/admin/email-settings", {
       method: "PUT",
       body: JSON.stringify(settings),
     });
   }
 
   async testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse> {
-    return this.request<TestEmailResponse>("/api/admin/email-settings/test", {
+    return this.request<TestEmailResponse>("/admin/email-settings/test", {
       method: "POST",
       body: JSON.stringify(request),
     });
