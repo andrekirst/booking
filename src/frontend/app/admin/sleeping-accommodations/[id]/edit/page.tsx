@@ -8,7 +8,7 @@ import { useApi } from '@/contexts/ApiContext';
 
 export default function EditSleepingAccommodationPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const api = useApi();
+  const { apiClient } = useApi();
   const [accommodation, setAccommodation] = useState<SleepingAccommodation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
 
   const fetchAccommodation = async (id: string) => {
     try {
-      const data = await api.getSleepingAccommodationById(id);
+      const data = await apiClient.getSleepingAccommodationById(id);
       setAccommodation(data);
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 404) {
@@ -44,7 +44,7 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
       throw new Error('Schlafmöglichkeit ID nicht gefunden');
     }
 
-    await api.updateSleepingAccommodation(accommodationId, data);
+    await apiClient.updateSleepingAccommodation(accommodationId, data);
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
