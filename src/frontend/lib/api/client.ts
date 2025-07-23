@@ -11,6 +11,8 @@ import {
   PendingUser,
   RegisterRequest,
   RegisterResponse,
+  RejectUserRequest,
+  RejectUserResponse,
   ResendVerificationRequest,
   ResendVerificationResponse,
   SleepingAccommodation,
@@ -63,6 +65,7 @@ export interface ApiClient {
   // Admin endpoints
   getPendingUsers(): Promise<PendingUser[]>;
   approveUser(userId: number): Promise<ApproveUserResponse>;
+  rejectUser(userId: number, reason?: string): Promise<RejectUserResponse>;
 
   // Email Settings endpoints
   getEmailSettings(): Promise<EmailSettings>;
@@ -351,6 +354,14 @@ export class HttpApiClient implements ApiClient {
   async approveUser(userId: number): Promise<ApproveUserResponse> {
     return this.request<ApproveUserResponse>(`/admin/users/${userId}/approve`, {
       method: "POST",
+    });
+  }
+
+  async rejectUser(userId: number, reason?: string): Promise<RejectUserResponse> {
+    const request: RejectUserRequest = { reason };
+    return this.request<RejectUserResponse>(`/admin/users/${userId}/reject`, {
+      method: "POST",
+      body: JSON.stringify(request),
     });
   }
 

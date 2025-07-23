@@ -15,6 +15,7 @@ import {
   PendingUser,
   RegisterRequest,
   RegisterResponse,
+  RejectUserResponse,
   ResendVerificationRequest,
   ResendVerificationResponse,
   SleepingAccommodation,
@@ -654,6 +655,22 @@ export class MockApiClient implements ApiClient {
     return {
       message: `Benutzer ${user.firstName} ${user.lastName} wurde erfolgreich freigegeben.`
     };
+  }
+
+  async rejectUser(userId: number, reason?: string): Promise<RejectUserResponse> {
+    await this.delay(800);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const userIndex = this.mockPendingUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const user = this.mockPendingUsers[userIndex];
+    this.mockPendingUsers.splice(userIndex, 1);
+    return { message: `Benutzer ${user.firstName} ${user.lastName} wurde abgelehnt.` };
   }
 
   // Email Settings

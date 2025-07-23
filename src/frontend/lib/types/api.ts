@@ -61,6 +61,14 @@ export interface ApproveUserResponse {
   message: string;
 }
 
+export interface RejectUserRequest {
+  reason?: string;
+}
+
+export interface RejectUserResponse {
+  message: string;
+}
+
 export interface User {
   id: string;
   email: string;

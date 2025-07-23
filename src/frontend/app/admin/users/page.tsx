@@ -4,13 +4,19 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApi } from '@/contexts/ApiContext';
 import { PendingUser } from '@/lib/types/api';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function UserManagementPage() {
     const { apiClient } = useApi();
+    const { showSuccess, showError, AlertComponent } = useAlert();
     const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [approvingUserId, setApprovingUserId] = useState<number | null>(null);
+    const [rejectingUserId, setRejectingUserId] = useState<number | null>(null);
+    const [showRejectDialog, setShowRejectDialog] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
+    const [rejectReason, setRejectReason] = useState('');
 
     const fetchPendingUsers = async () => {
         setLoading(true);
@@ -38,16 +44,49 @@ export default function UserManagementPage() {
             // Remove approved user from pending list
             setPendingUsers(users => users.filter(user => user.id !== userId));
             
-            // Show success message (you could use a toast library here)
-            alert(`✅ ${result.message}`);
+            // Show success message
+            showSuccess(result.message, 'Erfolgreich');
             
         } catch (error: unknown) {
             const errorMessage = error && typeof error === 'object' && 'message' in error 
                 ? String((error as { message: string }).message) 
                 : 'Fehler beim Freigeben des Benutzers';
-            alert(`❌ Fehler: ${errorMessage}`);
+            showError(errorMessage, 'Fehler');
         } finally {
             setApprovingUserId(null);
+        }
+    };
+
+    const openRejectDialog = (user: PendingUser) => {
+        setSelectedUser(user);
+        setShowRejectDialog(true);
+        setRejectReason('');
+    };
+
+    const rejectUser = async () => {
+        if (!selectedUser) return;
+        
+        setRejectingUserId(selectedUser.id);
+        setShowRejectDialog(false);
+        
+        try {
+            const result = await apiClient.rejectUser(selectedUser.id, rejectReason || undefined);
+            
+            // Remove rejected user from pending list
+            setPendingUsers(users => users.filter(user => user.id !== selectedUser.id));
+            
+            // Show success message
+            showSuccess(result.message, 'Benutzer abgelehnt');
+            
+        } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'message' in error 
+                ? String((error as { message: string }).message) 
+                : 'Fehler beim Ablehnen des Benutzers';
+            showError(errorMessage, 'Fehler');
+        } finally {
+            setRejectingUserId(null);
+            setSelectedUser(null);
+            setRejectReason('');
         }
     };
 
@@ -209,25 +248,46 @@ export default function UserManagementPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <button
-                                                onClick={() => approveUser(user.id)}
-                                                disabled={approvingUserId === user.id}
-                                                className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors"
-                                            >
-                                                {approvingUserId === user.id ? (
-                                                    <>
-                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                                        Freigabe...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        Freigeben
-                                                    </>
-                                                )}
-                                            </button>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => approveUser(user.id)}
+                                                    disabled={approvingUserId === user.id || rejectingUserId === user.id}
+                                                    className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors"
+                                                >
+                                                    {approvingUserId === user.id ? (
+                                                        <>
+                                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                                            Freigabe...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Freigeben
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => openRejectDialog(user)}
+                                                    disabled={approvingUserId === user.id || rejectingUserId === user.id}
+                                                    className="inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors"
+                                                >
+                                                    {rejectingUserId === user.id ? (
+                                                        <>
+                                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                                            Ablehnung...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Ablehnen
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -253,6 +313,56 @@ export default function UserManagementPage() {
                     </div>
                 </div>
             )}
+
+            {/* Reject Dialog */}
+            {showRejectDialog && selectedUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-md w-full p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Benutzer ablehnen
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                            Möchten Sie {selectedUser.firstName} {selectedUser.lastName} wirklich ablehnen?
+                        </p>
+                        
+                        <div className="mb-4">
+                            <label htmlFor="rejectReason" className="block text-sm font-medium text-gray-700 mb-2">
+                                Grund der Ablehnung (optional)
+                            </label>
+                            <textarea
+                                id="rejectReason"
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900"
+                                placeholder="Geben Sie einen Grund für die Ablehnung an..."
+                            />
+                        </div>
+                        
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowRejectDialog(false);
+                                    setSelectedUser(null);
+                                    setRejectReason('');
+                                }}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Abbrechen
+                            </button>
+                            <button
+                                onClick={rejectUser}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                Benutzer ablehnen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Alert Component */}
+            {AlertComponent}
         </div>
     );
 }
