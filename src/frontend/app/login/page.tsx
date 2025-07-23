@@ -22,7 +22,7 @@ export default function LoginPage() {
     setMessageType(null);
 
     try {
-      const response = await apiClient.login({ email, password });
+      await apiClient.login({ email, password });
       
       setMessage("Anmeldung erfolgreich");
       setMessageType("success");
@@ -31,8 +31,11 @@ export default function LoginPage() {
       setTimeout(() => {
         router.push("/bookings");
       }, 1000);
-    } catch (error: any) {
-      setMessage(error.message || "Anmeldung fehlgeschlagen");
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? String((error as { message: string }).message) 
+        : 'Anmeldung fehlgeschlagen';
+      setMessage(errorMessage);
       setMessageType("error");
     } finally {
       setIsLoading(false);

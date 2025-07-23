@@ -38,7 +38,7 @@ interface BookingCardProps {
   onReject?: (bookingId: string) => void;
 }
 
-function BookingCard({ booking, onClick, userRole, onAccept, onReject }: BookingCardProps) {
+function BookingCard({ booking, onClick }: BookingCardProps) {
   const getStatusBadge = (status: BookingStatus) => {
     switch (status) {
       case BookingStatus.Pending:
