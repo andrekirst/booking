@@ -1,10 +1,12 @@
 import {
+  ApproveUserResponse,
   Booking,
   BookingAvailability,
   CreateBookingRequest,
   ErrorResponse,
   LoginRequest,
   LoginResponse,
+  PendingUser,
   RegisterRequest,
   RegisterResponse,
   ResendVerificationRequest,
@@ -52,6 +54,10 @@ export interface ApiClient {
   // Admin functions
   debugBookingEvents(): Promise<{ totalEvents: number; bookingEvents: number; readModels: number; recentEvents: Array<{ eventType: string; version: number; aggregateId: string; timestamp: string }> }>;
   rebuildBookingProjections(): Promise<{ message: string }>;
+
+  // Admin endpoints
+  getPendingUsers(): Promise<PendingUser[]>;
+  approveUser(userId: number): Promise<ApproveUserResponse>;
 
   // Token management
   setToken(token: string): void;
@@ -323,6 +329,17 @@ export class HttpApiClient implements ApiClient {
 
   async rebuildBookingProjections(): Promise<{ message: string }> {
     return this.request<{ message: string }>("/bookings/projections/rebuild", {
+      method: "POST",
+    });
+  }
+
+  // Admin user management
+  async getPendingUsers(): Promise<PendingUser[]> {
+    return this.request<PendingUser[]>("/admin/users/pending");
+  }
+
+  async approveUser(userId: number): Promise<ApproveUserResponse> {
+    return this.request<ApproveUserResponse>(`/admin/users/${userId}/approve`, {
       method: "POST",
     });
   }

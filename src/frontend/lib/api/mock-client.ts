@@ -1,6 +1,7 @@
 import { ApiClient } from './client';
 import { ApiError } from './errors';
 import { 
+  ApproveUserResponse,
   User, 
   UserRole, 
   Booking,
@@ -9,6 +10,7 @@ import {
   CreateBookingRequest,
   LoginRequest, 
   LoginResponse,
+  PendingUser,
   RegisterRequest,
   RegisterResponse,
   ResendVerificationRequest,
@@ -24,6 +26,19 @@ export class MockApiClient implements ApiClient {
   private authenticated = false;
   private currentUser: User | null = null;
   private token: string | null = null;
+  
+  // Mock pending users storage
+  private mockPendingUsers: PendingUser[] = [
+    {
+      id: 1,
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      registrationDate: '2025-01-20T10:00:00Z',
+      emailVerifiedAt: '2025-01-20T10:05:00Z',
+      emailVerified: true
+    }
+  ];
 
   // Mock data
   private mockUsers: User[] = [
@@ -570,15 +585,43 @@ export class MockApiClient implements ApiClient {
     };
   }
 
-  async rebuildBookingProjections(): Promise<{ message: string; rebuiltCount: number }> {
+  async rebuildBookingProjections(): Promise<{ message: string }> {
     await this.delay(2000); // Simulate longer operation
     if (!this.authenticated) {
       throw new ApiError('Unauthorized', 401);
     }
 
     return {
-      message: 'Projections successfully rebuilt',
-      rebuiltCount: 15
+      message: 'Projections successfully rebuilt'
+    };
+  }
+
+  // Admin user management
+  async getPendingUsers(): Promise<PendingUser[]> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    return [...this.mockPendingUsers];
+  }
+
+  async approveUser(userId: number): Promise<ApproveUserResponse> {
+    await this.delay(800);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const userIndex = this.mockPendingUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const user = this.mockPendingUsers[userIndex];
+    this.mockPendingUsers.splice(userIndex, 1); // Remove from pending list
+
+    return {
+      message: `Benutzer ${user.firstName} ${user.lastName} wurde erfolgreich freigegeben.`
     };
   }
 }

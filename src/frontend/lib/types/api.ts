@@ -46,6 +46,21 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+// Admin User Management Types
+export interface PendingUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  registrationDate: string;
+  emailVerifiedAt: string | null;
+  emailVerified: boolean;
+}
+
+export interface ApproveUserResponse {
+  message: string;
+}
+
 export interface User {
   id: string;
   email: string;

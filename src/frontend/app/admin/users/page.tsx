@@ -2,18 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-interface PendingUser {
-    id: number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    registrationDate: string;
-    emailVerifiedAt: string | null;
-    emailVerified: boolean;
-}
+import { useApi } from '@/contexts/ApiContext';
+import { PendingUser } from '@/lib/types/api';
 
 export default function UserManagementPage() {
+    const { apiClient } = useApi();
     const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,20 +17,13 @@ export default function UserManagementPage() {
         setError(null);
         
         try {
-            const response = await fetch('/api/admin/users/pending', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch pending users');
-            }
-
-            const users = await response.json();
+            const users = await apiClient.getPendingUsers();
             setPendingUsers(users);
-        } catch (error) {
-            setError(error instanceof Error ? error.message : 'Unknown error occurred');
+        } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'message' in error 
+                ? String((error as { message: string }).message) 
+                : 'Fehler beim Laden der wartenden Benutzer';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -47,20 +33,7 @@ export default function UserManagementPage() {
         setApprovingUserId(userId);
         
         try {
-            const response = await fetch(`/api/admin/users/${userId}/approve`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to approve user');
-            }
-
-            const result = await response.json();
+            const result = await apiClient.approveUser(userId);
             
             // Remove approved user from pending list
             setPendingUsers(users => users.filter(user => user.id !== userId));
@@ -68,8 +41,11 @@ export default function UserManagementPage() {
             // Show success message (you could use a toast library here)
             alert(`✅ ${result.message}`);
             
-        } catch (error) {
-            alert(`❌ Fehler: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'message' in error 
+                ? String((error as { message: string }).message) 
+                : 'Fehler beim Freigeben des Benutzers';
+            alert(`❌ Fehler: ${errorMessage}`);
         } finally {
             setApprovingUserId(null);
         }
