@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { useRouter, useParams } from 'next/navigation';
 import BookingDetailPage from '../page';
 import { apiClient } from '../../../../lib/api/client';
@@ -491,9 +491,7 @@ describe('BookingDetailPage', () => {
       jest.restoreAllMocks();
     });
 
-    it('should show confirmation dialog when cancel button is clicked', async () => {
-      (global.confirm as jest.Mock).mockReturnValue(false);
-
+    it('should show confirmation modal when cancel button is clicked', async () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
@@ -501,14 +499,17 @@ describe('BookingDetailPage', () => {
       });
 
       const cancelButton = screen.getByRole('button', { name: /stornieren/i });
-      cancelButton.click();
+      
+      await act(async () => {
+        cancelButton.click();
+      });
 
-      expect(global.confirm).toHaveBeenCalledWith('Möchten Sie diese Buchung wirklich stornieren?');
+      expect(screen.getByText('Buchung stornieren')).toBeInTheDocument();
+      expect(screen.getByText('Möchten Sie diese Buchung wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden.')).toBeInTheDocument();
     });
 
     it('should log booking ID when cancel is confirmed', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      (global.confirm as jest.Mock).mockReturnValue(true);
 
       render(<BookingDetailPage />);
 
@@ -517,7 +518,18 @@ describe('BookingDetailPage', () => {
       });
 
       const cancelButton = screen.getByRole('button', { name: /stornieren/i });
-      cancelButton.click();
+      
+      await act(async () => {
+        cancelButton.click();
+      });
+
+      // Find and click the confirm button in the modal (should be the second one)
+      const stornierButtons = screen.getAllByRole('button', { name: /stornieren/i });
+      const confirmButton = stornierButtons[1]; // The modal confirm button
+      
+      await act(async () => {
+        confirmButton.click();
+      });
 
       expect(consoleSpy).toHaveBeenCalledWith('Cancel booking:', mockBooking.id);
       consoleSpy.mockRestore();

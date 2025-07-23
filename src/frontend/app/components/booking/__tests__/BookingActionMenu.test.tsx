@@ -197,12 +197,21 @@ describe('BookingActionMenu', () => {
         />
       );
 
+      // Click the accept button to open modal
       await waitFor(() => {
         const acceptButton = screen.getByText('Annehmen');
         fireEvent.click(acceptButton);
       });
 
-      expect(window.confirm).toHaveBeenCalledWith('Möchten Sie diese Buchung wirklich annehmen?');
+      // Check modal appears
+      expect(screen.getByText('Buchung annehmen')).toBeInTheDocument();
+      expect(screen.getByText('Möchten Sie diese Buchung annehmen? Die Buchung wird dadurch bestätigt und für den Gast freigegeben.')).toBeInTheDocument();
+
+      // Click confirm in modal (should be the second Annehmen button)
+      const annehmenButtons = screen.getAllByRole('button', { name: /annehmen/i });
+      const confirmButton = annehmenButtons[1]; // The modal confirm button
+      fireEvent.click(confirmButton);
+
       expect(mockOnAccept).toHaveBeenCalled();
     });
 
@@ -223,12 +232,21 @@ describe('BookingActionMenu', () => {
         />
       );
 
+      // Click the reject button to open modal
       await waitFor(() => {
         const rejectButton = screen.getByText('Ablehnen');
         fireEvent.click(rejectButton);
       });
 
-      expect(window.confirm).toHaveBeenCalledWith('Möchten Sie diese Buchung wirklich ablehnen?');
+      // Check modal appears
+      expect(screen.getByText('Buchung ablehnen')).toBeInTheDocument();
+      expect(screen.getByText('Möchten Sie diese Buchung ablehnen? Der Gast wird über die Ablehnung informiert.')).toBeInTheDocument();
+
+      // Click confirm in modal (should be the second Ablehnen button)
+      const ablehnenButtons = screen.getAllByRole('button', { name: /ablehnen/i });
+      const confirmButton = ablehnenButtons[1]; // The modal confirm button
+      fireEvent.click(confirmButton);
+
       expect(mockOnReject).toHaveBeenCalled();
     });
 
@@ -259,7 +277,7 @@ describe('BookingActionMenu', () => {
       expect(mockOnAccept).not.toHaveBeenCalled();
     });
 
-    it('should call onCancel when cancel button is clicked and confirmed', () => {
+    it('should call onCancel when cancel button is clicked and confirmed', async () => {
       render(
         <BookingActionMenu
           booking={baseBooking}
@@ -268,10 +286,21 @@ describe('BookingActionMenu', () => {
         />
       );
 
+      // Click the cancel button to open modal
       const cancelButton = screen.getByText('Stornieren');
       fireEvent.click(cancelButton);
 
-      expect(window.confirm).toHaveBeenCalledWith('Möchten Sie diese Buchung wirklich stornieren?');
+      // Check modal appears
+      await waitFor(() => {
+        expect(screen.getByText('Buchung stornieren')).toBeInTheDocument();
+        expect(screen.getByText('Möchten Sie diese Buchung wirklich stornieren? Diese Aktion kann nicht rückgängig gemacht werden.')).toBeInTheDocument();
+      });
+
+      // Click confirm in modal (find the second Stornieren button, which is the confirm button)
+      const stornierButtons = screen.getAllByRole('button', { name: /stornieren/i });
+      const confirmButton = stornierButtons[1];
+      fireEvent.click(confirmButton);
+
       expect(mockOnCancel).toHaveBeenCalled();
     });
 
