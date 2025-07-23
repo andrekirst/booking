@@ -61,7 +61,7 @@ export default function RegisterPage() {
                     <h2 className="text-3xl font-bold text-gray-900">
                         Registrierung
                     </h2>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-800">
                         Erstellen Sie Ihr Konto für das Buchungssystem
                     </p>
                 </div>
@@ -74,7 +74,7 @@ export default function RegisterPage() {
                 />
                 
                 <div className="text-center">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-800">
                         Bereits ein Konto?{' '}
                         <Link
                             href="/login"

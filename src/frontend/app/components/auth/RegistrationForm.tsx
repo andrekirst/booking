@@ -132,7 +132,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-900">
                         Vorname *
                     </label>
                     <input
@@ -151,7 +151,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                 </div>
 
                 <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-900">
                         Nachname *
                     </label>
                     <input
@@ -171,7 +171,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             </div>
 
             <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-900">
                     E-Mail-Adresse *
                 </label>
                 <input
@@ -190,7 +190,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             </div>
 
             <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-900">
                     Passwort *
                 </label>
                 <input
@@ -214,7 +214,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             </div>
 
             <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900">
                     Passwort bestätigen *
                 </label>
                 <input
@@ -256,7 +256,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                 </button>
             </div>
 
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-700">
                 <p>
                     * Pflichtfelder. Nach der Registrierung erhalten Sie eine E-Mail zur Bestätigung Ihrer Adresse. 
                     Anschließend wird Ihr Konto von einem Administrator für Buchungen freigeschaltet.
