@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '../../lib/api/client';
+import { useApi } from '@/contexts/ApiContext';
+import { EmailSettings, UpdateEmailSettingsRequest } from '@/lib/types/api';
 
 interface DebugEvent {
   eventType: string;
@@ -60,13 +61,24 @@ const tabs: Tab[] = [
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { apiClient } = useApi();
   const [activeTab, setActiveTab] = useState<TabId>('management');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Debugging state
   const [isRebuilding, setIsRebuilding] = useState(false);
   const [rebuildMessage, setRebuildMessage] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [isLoadingDebug, setIsLoadingDebug] = useState(false);
+
+  // Email settings state
+  const [emailSettings, setEmailSettings] = useState<EmailSettings | null>(null);
+  const [isLoadingEmailSettings, setIsLoadingEmailSettings] = useState(false);
+  const [isSavingEmailSettings, setIsSavingEmailSettings] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
+  const [emailMessage, setEmailMessage] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState('');
 
   const handleTabChange = (newTab: TabId) => {
     if (newTab === activeTab) return;
@@ -83,6 +95,68 @@ export default function AdminDashboard() {
         setIsTransitioning(false);
       }, 50);
     }, 150);
+  };
+
+  // Load email settings when settings tab is accessed
+  useEffect(() => {
+    if (activeTab === 'settings' && !emailSettings) {
+      loadEmailSettings();
+    }
+  }, [activeTab]);
+
+  const loadEmailSettings = async () => {
+    setIsLoadingEmailSettings(true);
+    setEmailMessage(null);
+    
+    try {
+      const settings = await apiClient.getEmailSettings();
+      setEmailSettings(settings);
+    } catch (error) {
+      console.error('Failed to load email settings:', error);
+      setEmailMessage(error instanceof Error ? error.message : 'Fehler beim Laden der E-Mail-Einstellungen');
+    } finally {
+      setIsLoadingEmailSettings(false);
+    }
+  };
+
+  const handleSaveEmailSettings = async (settings: UpdateEmailSettingsRequest) => {
+    setIsSavingEmailSettings(true);
+    setEmailMessage(null);
+    
+    try {
+      const response = await apiClient.updateEmailSettings(settings);
+      setEmailSettings(response.settings);
+      setEmailMessage(`✅ ${response.message}`);
+    } catch (error) {
+      console.error('Failed to save email settings:', error);
+      setEmailMessage(`❌ ${error instanceof Error ? error.message : 'Fehler beim Speichern der E-Mail-Einstellungen'}`);
+    } finally {
+      setIsSavingEmailSettings(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!testEmail) {
+      setEmailMessage('❌ Bitte geben Sie eine E-Mail-Adresse für den Test ein.');
+      return;
+    }
+
+    setIsTestingEmail(true);
+    setEmailMessage(null);
+    
+    try {
+      const response = await apiClient.testEmailSettings({
+        toEmail: testEmail,
+        subject: 'Test E-Mail vom Booking System',
+        body: 'Dies ist eine Test-E-Mail zur Überprüfung der E-Mail-Konfiguration.'
+      });
+      setEmailMessage(`✅ ${response.message}`);
+    } catch (error) {
+      console.error('Failed to test email settings:', error);
+      setEmailMessage(`❌ ${error instanceof Error ? error.message : 'Fehler beim Senden der Test-E-Mail'}`);
+    } finally {
+      setIsTestingEmail(false);
+    }
   };
 
   const handleDebugEvents = async () => {
@@ -160,31 +234,234 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const renderSettingsTab = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Systemeinstellungen</h3>
-        <p className="text-gray-600 mb-6">Konfigurieren Sie E-Mail-Server und Systemparameter</p>
-      </div>
+  const renderSettingsTab = () => {
+    const [formData, setFormData] = useState<UpdateEmailSettingsRequest>({
+      smtpHost: emailSettings?.smtpHost || '',
+      smtpPort: emailSettings?.smtpPort || 587,
+      smtpUsername: emailSettings?.smtpUsername || '',
+      smtpPassword: emailSettings?.smtpPassword || '',
+      fromName: emailSettings?.fromName || 'Booking System',
+      fromEmail: emailSettings?.fromEmail || '',
+      useTls: emailSettings?.useTls ?? true
+    });
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Email Server Settings Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 opacity-60">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-          <h4 className="text-lg font-medium text-gray-900 mb-2">E-Mail-Server</h4>
-          <p className="text-gray-600 text-sm mb-3">SMTP-Konfiguration für E-Mail-Versand.</p>
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            Bald verfügbar
-          </span>
+    // Update form data when email settings change
+    useEffect(() => {
+      if (emailSettings) {
+        setFormData({
+          smtpHost: emailSettings.smtpHost,
+          smtpPort: emailSettings.smtpPort,
+          smtpUsername: emailSettings.smtpUsername,
+          smtpPassword: emailSettings.smtpPassword,
+          fromName: emailSettings.fromName,
+          fromEmail: emailSettings.fromEmail,
+          useTls: emailSettings.useTls
+        });
+      }
+    }, [emailSettings]);
+
+    const handleInputChange = (field: keyof UpdateEmailSettingsRequest, value: string | number | boolean) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleSaveEmailSettings(formData);
+    };
+
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">E-Mail-Server Einstellungen</h3>
+          <p className="text-gray-600 mb-6">Konfigurieren Sie den SMTP-Server für E-Mail-Versand</p>
         </div>
 
-        {/* System Settings Card */}
+        {isLoadingEmailSettings ? (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* SMTP Host */}
+              <div>
+                <label htmlFor="smtpHost" className="block text-sm font-medium text-gray-700 mb-1">
+                  SMTP Server
+                </label>
+                <input
+                  type="text"
+                  id="smtpHost"
+                  value={formData.smtpHost}
+                  onChange={(e) => handleInputChange('smtpHost', e.target.value)}
+                  placeholder="z.B. smtp.gmail.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {/* SMTP Port */}
+              <div>
+                <label htmlFor="smtpPort" className="block text-sm font-medium text-gray-700 mb-1">
+                  Port
+                </label>
+                <input
+                  type="number"
+                  id="smtpPort"
+                  value={formData.smtpPort}
+                  onChange={(e) => handleInputChange('smtpPort', parseInt(e.target.value))}
+                  placeholder="587"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {/* SMTP Username */}
+              <div>
+                <label htmlFor="smtpUsername" className="block text-sm font-medium text-gray-700 mb-1">
+                  Benutzername
+                </label>
+                <input
+                  type="text"
+                  id="smtpUsername"
+                  value={formData.smtpUsername}
+                  onChange={(e) => handleInputChange('smtpUsername', e.target.value)}
+                  placeholder="Ihr E-Mail-Benutzername"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {/* SMTP Password */}
+              <div>
+                <label htmlFor="smtpPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Passwort
+                </label>
+                <input
+                  type="password"
+                  id="smtpPassword"
+                  value={formData.smtpPassword}
+                  onChange={(e) => handleInputChange('smtpPassword', e.target.value)}
+                  placeholder="Ihr E-Mail-Passwort"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {/* From Name */}
+              <div>
+                <label htmlFor="fromName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Absender-Name
+                </label>
+                <input
+                  type="text"
+                  id="fromName"
+                  value={formData.fromName}
+                  onChange={(e) => handleInputChange('fromName', e.target.value)}
+                  placeholder="Booking System"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {/* From Email */}
+              <div>
+                <label htmlFor="fromEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                  Absender-E-Mail
+                </label>
+                <input
+                  type="email"
+                  id="fromEmail"
+                  value={formData.fromEmail}
+                  onChange={(e) => handleInputChange('fromEmail', e.target.value)}
+                  placeholder="noreply@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              {/* Use TLS */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="useTls"
+                  checked={formData.useTls}
+                  onChange={(e) => handleInputChange('useTls', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="useTls" className="ml-2 block text-sm text-gray-700">
+                  TLS/SSL verwenden (empfohlen)
+                </label>
+              </div>
+
+              {/* Save Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={isSavingEmailSettings}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors"
+                >
+                  {isSavingEmailSettings ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Speichern...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Einstellungen speichern
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Test Email Section */}
+            {emailSettings?.isConfigured && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h4 className="text-md font-medium text-gray-900 mb-4">E-Mail-Konfiguration testen</h4>
+                <div className="flex gap-3">
+                  <input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    placeholder="test@example.com"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button
+                    onClick={handleTestEmail}
+                    disabled={isTestingEmail || !testEmail}
+                    className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors"
+                  >
+                    {isTestingEmail ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                        Sende...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Test-E-Mail senden
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Status Message */}
+            {emailMessage && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">{emailMessage}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* System Settings Placeholder */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 opacity-60">
           <div className="flex items-center mb-4">
             <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -200,8 +477,8 @@ export default function AdminDashboard() {
           </span>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderDebuggingTab = () => (
     <div className="space-y-6">

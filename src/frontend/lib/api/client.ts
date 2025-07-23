@@ -3,6 +3,8 @@ import {
   Booking,
   BookingAvailability,
   CreateBookingRequest,
+  EmailSettings,
+  EmailSettingsResponse,
   ErrorResponse,
   LoginRequest,
   LoginResponse,
@@ -12,7 +14,10 @@ import {
   ResendVerificationRequest,
   ResendVerificationResponse,
   SleepingAccommodation,
+  TestEmailRequest,
+  TestEmailResponse,
   UpdateBookingRequest,
+  UpdateEmailSettingsRequest,
   VerifyEmailRequest,
   VerifyEmailResponse,
 } from "../types/api";
@@ -58,6 +63,11 @@ export interface ApiClient {
   // Admin endpoints
   getPendingUsers(): Promise<PendingUser[]>;
   approveUser(userId: number): Promise<ApproveUserResponse>;
+
+  // Email Settings endpoints
+  getEmailSettings(): Promise<EmailSettings>;
+  updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse>;
+  testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse>;
 
   // Token management
   setToken(token: string): void;
@@ -341,6 +351,25 @@ export class HttpApiClient implements ApiClient {
   async approveUser(userId: number): Promise<ApproveUserResponse> {
     return this.request<ApproveUserResponse>(`/admin/users/${userId}/approve`, {
       method: "POST",
+    });
+  }
+
+  // Email Settings
+  async getEmailSettings(): Promise<EmailSettings> {
+    return this.request<EmailSettings>("/admin/email-settings");
+  }
+
+  async updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse> {
+    return this.request<EmailSettingsResponse>("/admin/email-settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    });
+  }
+
+  async testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse> {
+    return this.request<TestEmailResponse>("/admin/email-settings/test", {
+      method: "POST",
+      body: JSON.stringify(request),
     });
   }
 

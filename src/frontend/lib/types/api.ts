@@ -192,3 +192,41 @@ export interface ErrorResponse {
   message?: string;
   validationErrors?: ValidationError[];
 }
+
+// Email Settings Types
+export interface EmailSettings {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUsername: string;
+  smtpPassword: string;
+  fromName: string;
+  fromEmail: string;
+  useTls: boolean;
+  isConfigured: boolean;
+}
+
+export interface UpdateEmailSettingsRequest {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUsername: string;
+  smtpPassword: string;
+  fromName: string;
+  fromEmail: string;
+  useTls: boolean;
+}
+
+export interface EmailSettingsResponse {
+  message: string;
+  settings: EmailSettings;
+}
+
+export interface TestEmailRequest {
+  toEmail: string;
+  subject?: string;
+  body?: string;
+}
+
+export interface TestEmailResponse {
+  message: string;
+  success: boolean;
+}

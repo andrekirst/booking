@@ -8,6 +8,8 @@ import {
   BookingAvailability,
   BookingStatus,
   CreateBookingRequest,
+  EmailSettings,
+  EmailSettingsResponse,
   LoginRequest, 
   LoginResponse,
   PendingUser,
@@ -17,7 +19,10 @@ import {
   ResendVerificationResponse,
   SleepingAccommodation,
   AccommodationType,
+  TestEmailRequest,
+  TestEmailResponse,
   UpdateBookingRequest,
+  UpdateEmailSettingsRequest,
   VerifyEmailRequest,
   VerifyEmailResponse
 } from '../types/api';
@@ -26,6 +31,18 @@ export class MockApiClient implements ApiClient {
   private authenticated = false;
   private currentUser: User | null = null;
   private token: string | null = null;
+  
+  // Mock email settings storage
+  private mockEmailSettings: EmailSettings = {
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUsername: '',
+    smtpPassword: '',
+    fromName: 'Booking System',
+    fromEmail: '',
+    useTls: true,
+    isConfigured: false
+  };
   
   // Mock pending users storage
   private mockPendingUsers: PendingUser[] = [
@@ -622,6 +639,60 @@ export class MockApiClient implements ApiClient {
 
     return {
       message: `Benutzer ${user.firstName} ${user.lastName} wurde erfolgreich freigegeben.`
+    };
+  }
+
+  // Email Settings
+  async getEmailSettings(): Promise<EmailSettings> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    return { ...this.mockEmailSettings };
+  }
+
+  async updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse> {
+    await this.delay(800);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    // Update mock settings
+    this.mockEmailSettings = {
+      ...settings,
+      isConfigured: true
+    };
+
+    return {
+      message: 'E-Mail-Einstellungen wurden erfolgreich gespeichert.',
+      settings: { ...this.mockEmailSettings }
+    };
+  }
+
+  async testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse> {
+    await this.delay(2000); // Longer delay to simulate email sending
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    // Simulate test based on current settings
+    if (!this.mockEmailSettings.isConfigured) {
+      throw new ApiError('E-Mail-Einstellungen müssen erst konfiguriert werden.', 400);
+    }
+
+    // Mock success/failure based on settings
+    const isValidConfig = this.mockEmailSettings.smtpHost && 
+                         this.mockEmailSettings.smtpUsername && 
+                         this.mockEmailSettings.fromEmail;
+
+    if (!isValidConfig) {
+      throw new ApiError('Ungültige E-Mail-Konfiguration. Bitte überprüfen Sie Ihre Einstellungen.', 400);
+    }
+
+    return {
+      message: `Test-E-Mail wurde erfolgreich an ${request.toEmail} gesendet.`,
+      success: true
     };
   }
 }
