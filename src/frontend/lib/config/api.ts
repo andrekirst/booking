@@ -7,13 +7,13 @@ export interface ApiConfig {
 
 export const apiConfig: Record<string, ApiConfig> = {
   development: {
-    baseUrl: 'http://localhost:5000',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7000/api',
     timeout: 10000,
     retryAttempts: 3,
     retryDelay: 1000,
   },
   test: {
-    baseUrl: 'http://localhost:5000',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7000/api',
     timeout: 5000,
     retryAttempts: 1,
     retryDelay: 500,

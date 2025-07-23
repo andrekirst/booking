@@ -276,6 +276,68 @@ public class BookingAggregateTests
         aggregate.DomainEvents.Should().BeEmpty(); // No new events when loading from history
     }
 
+    [Fact]
+    public void Accept_WhenPending_ShouldChangeStatusToAcceptedAndAddEvent()
+    {
+        // Arrange
+        var aggregate = CreateTestBookingAggregate();
+        aggregate.Status.Should().Be(BookingStatus.Pending);
+
+        // Act
+        aggregate.Accept();
+
+        // Assert
+        aggregate.Status.Should().Be(BookingStatus.Accepted);
+        
+        var acceptedEvent = aggregate.DomainEvents.OfType<BookingAcceptedEvent>().FirstOrDefault();
+        acceptedEvent.Should().NotBeNull();
+        acceptedEvent!.BookingId.Should().Be(aggregate.Id);
+    }
+
+    [Fact]
+    public void Accept_WhenNotPending_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var aggregate = CreateTestBookingAggregate();
+        aggregate.Confirm(); // Change status to Confirmed
+
+        // Act & Assert
+        var act = () => aggregate.Accept();
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage($"Cannot accept booking with status {BookingStatus.Confirmed}");
+    }
+
+    [Fact]
+    public void Reject_WhenPending_ShouldChangeStatusToRejectedAndAddEvent()
+    {
+        // Arrange
+        var aggregate = CreateTestBookingAggregate();
+        aggregate.Status.Should().Be(BookingStatus.Pending);
+
+        // Act
+        aggregate.Reject();
+
+        // Assert
+        aggregate.Status.Should().Be(BookingStatus.Rejected);
+        
+        var rejectedEvent = aggregate.DomainEvents.OfType<BookingRejectedEvent>().FirstOrDefault();
+        rejectedEvent.Should().NotBeNull();
+        rejectedEvent!.BookingId.Should().Be(aggregate.Id);
+    }
+
+    [Fact]
+    public void Reject_WhenNotPending_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var aggregate = CreateTestBookingAggregate();
+        aggregate.Confirm(); // Change status to Confirmed
+
+        // Act & Assert
+        var act = () => aggregate.Reject();
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage($"Cannot reject booking with status {BookingStatus.Confirmed}");
+    }
+
     private static BookingAggregate CreateTestBookingAggregate()
     {
         return BookingAggregate.Create(

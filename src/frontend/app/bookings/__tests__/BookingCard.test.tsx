@@ -33,6 +33,9 @@ const mockBooking: Booking = {
 interface BookingCardProps {
   booking: Booking;
   onClick: () => void;
+  userRole?: string | null;
+  onAccept?: (bookingId: string) => void;
+  onReject?: (bookingId: string) => void;
 }
 
 function BookingCard({ booking, onClick }: BookingCardProps) {
@@ -72,6 +75,24 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Abgeschlossen
+          </span>
+        );
+      case BookingStatus.Accepted:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+            </svg>
+            Angenommen
+          </span>
+        );
+      case BookingStatus.Rejected:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Abgelehnt
           </span>
         );
       default:
@@ -241,6 +262,24 @@ describe('BookingCard', () => {
       expect(badge).toHaveClass('bg-blue-100', 'text-blue-800');
     });
 
+    it('should display accepted status badge', () => {
+      const acceptedBooking = { ...mockBooking, status: BookingStatus.Accepted };
+      render(<BookingCard booking={acceptedBooking} onClick={mockOnClick} />);
+      
+      const badge = screen.getByText('Angenommen');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveClass('bg-emerald-100', 'text-emerald-800');
+    });
+
+    it('should display rejected status badge', () => {
+      const rejectedBooking = { ...mockBooking, status: BookingStatus.Rejected };
+      render(<BookingCard booking={rejectedBooking} onClick={mockOnClick} />);
+      
+      const badge = screen.getByText('Abgelehnt');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveClass('bg-rose-100', 'text-rose-800');
+    });
+
     it('should display unknown status badge for invalid status', () => {
       const unknownBooking = { ...mockBooking, status: 'Invalid' as unknown as BookingStatus };
       render(<BookingCard booking={unknownBooking} onClick={mockOnClick} />);
@@ -325,4 +364,7 @@ describe('BookingCard', () => {
       expect(dateText).toHaveClass('text-gray-900');
     });
   });
+
+  // Note: Admin functionality has been moved to BookingActionMenu component
+  // BookingCard no longer handles admin actions directly
 });

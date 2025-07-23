@@ -5,13 +5,17 @@ import { useRouter } from 'next/navigation';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 interface BookingCardProps {
   booking: Booking;
   onClick: () => void;
+  userRole?: string | null;
+  onAccept?: (bookingId: string) => void;
+  onReject?: (bookingId: string) => void;
 }
 
-function BookingCard({ booking, onClick }: BookingCardProps) {
+function BookingCard({ booking, onClick, userRole, onAccept, onReject }: BookingCardProps) {
   const getStatusBadge = (status: BookingStatus) => {
     switch (status) {
       case BookingStatus.Pending:
@@ -48,6 +52,24 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Abgeschlossen
+          </span>
+        );
+      case BookingStatus.Accepted:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Angenommen
+          </span>
+        );
+      case BookingStatus.Rejected:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            Abgelehnt
           </span>
         );
       default:
@@ -110,14 +132,46 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
 
       </div>
 
-      {/* Action Button */}
+      {/* Action Buttons */}
       <div className="bg-gray-50 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Details anzeigen</span>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
+        {userRole === 'Administrator' && booking.status === BookingStatus.Pending ? (
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAccept?.(booking.id);
+                }}
+                className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition-colors"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Annehmen
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReject?.(booking.id);
+                }}
+                className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg transition-colors"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Ablehnen
+              </button>
+            </div>
+            <span className="text-xs text-gray-500">Admin-Aktionen</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Details anzeigen</span>
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -129,6 +183,9 @@ export default function BookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -181,6 +238,46 @@ export default function BookingsPage() {
 
   const handleCreateBooking = () => {
     router.push('/bookings/new');
+  };
+
+  const handleAcceptBooking = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setShowAcceptModal(true);
+  };
+
+  const handleRejectBooking = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setShowRejectModal(true);
+  };
+
+  const confirmAcceptBooking = async () => {
+    if (!selectedBookingId) return;
+    
+    try {
+      await apiClient.acceptBooking(selectedBookingId);
+      await fetchBookings(); // Refresh bookings to show updated status
+    } catch (error) {
+      console.error('Error accepting booking:', error);
+      setError('Fehler beim Annehmen der Buchung');
+    } finally {
+      setShowAcceptModal(false);
+      setSelectedBookingId(null);
+    }
+  };
+
+  const confirmRejectBooking = async () => {
+    if (!selectedBookingId) return;
+    
+    try {
+      await apiClient.rejectBooking(selectedBookingId);
+      await fetchBookings(); // Refresh bookings to show updated status
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      setError('Fehler beim Ablehnen der Buchung');
+    } finally {
+      setShowRejectModal(false);
+      setSelectedBookingId(null);
+    }
   };
 
   if (isLoading) {
@@ -281,12 +378,44 @@ export default function BookingsPage() {
                   key={booking.id}
                   booking={booking}
                   onClick={() => router.push(`/bookings/${booking.id}`)}
+                  userRole={userRole}
+                  onAccept={handleAcceptBooking}
+                  onReject={handleRejectBooking}
                 />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showAcceptModal}
+        onClose={() => {
+          setShowAcceptModal(false);
+          setSelectedBookingId(null);
+        }}
+        onConfirm={confirmAcceptBooking}
+        title="Buchung annehmen"
+        message="Möchten Sie diese Buchung annehmen? Die Buchung wird dadurch bestätigt und für den Gast freigegeben."
+        confirmText="Annehmen"
+        cancelText="Abbrechen"
+        type="info"
+      />
+
+      <ConfirmationModal
+        isOpen={showRejectModal}
+        onClose={() => {
+          setShowRejectModal(false);
+          setSelectedBookingId(null);
+        }}
+        onConfirm={confirmRejectBooking}
+        title="Buchung ablehnen"
+        message="Möchten Sie diese Buchung ablehnen? Der Gast wird über die Ablehnung informiert."
+        confirmText="Ablehnen"
+        cancelText="Abbrechen"
+        type="danger"
+      />
     </div>
   );
 }
