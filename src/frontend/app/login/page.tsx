@@ -205,6 +205,19 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Registration Link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Noch kein Konto?{" "}
+              <Link
+                href="/register"
+                className="font-semibold text-blue-600 hover:text-blue-500 transition-colors"
+              >
+                Jetzt registrieren
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
