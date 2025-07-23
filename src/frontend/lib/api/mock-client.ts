@@ -28,9 +28,23 @@ import {
 } from '../types/api';
 
 export class MockApiClient implements ApiClient {
-  private authenticated = false;
+  private authenticated = true; // Set to true for development/testing
   private currentUser: User | null = null;
-  private token: string | null = null;
+  private token: string | null = 'mock-admin-token';
+
+  constructor() {
+    // Set default admin user for mock client
+    this.currentUser = {
+      id: '1',
+      email: 'admin@booking.com',
+      firstName: 'Admin',
+      lastName: 'User',
+      role: UserRole.Administrator,
+      isActive: true,
+      createdAt: '2025-01-01T00:00:00Z',
+      changedAt: '2025-01-01T00:00:00Z',
+    };
+  }
   
   // Mock email settings storage
   private mockEmailSettings: EmailSettings = {
