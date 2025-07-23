@@ -30,8 +30,8 @@ describe('BookingActionMenu', () => {
     bookingItems: [],
     notes: '',
     totalPersons: 2,
+    numberOfNights: 4,
     createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
   };
 
   beforeEach(() => {
