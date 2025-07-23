@@ -56,9 +56,8 @@ export class ApiFactory {
       return 'production';
     }
 
-    // Temporarily use mock for development until backend email endpoints are implemented
-    // TODO: Change back to 'development' when backend email-settings endpoints are ready
-    return 'mock';
+    // Default to development
+    return 'development';
   }
 }
 

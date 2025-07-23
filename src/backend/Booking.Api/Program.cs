@@ -48,6 +48,7 @@ public class Program
         // Register custom services
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IEncryptionService, EncryptionService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         
         // Register Event Sourcing services
