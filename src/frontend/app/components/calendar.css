@@ -76,6 +76,13 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 1279px) {
+  /* Large screens and below - stack calendar and list vertically */
+  .rbc-calendar {
+    min-height: 500px;
+  }
+}
+
 @media (max-width: 768px) {
   .rbc-toolbar {
     flex-direction: column;
@@ -85,9 +92,42 @@
   .rbc-toolbar-label {
     order: -1;
     margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1rem;
   }
   
   .rbc-event {
     font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .rbc-calendar {
+    min-height: 400px;
+  }
+  
+  /* Hide some details on mobile for better readability */
+  .rbc-event-content {
+    line-height: 1.1;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Small mobile adjustments */
+  .rbc-calendar {
+    min-height: 350px;
+  }
+  
+  .rbc-header {
+    font-size: 0.875rem;
+    padding: 4px 2px;
+  }
+  
+  .rbc-date-cell {
+    padding: 2px;
+  }
+  
+  .rbc-event {
+    font-size: 9px;
+    padding: 1px 3px;
   }
 }

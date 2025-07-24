@@ -388,14 +388,14 @@ export default function BookingsPage() {
               />
             </div>
           ) : viewMode === 'calendar' ? (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2">
+            <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2 order-2 xl:order-1">
                 <CalendarView
                   bookings={bookings}
                   onSelectBooking={handleSelectBooking}
                 />
               </div>
-              <div className="xl:col-span-1">
+              <div className="xl:col-span-1 order-1 xl:order-2">
                 <CompactBookingList
                   bookings={bookings}
                   onSelectBooking={handleSelectBookingById}

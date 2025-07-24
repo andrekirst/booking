@@ -14,29 +14,29 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
     <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1 shadow-sm">
       <button
         onClick={() => onViewChange('list')}
-        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+        className={`flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
           currentView === 'list'
             ? 'bg-blue-100 text-blue-700 shadow-sm'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
         }`}
       >
-        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
-        Liste
+        <span className="hidden sm:inline">Liste</span>
       </button>
       <button
         onClick={() => onViewChange('calendar')}
-        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+        className={`flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
           currentView === 'calendar'
             ? 'bg-blue-100 text-blue-700 shadow-sm'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
         }`}
       >
-        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+        <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
         </svg>
-        Kalender
+        <span className="hidden sm:inline">Kalender</span>
       </button>
     </div>
   );
