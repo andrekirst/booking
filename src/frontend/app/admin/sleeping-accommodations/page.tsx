@@ -8,7 +8,7 @@ import { useApi } from '@/contexts/ApiContext';
 
 export default function SleepingAccommodationsPage() {
   const router = useRouter();
-  const api = useApi();
+  const { apiClient } = useApi();
   const [accommodations, setAccommodations] = useState<SleepingAccommodation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function SleepingAccommodationsPage() {
     setError(null);
 
     try {
-      const data = await api.getSleepingAccommodations(includeInactive);
+      const data = await apiClient.getSleepingAccommodations(includeInactive);
       setAccommodations(data);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 403) {
@@ -46,7 +46,7 @@ export default function SleepingAccommodationsPage() {
     }
 
     try {
-      await api.deleteSleepingAccommodation(id);
+      await apiClient.deleteSleepingAccommodation(id);
       fetchAccommodations();
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : 'Fehler beim Deaktivieren der Schlafmöglichkeit');

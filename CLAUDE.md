@@ -44,6 +44,39 @@ Das Projekt ist eine Buchungsplattform für einen Garten, die es Familienmitglie
 - ❌ Client: `data.filter(item => item.status === 'active')`
 - ✅ Backend: API-Parameter `?status=active`
 
+### API-Client Verwendung - KRITISCH!
+**NIEMALS direkte fetch() Aufrufe verwenden!** Alle API-Kommunikation MUSS über den konfigurierten API-Client erfolgen:
+
+**❌ FALSCH - Direkte fetch-Aufrufe:**
+```javascript
+const response = await fetch('/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(credentials)
+});
+```
+
+**✅ RICHTIG - API-Client verwenden:**
+```javascript
+const { apiClient } = useApi();
+const response = await apiClient.login(credentials);
+```
+
+**Warum API-Client verwenden:**
+- ✅ Verwendet konfigurierte Backend-URL (`NEXT_PUBLIC_API_URL`)
+- ✅ Konsistente Error-Behandlung
+- ✅ Automatisches Token-Management
+- ✅ TypeScript-Type-Safety
+- ✅ Mock-Support für Tests
+- ❌ Direkte fetch verwendet hardcodierten localhost:3000
+
+**Bei JEDER neuen API-Funktion:**
+1. Type-Interfaces in `lib/types/api.ts` definieren
+2. Methode zu `ApiClient` Interface hinzufügen
+3. Implementation in `HttpApiClient` hinzufügen
+4. Mock-Implementation in `MockApiClient` hinzufügen
+5. Komponenten verwenden `const { apiClient } = useApi()`
+
 ## 1. Anforderungen aus requirements.md nutzen
 - Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.
 - Neue Issues, Features oder Tasks werden auf Basis der Anforderungen in `requirements.md` erstellt.

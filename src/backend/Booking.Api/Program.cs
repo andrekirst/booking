@@ -48,6 +48,8 @@ public class Program
         // Register custom services
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IEncryptionService, EncryptionService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
         
         // Register Event Sourcing services
         builder.Services.AddScoped<IEventStore, EventStore>();
@@ -90,6 +92,9 @@ public class Program
         
         // Configure JwtSettings with Options pattern
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+        
+        // Configure EmailSettings with Options pattern
+        builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
         
         // Configure ProjectionRetryOptions
         builder.Services.Configure<ProjectionRetryOptions>(builder.Configuration.GetSection(ProjectionRetryOptions.SectionName));

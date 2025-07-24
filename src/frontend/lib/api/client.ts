@@ -1,18 +1,36 @@
 import {
+  ApproveUserResponse,
   Booking,
   BookingAvailability,
   CreateBookingRequest,
+  EmailSettings,
+  EmailSettingsResponse,
   ErrorResponse,
   LoginRequest,
   LoginResponse,
+  PendingUser,
+  RegisterRequest,
+  RegisterResponse,
+  RejectUserRequest,
+  RejectUserResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse,
   SleepingAccommodation,
+  TestEmailRequest,
+  TestEmailResponse,
   UpdateBookingRequest,
+  UpdateEmailSettingsRequest,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
 } from "../types/api";
 import { ApiError } from "./errors";
 
 export interface ApiClient {
   // Auth endpoints
   login(credentials: LoginRequest): Promise<LoginResponse>;
+  register(request: RegisterRequest): Promise<RegisterResponse>;
+  verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse>;
+  resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse>;
   logout(): Promise<void>;
 
   // Booking endpoints
@@ -43,6 +61,16 @@ export interface ApiClient {
   // Admin functions
   debugBookingEvents(): Promise<{ totalEvents: number; bookingEvents: number; readModels: number; recentEvents: Array<{ eventType: string; version: number; aggregateId: string; timestamp: string }> }>;
   rebuildBookingProjections(): Promise<{ message: string }>;
+
+  // Admin endpoints
+  getPendingUsers(): Promise<PendingUser[]>;
+  approveUser(userId: number): Promise<ApproveUserResponse>;
+  rejectUser(userId: number, reason?: string): Promise<RejectUserResponse>;
+
+  // Email Settings endpoints
+  getEmailSettings(): Promise<EmailSettings>;
+  updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse>;
+  testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse>;
 
   // Token management
   setToken(token: string): void;
@@ -172,6 +200,33 @@ export class HttpApiClient implements ApiClient {
     return response;
   }
 
+  async register(request: RegisterRequest): Promise<RegisterResponse> {
+    const response = await this.request<RegisterResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    return response;
+  }
+
+  async verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    const response = await this.request<VerifyEmailResponse>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    return response;
+  }
+
+  async resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse> {
+    const response = await this.request<ResendVerificationResponse>("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+
+    return response;
+  }
+
   async logout(): Promise<void> {
     this.token = null;
     if (typeof window !== "undefined") {
@@ -288,6 +343,44 @@ export class HttpApiClient implements ApiClient {
   async rebuildBookingProjections(): Promise<{ message: string }> {
     return this.request<{ message: string }>("/bookings/projections/rebuild", {
       method: "POST",
+    });
+  }
+
+  // Admin user management
+  async getPendingUsers(): Promise<PendingUser[]> {
+    return this.request<PendingUser[]>("/admin/users/pending");
+  }
+
+  async approveUser(userId: number): Promise<ApproveUserResponse> {
+    return this.request<ApproveUserResponse>(`/admin/users/${userId}/approve`, {
+      method: "POST",
+    });
+  }
+
+  async rejectUser(userId: number, reason?: string): Promise<RejectUserResponse> {
+    const request: RejectUserRequest = { reason };
+    return this.request<RejectUserResponse>(`/admin/users/${userId}/reject`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Email Settings
+  async getEmailSettings(): Promise<EmailSettings> {
+    return this.request<EmailSettings>("/admin/email-settings");
+  }
+
+  async updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse> {
+    return this.request<EmailSettingsResponse>("/admin/email-settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    });
+  }
+
+  async testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse> {
+    return this.request<TestEmailResponse>("/admin/email-settings/test", {
+      method: "POST",
+      body: JSON.stringify(request),
     });
   }
 

@@ -44,6 +44,39 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.ChangedAt)
             .IsRequired(false);
             
+        // Registration and Email Verification fields
+        builder.Property(u => u.EmailVerified)
+            .HasDefaultValue(false);
+            
+        builder.Property(u => u.EmailVerificationToken)
+            .IsRequired(false)
+            .HasMaxLength(64);
+            
+        builder.Property(u => u.EmailVerificationTokenExpiry)
+            .IsRequired(false);
+            
+        builder.Property(u => u.RegistrationDate)
+            .IsRequired(false);
+            
+        builder.Property(u => u.EmailVerifiedAt)
+            .IsRequired(false);
+            
+        // Administrator Approval fields
+        builder.Property(u => u.IsApprovedForBooking)
+            .HasDefaultValue(false);
+            
+        builder.Property(u => u.ApprovedForBookingAt)
+            .IsRequired(false);
+            
+        builder.Property(u => u.ApprovedById)
+            .IsRequired(false);
+            
+        // Self-referencing relationship for ApprovedBy
+        builder.HasOne(u => u.ApprovedBy)
+            .WithMany()
+            .HasForeignKey(u => u.ApprovedById)
+            .OnDelete(DeleteBehavior.Restrict);
+            
         // Global Query Filter for soft delete
         builder.HasQueryFilter(u => u.IsActive);
     }

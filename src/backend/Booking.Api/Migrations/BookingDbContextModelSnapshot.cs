@@ -22,6 +22,62 @@ namespace Booking.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Booking.Api.Domain.Entities.EmailSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("FromEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FromName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsConfigured")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SmtpHost")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("SmtpPassword")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("SmtpPort")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SmtpUsername")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("UseTls")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.ToTable("EmailSettings", (string)null);
+                });
+
             modelBuilder.Entity("Booking.Api.Domain.Entities.EventStoreEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -143,6 +199,12 @@ namespace Booking.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ApprovedForBookingAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTime?>("ChangedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -156,6 +218,21 @@ namespace Booking.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EmailVerificationToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("EmailVerificationTokenExpiry")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("EmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -165,6 +242,11 @@ namespace Booking.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsApprovedForBooking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp without time zone");
@@ -179,12 +261,17 @@ namespace Booking.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<DateTime?>("RegistrationDate")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApprovedById");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -299,6 +386,16 @@ namespace Booking.Api.Migrations
                     b.HasIndex("Type");
 
                     b.ToTable("SleepingAccommodationReadModels", (string)null);
+                });
+
+            modelBuilder.Entity("Booking.Api.Domain.Entities.User", b =>
+                {
+                    b.HasOne("Booking.Api.Domain.Entities.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ApprovedBy");
                 });
 #pragma warning restore 612, 618
         }
