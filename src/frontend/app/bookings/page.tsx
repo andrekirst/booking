@@ -390,34 +390,50 @@ export default function BookingsPage() {
                 onClick={handleCreateBooking}
               />
             </div>
-          ) : viewMode === 'calendar' ? (
-            <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 order-2 xl:order-1">
-                <CalendarView
-                  bookings={bookings}
-                  onSelectBooking={handleSelectBooking}
-                />
-              </div>
-              <div className="xl:col-span-1 order-1 xl:order-2">
-                <CompactBookingList
-                  bookings={bookings}
-                  onSelectBooking={handleSelectBookingById}
-                  selectedBookingId={selectedBookingId}
-                />
-              </div>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {bookings.map((booking) => (
-                <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  onClick={() => router.push(`/bookings/${booking.id}`)}
-                  userRole={userRole}
-                  onAccept={handleAcceptBooking}
-                  onReject={handleRejectBooking}
-                />
-              ))}
+            <div className="relative">
+              {/* Animation container */}
+              <div className={`transition-all duration-500 ease-in-out ${
+                viewMode === 'calendar' 
+                  ? 'opacity-100 transform translate-x-0' 
+                  : 'opacity-0 transform -translate-x-full absolute inset-0'
+              }`}>
+                <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                  <div className="xl:col-span-2 order-2 xl:order-1">
+                    <CalendarView
+                      bookings={bookings}
+                      onSelectBooking={handleSelectBooking}
+                    />
+                  </div>
+                  <div className="xl:col-span-1 order-1 xl:order-2">
+                    <CompactBookingList
+                      bookings={bookings}
+                      onSelectBooking={handleSelectBookingById}
+                      selectedBookingId={selectedBookingId}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* List view with animation */}
+              <div className={`transition-all duration-500 ease-in-out ${
+                viewMode === 'list' 
+                  ? 'opacity-100 transform translate-x-0' 
+                  : 'opacity-0 transform translate-x-full absolute inset-0'
+              }`}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {bookings.map((booking) => (
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      onClick={() => router.push(`/bookings/${booking.id}`)}
+                      userRole={userRole}
+                      onAccept={handleAcceptBooking}
+                      onReject={handleRejectBooking}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
