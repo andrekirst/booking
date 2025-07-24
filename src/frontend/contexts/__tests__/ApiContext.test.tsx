@@ -5,15 +5,15 @@ import { ApiClient } from '../../lib/api/client';
 
 // Test component that uses the API context
 const TestComponent: React.FC = () => {
-  const api = useApi();
+  const { apiClient } = useApi();
   
   return (
     <div>
-      <div data-testid="api-available">{api ? 'API Available' : 'No API'}</div>
-      <div data-testid="api-type">{api.constructor.name}</div>
+      <div data-testid="api-available">{apiClient ? 'API Available' : 'No API'}</div>
+      <div data-testid="api-type">{apiClient.constructor.name}</div>
       <button 
         data-testid="health-check"
-        onClick={() => api.healthCheck()}
+        onClick={() => apiClient.healthCheck()}
       >
         Health Check
       </button>
@@ -24,7 +24,7 @@ const TestComponent: React.FC = () => {
 // Component that tries to use API without provider
 const ComponentWithoutProvider: React.FC = () => {
   try {
-    const api = useApi();
+    const { apiClient } = useApi();
     return <div>Should not reach here</div>;
   } catch (error) {
     return <div data-testid="error">{(error as Error).message}</div>;
@@ -46,13 +46,13 @@ describe('ApiContext', () => {
 
     it('should provide the same API instance to multiple children', () => {
       const ChildComponent1: React.FC = () => {
-        const api = useApi();
-        return <div data-testid="child1-api">{api.constructor.name}</div>;
+        const { apiClient } = useApi();
+        return <div data-testid="child1-api">{apiClient.constructor.name}</div>;
       };
 
       const ChildComponent2: React.FC = () => {
-        const api = useApi();
-        return <div data-testid="child2-api">{api.constructor.name}</div>;
+        const { apiClient } = useApi();
+        return <div data-testid="child2-api">{apiClient.constructor.name}</div>;
       };
 
       render(
@@ -68,8 +68,8 @@ describe('ApiContext', () => {
 
     it('should allow nested providers (inheritance)', () => {
       const NestedComponent: React.FC = () => {
-        const api = useApi();
-        return <div data-testid="nested-api">{api.constructor.name}</div>;
+        const { apiClient } = useApi();
+        return <div data-testid="nested-api">{apiClient.constructor.name}</div>;
       };
 
       render(
@@ -102,14 +102,14 @@ describe('ApiContext', () => {
 
     it('should return API client when used within provider', () => {
       const TestHookComponent: React.FC = () => {
-        const api = useApi();
+        const { apiClient } = useApi();
         
         return (
           <div>
-            <div data-testid="has-login">{typeof api.login === 'function' ? 'Has login' : 'No login'}</div>
-            <div data-testid="has-logout">{typeof api.logout === 'function' ? 'Has logout' : 'No logout'}</div>
-            <div data-testid="has-bookings">{typeof api.getBookings === 'function' ? 'Has getBookings' : 'No getBookings'}</div>
-            <div data-testid="has-accommodations">{typeof api.getSleepingAccommodations === 'function' ? 'Has getSleepingAccommodations' : 'No getSleepingAccommodations'}</div>
+            <div data-testid="has-login">{typeof apiClient.login === 'function' ? 'Has login' : 'No login'}</div>
+            <div data-testid="has-logout">{typeof apiClient.logout === 'function' ? 'Has logout' : 'No logout'}</div>
+            <div data-testid="has-bookings">{typeof apiClient.getBookings === 'function' ? 'Has getBookings' : 'No getBookings'}</div>
+            <div data-testid="has-accommodations">{typeof apiClient.getSleepingAccommodations === 'function' ? 'Has getSleepingAccommodations' : 'No getSleepingAccommodations'}</div>
           </div>
         );
       };
@@ -137,12 +137,12 @@ describe('ApiContext', () => {
       ) as jest.Mock;
 
       const TestApiMethodsComponent: React.FC = () => {
-        const api = useApi();
+        const { apiClient } = useApi();
         const [result, setResult] = React.useState<string>('');
 
         const handleHealthCheck = async () => {
           try {
-            const response = await api.healthCheck();
+            const response = await apiClient.healthCheck();
             setResult(response.status);
           } catch (error) {
             setResult('error');
@@ -180,22 +180,22 @@ describe('ApiContext', () => {
   describe('Context isolation', () => {
     it('should maintain separate instances in different provider trees', () => {
       const Component1: React.FC = () => {
-        const api = useApi();
+        const { apiClient } = useApi();
         // Set token to distinguish instances
         React.useEffect(() => {
-          api.setToken('token1');
-        }, [api]);
+          apiClient.setToken('token1');
+        }, [apiClient]);
         
-        return <div data-testid="token1">{api.getToken()}</div>;
+        return <div data-testid="token1">{apiClient.getToken()}</div>;
       };
 
       const Component2: React.FC = () => {
-        const api = useApi();
+        const { apiClient } = useApi();
         React.useEffect(() => {
-          api.setToken('token2');
-        }, [api]);
+          apiClient.setToken('token2');
+        }, [apiClient]);
         
-        return <div data-testid="token2">{api.getToken()}</div>;
+        return <div data-testid="token2">{apiClient.getToken()}</div>;
       };
 
       render(
@@ -225,12 +225,12 @@ describe('ApiContext', () => {
       ) as jest.Mock;
 
       const ErrorHandlingComponent: React.FC = () => {
-        const api = useApi();
+        const { apiClient } = useApi();
         const [error, setError] = React.useState<string>('');
 
         const handleApiCall = async () => {
           try {
-            await api.healthCheck();
+            await apiClient.healthCheck();
           } catch (err) {
             setError((err as Error).message);
           }
@@ -270,12 +270,14 @@ describe('ApiContext', () => {
       let apiInstance2: ApiClient;
       
       const Component1: React.FC = () => {
-        apiInstance1 = useApi();
+        const { apiClient } = useApi();
+        apiInstance1 = apiClient;
         return <div>Component 1</div>;
       };
 
       const Component2: React.FC = () => {
-        apiInstance2 = useApi();
+        const { apiClient } = useApi();
+        apiInstance2 = apiClient;
         return <div>Component 2</div>;
       };
 

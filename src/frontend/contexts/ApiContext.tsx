@@ -21,3 +21,6 @@ export const useApi = (): ApiContextType => {
   }
   return context;
 };
+
+// Export ApiProvider as ApiContextProvider for backward compatibility
+export const ApiContextProvider = ApiProvider;
