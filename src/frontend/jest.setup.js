@@ -11,7 +11,11 @@ beforeAll(() => {
   console.error = (...args) => {
     const message = args[0];
     // Suppress React Testing Library act() warnings
-    if (typeof message === 'string' && message.includes('Warning: An update to')) {
+    if (typeof message === 'string' && (
+      message.includes('An update to') ||
+      message.includes('Warning: An update to') ||
+      message.includes('act(...)')
+    )) {
       return;
     }
     // Suppress expected error logs from error handling tests
