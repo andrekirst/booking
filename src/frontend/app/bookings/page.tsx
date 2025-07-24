@@ -412,13 +412,13 @@ export default function BookingsPage() {
               />
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative min-h-[600px]">
               {/* Calendar view */}
-              <div className={`${
+              <div className={`absolute inset-0 ${
                 viewMode === 'calendar' 
-                  ? (isTransitioning ? 'animate-cross-fade-in' : 'opacity-100')
-                  : (isTransitioning ? 'animate-cross-fade-out' : 'opacity-0 pointer-events-none')
-              } ${viewMode !== 'calendar' && !isTransitioning ? 'absolute inset-0' : ''}`}>
+                  ? (isTransitioning ? 'animate-cross-fade-in z-20' : 'opacity-100 z-10')
+                  : (isTransitioning ? 'animate-cross-fade-out z-10' : 'opacity-0 pointer-events-none z-0')
+              }`}>
                 <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
                   <div className="xl:col-span-2 order-2 xl:order-1">
                     <CalendarView
@@ -437,11 +437,11 @@ export default function BookingsPage() {
               </div>
 
               {/* List view */}
-              <div className={`${
+              <div className={`absolute inset-0 ${
                 viewMode === 'list' 
-                  ? (isTransitioning ? 'animate-cross-fade-in' : 'opacity-100')
-                  : (isTransitioning ? 'animate-cross-fade-out' : 'opacity-0 pointer-events-none')
-              } ${viewMode !== 'list' && !isTransitioning ? 'absolute inset-0' : ''}`}>
+                  ? (isTransitioning ? 'animate-cross-fade-in z-20' : 'opacity-100 z-10')
+                  : (isTransitioning ? 'animate-cross-fade-out z-10' : 'opacity-0 pointer-events-none z-0')
+              }`}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {bookings.map((booking) => (
                     <BookingCard
