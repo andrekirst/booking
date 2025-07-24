@@ -69,7 +69,7 @@ describe('PasswordStrengthIndicator', () => {
     });
 
     it('shows good strength for complex passwords', () => {
-        render(<PasswordStrengthIndicator password="Password123!" />);
+        render(<PasswordStrengthIndicator password="Pass123!" />);
         
         expect(screen.getByText('Gut')).toBeInTheDocument();
     });
@@ -95,7 +95,7 @@ describe('PasswordStrengthIndicator', () => {
         rerender(<PasswordStrengthIndicator password="Password1" />);
         expect(screen.getByText('Ausreichend')).toHaveClass('text-yellow-600');
         
-        rerender(<PasswordStrengthIndicator password="Password123!" />);
+        rerender(<PasswordStrengthIndicator password="Pass123!" />);
         expect(screen.getByText('Gut')).toHaveClass('text-blue-600');
         
         rerender(<PasswordStrengthIndicator password="VeryStrongPassword123!" />);
@@ -103,7 +103,7 @@ describe('PasswordStrengthIndicator', () => {
     });
 
     it('shows progress bar that reflects password strength', () => {
-        render(<PasswordStrengthIndicator password="Password123!" />);
+        render(<PasswordStrengthIndicator password="Pass123!" />);
         
         // The progress bar should be present
         const progressBar = document.querySelector('.bg-blue-500');
