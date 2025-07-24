@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CalendarDaysIcon, Bars3Icon } from '@heroicons/react/24/outline';
 
 export type ViewMode = 'list' | 'calendar';
 
@@ -20,9 +21,7 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
         }`}
       >
-        <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-        </svg>
+        <Bars3Icon className="w-4 h-4 sm:mr-2" />
         <span className="hidden sm:inline">Liste</span>
       </button>
       <button
@@ -33,9 +32,7 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
         }`}
       >
-        <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-        </svg>
+        <CalendarDaysIcon className="w-4 h-4 sm:mr-2" />
         <span className="hidden sm:inline">Kalender</span>
       </button>
     </div>
