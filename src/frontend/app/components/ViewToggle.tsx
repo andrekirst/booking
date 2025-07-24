@@ -59,25 +59,25 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
       <button
         ref={listButtonRef}
         onClick={() => onViewChange('list')}
-        className={`relative z-10 flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
+        className={`relative z-10 flex items-center px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
           currentView === 'list'
             ? 'text-blue-700 font-semibold'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >
-        <Bars3Icon className="w-4 h-4 sm:mr-2" />
+        <Bars3Icon className="w-6 h-6 sm:mr-2" />
         <span className="hidden sm:inline">Liste</span>
       </button>
       <button
         ref={calendarButtonRef}
         onClick={() => onViewChange('calendar')}
-        className={`relative z-10 flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
+        className={`relative z-10 flex items-center px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
           currentView === 'calendar'
             ? 'text-blue-700 font-semibold'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >
-        <CalendarDaysIcon className="w-4 h-4 sm:mr-2" />
+        <CalendarDaysIcon className="w-6 h-6 sm:mr-2" />
         <span className="hidden sm:inline">Kalender</span>
       </button>
     </div>
