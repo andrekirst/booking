@@ -14,18 +14,6 @@ export default function VerifyEmailPage() {
     const [message, setMessage] = useState('');
     const [requiresApproval, setRequiresApproval] = useState(false);
 
-    useEffect(() => {
-        const token = searchParams.get('token');
-        
-        if (!token) {
-            setStatus('invalid');
-            setMessage('Kein Bestätigungstoken gefunden.');
-            return;
-        }
-
-        verifyEmail(token);
-    }, [searchParams, verifyEmail]);
-
     const verifyEmail = useCallback(async (token: string) => {
         try {
             const data = await apiClient.verifyEmail({ token });
@@ -40,6 +28,18 @@ export default function VerifyEmailPage() {
             setMessage(errorMessage);
         }
     }, [apiClient]);
+
+    useEffect(() => {
+        const token = searchParams.get('token');
+        
+        if (!token) {
+            setStatus('invalid');
+            setMessage('Kein Bestätigungstoken gefunden.');
+            return;
+        }
+
+        verifyEmail(token);
+    }, [searchParams, verifyEmail]);
 
     const getStatusIcon = () => {
         switch (status) {

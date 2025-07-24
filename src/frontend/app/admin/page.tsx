@@ -106,13 +106,6 @@ export default function AdminDashboard() {
     }, 150);
   };
 
-  // Load email settings when settings tab is accessed
-  useEffect(() => {
-    if (activeTab === 'settings' && !emailSettings) {
-      loadEmailSettings();
-    }
-  }, [activeTab, emailSettings, loadEmailSettings]);
-
   const loadEmailSettings = useCallback(async () => {
     setIsLoadingEmailSettings(true);
     setEmailMessage(null);
@@ -137,6 +130,13 @@ export default function AdminDashboard() {
       setIsLoadingEmailSettings(false);
     }
   }, [apiClient]);
+
+  // Load email settings when settings tab is accessed
+  useEffect(() => {
+    if (activeTab === 'settings' && !emailSettings) {
+      loadEmailSettings();
+    }
+  }, [activeTab, emailSettings, loadEmailSettings]);
 
   const handleSaveEmailSettings = async (settings: UpdateEmailSettingsRequest) => {
     setIsSavingEmailSettings(true);
