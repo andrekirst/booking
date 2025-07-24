@@ -1,0 +1,34 @@
+{
+  "stryker-config": {
+    "project": "Booking.Api.csproj",
+    "test-projects": [
+      "Booking.Api.Tests.csproj"
+    ],
+    "mutation-level": "Standard",
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 50
+    },
+    "mutate": [
+      "**/*.cs",
+      "!**/Migrations/**",
+      "!**/bin/**",
+      "!**/obj/**",  
+      "!**/Program.cs",
+      "!**/appsettings*.json",
+      "!**/*.Designer.cs",
+      "!**/GlobalAssemblyInfo.cs",
+      "!**/Integration/**"
+    ],
+    "test-case-filter": "Category!=Integration",
+    "reporters": [
+      "Progress",
+      "Html",
+      "Json"
+    ],
+    "concurrency": 1,
+    "additional-timeout": 30000,
+    "verbosity": "info"
+  }
+}
