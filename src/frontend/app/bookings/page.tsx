@@ -196,18 +196,25 @@ export default function BookingsPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [previousViewMode, setPreviousViewMode] = useState<typeof viewMode>(viewMode);
 
-  // Handle view transitions with card shuffle animation
+  // Handle view transitions with blur & reveal animation
   useEffect(() => {
     if (viewMode !== previousViewMode) {
       setIsTransitioning(true);
-      setPreviousViewMode(viewMode);
       
-      // End transition after animation completes
-      const timer = setTimeout(() => {
+      // Short delay to let blur-out animation finish before switching content
+      const switchTimer = setTimeout(() => {
+        setPreviousViewMode(viewMode);
+      }, 400); // blur-out duration
+      
+      // End transition after reveal-in animation completes
+      const endTimer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 1000); // 800ms animation + 200ms buffer
+      }, 1000); // 400ms blur-out + 600ms reveal-in
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(switchTimer);
+        clearTimeout(endTimer);
+      };
     }
   }, [viewMode, previousViewMode]);
 
@@ -408,54 +415,46 @@ export default function BookingsPage() {
               />
             </div>
           ) : (
-            <div className="relative overflow-hidden">
-              {viewMode === 'calendar' ? (
-                <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
-                  <div className={`xl:col-span-2 order-2 xl:order-1 ${
-                    isTransitioning ? 'animate-card-build-in' : ''
-                  }`} style={{ animationDelay: '0.3s' }}>
-                    <CalendarView
-                      bookings={bookings}
-                      onSelectBooking={handleSelectBooking}
-                    />
+            <div className="relative">
+              {/* Show the content that's currently being viewed or transitioned away from */}
+              <div className={`${
+                isTransitioning && viewMode !== previousViewMode 
+                  ? 'animate-blur-out' 
+                  : isTransitioning && viewMode === previousViewMode
+                  ? 'animate-reveal-in'
+                  : ''
+              }`}>
+                {(isTransitioning ? previousViewMode : viewMode) === 'calendar' ? (
+                  <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                    <div className="xl:col-span-2 order-2 xl:order-1">
+                      <CalendarView
+                        bookings={bookings}
+                        onSelectBooking={handleSelectBooking}
+                      />
+                    </div>
+                    <div className="xl:col-span-1 order-1 xl:order-2">
+                      <CompactBookingList
+                        bookings={bookings}
+                        onSelectBooking={handleSelectBookingById}
+                        selectedBookingId={selectedBookingId}
+                      />
+                    </div>
                   </div>
-                  <div className={`xl:col-span-1 order-1 xl:order-2 ${
-                    isTransitioning ? 'animate-card-build-in-alt' : ''
-                  }`} style={{ animationDelay: '0.5s' }}>
-                    <CompactBookingList
-                      bookings={bookings}
-                      onSelectBooking={handleSelectBookingById}
-                      selectedBookingId={selectedBookingId}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {bookings.map((booking, index) => (
-                    <div
-                      key={booking.id}
-                      className={`${
-                        isTransitioning
-                          ? 'animate-card-build-in'
-                          : ''
-                      }`}
-                      style={{ 
-                        animationDelay: isTransitioning 
-                          ? `${index * 0.1}s` 
-                          : '0s' 
-                      }}
-                    >
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {bookings.map((booking) => (
                       <BookingCard
+                        key={booking.id}
                         booking={booking}
                         onClick={() => router.push(`/bookings/${booking.id}`)}
                         userRole={userRole}
                         onAccept={handleAcceptBooking}
                         onReject={handleRejectBooking}
                       />
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
