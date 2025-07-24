@@ -55,7 +55,7 @@ jobs:
       working-directory: src/backend
 
     - name: Run unit tests
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Integration"
       working-directory: src/backend
       env:
         ConnectionStrings__DefaultConnection: "Host=localhost;Database=booking_test;Username=postgres;Password=postgres"
@@ -72,7 +72,7 @@ jobs:
           ${{ runner.os }}-stryker-
 
     - name: Run Stryker Mutation Tests
-      run: dotnet stryker --config-file stryker-config.json --reporter Progress,Html,Json
+      run: dotnet stryker --config-file stryker-config.json --reporter Progress,Html,Json --test-case-filter "Category!=Integration"
       working-directory: src/backend
       env:
         ConnectionStrings__DefaultConnection: "Host=localhost;Database=booking_test;Username=postgres;Password=postgres"
@@ -82,7 +82,7 @@ jobs:
       if: always()
       with:
         name: stryker-mutation-report
-        path: src/backend/StrykerOutput/**/reports/mutation-report.html
+        path: src/backend/StrykerOutput/**/mutation-report.html
         retention-days: 30
 
     - name: Upload Stryker JSON Report
@@ -90,7 +90,7 @@ jobs:
       if: always()
       with:
         name: stryker-mutation-json
-        path: src/backend/StrykerOutput/**/reports/mutation-report.json
+        path: src/backend/StrykerOutput/**/mutation-report.json
         retention-days: 30
 
     - name: Comment PR with Mutation Results
@@ -107,7 +107,7 @@ jobs:
           const latestDir = dirs.sort().pop();
           
           if (latestDir) {
-            const reportPath = path.join(strykerOutputPath, latestDir, 'reports', 'mutation-report.json');
+            const reportPath = path.join(strykerOutputPath, latestDir, 'mutation-report.json');
             
             if (fs.existsSync(reportPath)) {
               const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));

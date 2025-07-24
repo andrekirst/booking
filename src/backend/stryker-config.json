@@ -18,8 +18,10 @@
       "!**/Program.cs",
       "!**/appsettings*.json",
       "!**/*.Designer.cs",
-      "!**/GlobalAssemblyInfo.cs"
+      "!**/GlobalAssemblyInfo.cs",
+      "!**/Integration/**"
     ],
+    "test-case-filter": "Category!=Integration",
     "reporters": [
       "Progress",
       "Html",
