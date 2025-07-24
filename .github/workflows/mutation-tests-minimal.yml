@@ -32,7 +32,7 @@ jobs:
       working-directory: src/backend
 
     - name: Run specific unit tests only
-      run: dotnet test --no-build --configuration Release --verbosity normal --filter "FullyQualifiedName~JwtService|FullyQualifiedName~ValidationExtensions" --no-logo
+      run: dotnet test --no-build --configuration Release --verbosity normal --filter "FullyQualifiedName~JwtService|FullyQualifiedName~ValidationExtensions"
       working-directory: src/backend
 
     - name: Install Stryker.NET
