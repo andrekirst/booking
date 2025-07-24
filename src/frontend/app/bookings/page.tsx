@@ -331,9 +331,9 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8 min-h-screen">
-        <div className="max-w-6xl mx-auto h-full flex flex-col">
+    <div className="bg-gradient-to-br from-green-50 via-blue-50 to-indigo-100 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto pb-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
@@ -398,7 +398,7 @@ export default function BookingsPage() {
           )}
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div>
             {bookings.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
                 <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
