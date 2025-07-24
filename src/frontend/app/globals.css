@@ -70,9 +70,9 @@ body {
 
 /* Animation classes */
 .animate-blur-out {
-  animation: blur-out 0.4s ease-out forwards;
+  animation: blur-out 0.2s ease-out forwards;
 }
 
 .animate-reveal-in {
-  animation: reveal-in 0.6s ease-out forwards;
+  animation: reveal-in 0.3s ease-out forwards;
 }

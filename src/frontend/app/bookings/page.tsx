@@ -204,12 +204,12 @@ export default function BookingsPage() {
       // Short delay to let blur-out animation finish before switching content
       const switchTimer = setTimeout(() => {
         setPreviousViewMode(viewMode);
-      }, 400); // blur-out duration
+      }, 200); // blur-out duration
       
       // End transition after reveal-in animation completes
       const endTimer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 1000); // 400ms blur-out + 600ms reveal-in
+      }, 500); // 200ms blur-out + 300ms reveal-in
       
       return () => {
         clearTimeout(switchTimer);
