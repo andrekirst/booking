@@ -391,14 +391,12 @@ export default function BookingsPage() {
               />
             </div>
           ) : (
-            <div className="relative">
-              {/* Animation container */}
-              <div className={`transition-all duration-500 ease-in-out ${
-                viewMode === 'calendar' 
-                  ? 'opacity-100 transform translate-x-0' 
-                  : 'opacity-0 transform -translate-x-full absolute inset-0'
-              }`}>
-                <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+            <div className="transition-opacity duration-300 ease-in-out">
+              {viewMode === 'calendar' ? (
+                <div 
+                  key="calendar-view"
+                  className="animate-fade-in flex flex-col xl:grid xl:grid-cols-3 gap-6"
+                >
                   <div className="xl:col-span-2 order-2 xl:order-1">
                     <CalendarView
                       bookings={bookings}
@@ -413,15 +411,11 @@ export default function BookingsPage() {
                     />
                   </div>
                 </div>
-              </div>
-              
-              {/* List view with animation */}
-              <div className={`transition-all duration-500 ease-in-out ${
-                viewMode === 'list' 
-                  ? 'opacity-100 transform translate-x-0' 
-                  : 'opacity-0 transform translate-x-full absolute inset-0'
-              }`}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              ) : (
+                <div 
+                  key="list-view"
+                  className="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-6"
+                >
                   {bookings.map((booking) => (
                     <BookingCard
                       key={booking.id}
@@ -433,7 +427,7 @@ export default function BookingsPage() {
                     />
                   ))}
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
