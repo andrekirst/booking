@@ -30,14 +30,21 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
       }
     };
 
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(updateSlider, 0);
+    // Small delay to ensure layout is stable
+    const timeoutId = setTimeout(updateSlider, 10);
     
-    // Update on resize
-    window.addEventListener('resize', updateSlider);
+    // Update on resize (debounced)
+    let resizeTimeout: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateSlider, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
     return () => {
       clearTimeout(timeoutId);
-      window.removeEventListener('resize', updateSlider);
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', handleResize);
     };
   }, [currentView]);
 
@@ -48,7 +55,7 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
     >
       {/* Sliding background */}
       <div 
-        className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-300 ease-out"
+        className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-250 ease-out"
         style={{
           left: `${sliderStyle.left}px`,
           width: `${sliderStyle.width}px`,
@@ -59,9 +66,9 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
       <button
         ref={listButtonRef}
         onClick={() => onViewChange('list')}
-        className={`relative z-10 flex items-center px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
+        className={`relative z-10 flex items-center px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-md transition-all duration-150 ease-in-out ${
           currentView === 'list'
-            ? 'text-blue-700 font-semibold'
+            ? 'text-blue-700'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >
@@ -71,9 +78,9 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
       <button
         ref={calendarButtonRef}
         onClick={() => onViewChange('calendar')}
-        className={`relative z-10 flex items-center px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
+        className={`relative z-10 flex items-center px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-md transition-all duration-150 ease-in-out ${
           currentView === 'calendar'
-            ? 'text-blue-700 font-semibold'
+            ? 'text-blue-700'
             : 'text-gray-600 hover:text-gray-900'
         }`}
       >

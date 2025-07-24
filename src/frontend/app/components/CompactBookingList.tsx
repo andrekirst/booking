@@ -68,14 +68,14 @@ export default function CompactBookingList({
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-fit max-h-[600px] xl:max-h-[600px] lg:max-h-[400px]">
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <h3 className="text-lg font-semibold text-gray-900">
           Buchungen ({bookings.length})
         </h3>
       </div>
       
-      <div className="overflow-y-auto flex-1 max-h-[calc(600px-60px)] xl:max-h-[calc(600px-60px)] lg:max-h-[calc(400px-60px)]">
+      <div className="overflow-y-auto max-h-[600px]">
         {sortedBookings.length === 0 ? (
           <div className="p-6 text-center text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
