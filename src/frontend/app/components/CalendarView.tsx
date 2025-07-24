@@ -36,6 +36,8 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
     visible: false,
   });
 
+  const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
+
   // Transform bookings to calendar events
   const events: CalendarEvent[] = bookings.map((booking) => {
     const startDate = new Date(booking.startDate);
@@ -230,7 +232,9 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         popup
         step={60}
         showMultiDayTimes
-        defaultView="month"
+        view={currentView}
+        onView={(view) => setCurrentView(view as 'month' | 'week' | 'day')}
+        views={['month', 'week', 'day']}
       />
       
       {/* Legend */}
