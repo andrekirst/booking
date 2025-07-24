@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CalendarDaysIcon, Bars3Icon } from '@heroicons/react/24/outline';
 
 export type ViewMode = 'list' | 'calendar';
@@ -11,32 +11,73 @@ interface ViewToggleProps {
 }
 
 export default function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const listButtonRef = useRef<HTMLButtonElement>(null);
+  const calendarButtonRef = useRef<HTMLButtonElement>(null);
+  const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const updateSlider = () => {
+      const activeButton = currentView === 'list' ? listButtonRef.current : calendarButtonRef.current;
+      if (activeButton && containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const buttonRect = activeButton.getBoundingClientRect();
+        
+        setSliderStyle({
+          left: buttonRect.left - containerRect.left,
+          width: buttonRect.width,
+        });
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(updateSlider, 0);
+    
+    // Update on resize
+    window.addEventListener('resize', updateSlider);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateSlider);
+    };
+  }, [currentView]);
+
   return (
-    <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1 shadow-sm">
+    <div 
+      ref={containerRef}
+      className="relative flex items-center bg-gray-100 rounded-lg p-1 shadow-sm"
+    >
+      {/* Sliding background */}
+      <div 
+        className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-300 ease-out"
+        style={{
+          left: `${sliderStyle.left}px`,
+          width: `${sliderStyle.width}px`,
+        }}
+      />
+      
+      {/* Buttons */}
       <button
+        ref={listButtonRef}
         onClick={() => onViewChange('list')}
-        className={`flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ease-in-out transform ${
+        className={`relative z-10 flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
           currentView === 'list'
-            ? 'bg-blue-100 text-blue-700 shadow-sm scale-102'
-            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:scale-101'
+            ? 'text-blue-700 font-semibold'
+            : 'text-gray-600 hover:text-gray-900'
         }`}
       >
-        <Bars3Icon className={`w-4 h-4 sm:mr-2 transition-transform duration-300 ${
-          currentView === 'list' ? 'rotate-0' : 'rotate-0'
-        }`} />
+        <Bars3Icon className="w-4 h-4 sm:mr-2" />
         <span className="hidden sm:inline">Liste</span>
       </button>
       <button
+        ref={calendarButtonRef}
         onClick={() => onViewChange('calendar')}
-        className={`flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ease-in-out transform ${
+        className={`relative z-10 flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
           currentView === 'calendar'
-            ? 'bg-blue-100 text-blue-700 shadow-sm scale-102'
-            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:scale-101'
+            ? 'text-blue-700 font-semibold'
+            : 'text-gray-600 hover:text-gray-900'
         }`}
       >
-        <CalendarDaysIcon className={`w-4 h-4 sm:mr-2 transition-transform duration-300 ${
-          currentView === 'calendar' ? 'rotate-0' : 'rotate-0'
-        }`} />
+        <CalendarDaysIcon className="w-4 h-4 sm:mr-2" />
         <span className="hidden sm:inline">Kalender</span>
       </button>
     </div>

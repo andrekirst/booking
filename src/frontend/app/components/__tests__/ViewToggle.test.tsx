@@ -37,7 +37,7 @@ describe('ViewToggle', () => {
     const listButton = screen.getByText('Liste').closest('button');
     const calendarButton = screen.getByText('Kalender').closest('button');
 
-    expect(listButton).toHaveClass('bg-blue-100', 'text-blue-700');
+    expect(listButton).toHaveClass('text-blue-700', 'font-semibold');
     expect(calendarButton).toHaveClass('text-gray-600');
   });
 
@@ -50,7 +50,7 @@ describe('ViewToggle', () => {
     const listButton = screen.getByText('Liste').closest('button');
     const calendarButton = screen.getByText('Kalender').closest('button');
 
-    expect(calendarButton).toHaveClass('bg-blue-100', 'text-blue-700');
+    expect(calendarButton).toHaveClass('text-blue-700', 'font-semibold');
     expect(listButton).toHaveClass('text-gray-600');
   });
 
