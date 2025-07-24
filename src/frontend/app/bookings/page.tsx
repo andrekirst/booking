@@ -9,6 +9,9 @@ import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import ViewToggle, { useViewMode } from '../components/ViewToggle';
 import CalendarView from '../components/CalendarView';
 import CompactBookingList from '../components/CompactBookingList';
+import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
+import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
+import BookingCardSkeleton from '../components/BookingCardSkeleton';
 
 interface BookingCardProps {
   booking: Booking;
@@ -413,48 +416,81 @@ export default function BookingsPage() {
             </div>
           ) : (
             <div className="relative min-h-[600px]">
-              {/* Calendar view */}
-              <div className={`absolute inset-0 ${
-                viewMode === 'calendar' 
-                  ? (isTransitioning ? 'animate-cross-fade-in z-20' : 'opacity-100 z-10')
-                  : (isTransitioning ? 'animate-cross-fade-out z-10' : 'opacity-0 pointer-events-none z-0')
-              }`}>
-                <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
-                  <div className="xl:col-span-2 order-2 xl:order-1">
-                    <CalendarView
-                      bookings={bookings}
-                      onSelectBooking={handleSelectBooking}
-                    />
+              {isLoading ? (
+                // Loading Skeletons
+                <>
+                  {/* Calendar skeleton view */}
+                  <div className={`absolute inset-0 ${
+                    viewMode === 'calendar' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none z-0'
+                  }`}>
+                    <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                      <div className="xl:col-span-2 order-2 xl:order-1">
+                        <CalendarViewSkeleton />
+                      </div>
+                      <div className="xl:col-span-1 order-1 xl:order-2">
+                        <CompactBookingListSkeleton />
+                      </div>
+                    </div>
                   </div>
-                  <div className="xl:col-span-1 order-1 xl:order-2">
-                    <CompactBookingList
-                      bookings={bookings}
-                      onSelectBooking={handleSelectBookingById}
-                      selectedBookingId={selectedBookingId}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* List view */}
-              <div className={`absolute inset-0 ${
-                viewMode === 'list' 
-                  ? (isTransitioning ? 'animate-cross-fade-in z-20' : 'opacity-100 z-10')
-                  : (isTransitioning ? 'animate-cross-fade-out z-10' : 'opacity-0 pointer-events-none z-0')
-              }`}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {bookings.map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      booking={booking}
-                      onClick={() => router.push(`/bookings/${booking.id}`)}
-                      userRole={userRole}
-                      onAccept={handleAcceptBooking}
-                      onReject={handleRejectBooking}
-                    />
-                  ))}
-                </div>
-              </div>
+                  {/* List skeleton view */}
+                  <div className={`absolute inset-0 ${
+                    viewMode === 'list' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none z-0'
+                  }`}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <BookingCardSkeleton key={i} />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // Real content
+                <>
+                  {/* Calendar view */}
+                  <div className={`absolute inset-0 ${
+                    viewMode === 'calendar' 
+                      ? (isTransitioning ? 'animate-cross-fade-in z-20' : 'opacity-100 z-10')
+                      : (isTransitioning ? 'animate-cross-fade-out z-10' : 'opacity-0 pointer-events-none z-0')
+                  }`}>
+                    <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                      <div className="xl:col-span-2 order-2 xl:order-1">
+                        <CalendarView
+                          bookings={bookings}
+                          onSelectBooking={handleSelectBooking}
+                        />
+                      </div>
+                      <div className="xl:col-span-1 order-1 xl:order-2">
+                        <CompactBookingList
+                          bookings={bookings}
+                          onSelectBooking={handleSelectBookingById}
+                          selectedBookingId={selectedBookingId}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* List view */}
+                  <div className={`absolute inset-0 ${
+                    viewMode === 'list' 
+                      ? (isTransitioning ? 'animate-cross-fade-in z-20' : 'opacity-100 z-10')
+                      : (isTransitioning ? 'animate-cross-fade-out z-10' : 'opacity-0 pointer-events-none z-0')
+                  }`}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {bookings.map((booking) => (
+                        <BookingCard
+                          key={booking.id}
+                          booking={booking}
+                          onClick={() => router.push(`/bookings/${booking.id}`)}
+                          userRole={userRole}
+                          onAccept={handleAcceptBooking}
+                          onReject={handleRejectBooking}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

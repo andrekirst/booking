@@ -6,6 +6,9 @@ import 'moment/locale/de';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import { useState, useRef, useEffect } from 'react';
 import BookingTooltip from './BookingTooltip';
+import CalendarToolbar from './CalendarToolbar';
+import CalendarLegend from './CalendarLegend';
+import CalendarEvent from './CalendarEvent';
 import './calendar.css';
 
 // Set up moment localization
@@ -99,115 +102,28 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
     onSelectBooking(event.resource);
   };
 
-  const CustomEvent = ({ event }: { event: CalendarEvent }) => {
-    const booking = event.resource;
+  const handleEventMouseEnter = (e: React.MouseEvent, booking: Booking) => {
+    // Clear any existing hide timeout
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
     
-    return (
-      <div 
-        className="text-xs"
-        onMouseEnter={(e) => {
-          // Clear any existing hide timeout
-          if (hideTimeoutRef.current) {
-            clearTimeout(hideTimeoutRef.current);
-            hideTimeoutRef.current = null;
-          }
-          
-          const rect = e.currentTarget.getBoundingClientRect();
-          setTooltip({
-            booking,
-            position: { x: rect.left + rect.width / 2, y: rect.top },
-            visible: true,
-          });
-        }}
-        onMouseLeave={() => {
-          // Add a small delay before hiding to prevent flickering
-          hideTimeoutRef.current = setTimeout(() => {
-            setTooltip(prev => ({ ...prev, visible: false }));
-          }, 100);
-        }}
-      >
-        <div className="font-medium">{event.title}</div>
-        <div className="text-white/80">
-          {booking.bookingItems.length} {booking.bookingItems.length === 1 ? 'Raum' : 'Räume'}
-        </div>
-      </div>
-    );
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltip({
+      booking,
+      position: { x: rect.left + rect.width / 2, y: rect.top },
+      visible: true,
+    });
   };
 
-  // Custom toolbar with German translations
-  const CustomToolbar = ({ 
-    label, 
-    onNavigate, 
-    onView, 
-    view 
-  }: {
-    label: string;
-    onNavigate: (navigate: 'PREV' | 'NEXT' | 'TODAY') => void;
-    onView: (view: 'month' | 'week' | 'day') => void;
-    view: string;
-  }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-      <div className="flex items-center space-x-2">
-        <button
-          onClick={() => onNavigate('PREV')}
-          className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button
-          onClick={() => onNavigate('TODAY')}
-          className="px-3 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-black"
-        >
-          Heute
-        </button>
-        <button
-          onClick={() => onNavigate('NEXT')}
-          className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-      
-      <h2 className="text-lg font-semibold text-black">{label}</h2>
-      
-      <div className="flex items-center space-x-1 bg-white border border-gray-300 rounded-lg p-1">
-        <button
-          onClick={() => onView('month')}
-          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-            view === 'month'
-              ? 'bg-blue-100 text-blue-700'
-              : 'text-black hover:text-black hover:bg-gray-50'
-          }`}
-        >
-          Monat
-        </button>
-        <button
-          onClick={() => onView('week')}
-          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-            view === 'week'
-              ? 'bg-blue-100 text-blue-700'
-              : 'text-black hover:text-black hover:bg-gray-50'
-          }`}
-        >
-          Woche
-        </button>
-        <button
-          onClick={() => onView('day')}
-          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-            view === 'day'
-              ? 'bg-blue-100 text-blue-700'
-              : 'text-black hover:text-black hover:bg-gray-50'
-          }`}
-        >
-          Tag
-        </button>
-      </div>
-    </div>
-  );
+  const handleEventMouseLeave = () => {
+    // Add a small delay before hiding to prevent flickering
+    hideTimeoutRef.current = setTimeout(() => {
+      setTooltip(prev => ({ ...prev, visible: false }));
+    }, 100);
+  };
+
 
   const messages = {
     allDay: 'Ganztägig',
@@ -242,8 +158,22 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         onSelectEvent={handleSelectEvent}
         eventPropGetter={getEventStyle}
         components={{
-          event: CustomEvent,
-          toolbar: CustomToolbar,
+          event: (props) => (
+            <CalendarEvent
+              {...props}
+              onMouseEnter={handleEventMouseEnter}
+              onMouseLeave={handleEventMouseLeave}
+            />
+          ),
+          toolbar: (props) => (
+            <CalendarToolbar
+              {...props}
+              onView={(view) => {
+                setCurrentView(view);
+                props.onView(view);
+              }}
+            />
+          ),
         }}
         messages={messages}
         formats={{
@@ -263,24 +193,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       />
       
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
-          <span className="text-gray-800 font-medium">Ausstehend</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-emerald-500 rounded mr-2"></div>
-          <span className="text-gray-800 font-medium">Bestätigt/Angenommen</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-red-500 rounded mr-2"></div>
-          <span className="text-gray-800 font-medium">Storniert/Abgelehnt</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-          <span className="text-gray-800 font-medium">Abgeschlossen</span>
-        </div>
-      </div>
+      <CalendarLegend />
       
       {/* Tooltip */}
       <BookingTooltip
