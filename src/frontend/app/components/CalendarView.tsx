@@ -234,22 +234,22 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       />
       
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-xs">
+      <div className="mt-4 flex flex-wrap gap-4 text-sm">
         <div className="flex items-center">
           <div className="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
-          <span>Ausstehend</span>
+          <span className="text-gray-800 font-medium">Ausstehend</span>
         </div>
         <div className="flex items-center">
           <div className="w-3 h-3 bg-emerald-500 rounded mr-2"></div>
-          <span>Bestätigt/Angenommen</span>
+          <span className="text-gray-800 font-medium">Bestätigt/Angenommen</span>
         </div>
         <div className="flex items-center">
           <div className="w-3 h-3 bg-red-500 rounded mr-2"></div>
-          <span>Storniert/Abgelehnt</span>
+          <span className="text-gray-800 font-medium">Storniert/Abgelehnt</span>
         </div>
         <div className="flex items-center">
           <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-          <span>Abgeschlossen</span>
+          <span className="text-gray-800 font-medium">Abgeschlossen</span>
         </div>
       </div>
       
