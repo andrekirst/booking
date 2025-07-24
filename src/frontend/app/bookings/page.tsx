@@ -6,6 +6,9 @@ import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import ViewToggle, { useViewMode } from '../components/ViewToggle';
+import CalendarView from '../components/CalendarView';
+import CompactBookingList from '../components/CompactBookingList';
 
 interface BookingCardProps {
   booking: Booking;
@@ -179,6 +182,7 @@ function BookingCard({ booking, onClick, userRole, onAccept, onReject }: Booking
 
 export default function BookingsPage() {
   const router = useRouter();
+  const [viewMode, setViewMode] = useViewMode();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -238,6 +242,14 @@ export default function BookingsPage() {
 
   const handleCreateBooking = () => {
     router.push('/bookings/new');
+  };
+
+  const handleSelectBooking = (booking: Booking) => {
+    router.push(`/bookings/${booking.id}`);
+  };
+
+  const handleSelectBookingById = (bookingId: string) => {
+    router.push(`/bookings/${bookingId}`);
   };
 
   const handleAcceptBooking = (bookingId: string) => {
@@ -306,6 +318,10 @@ export default function BookingsPage() {
               </p>
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
+              <ViewToggle 
+                currentView={viewMode}
+                onViewChange={setViewMode}
+              />
               <CreateBookingButton
                 variant="large"
                 onClick={handleCreateBooking}
@@ -354,7 +370,7 @@ export default function BookingsPage() {
             </div>
           )}
 
-          {/* Bookings Grid */}
+          {/* Main Content */}
           {bookings.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
               <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,6 +386,22 @@ export default function BookingsPage() {
                 variant="large"
                 onClick={handleCreateBooking}
               />
+            </div>
+          ) : viewMode === 'calendar' ? (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                <CalendarView
+                  bookings={bookings}
+                  onSelectBooking={handleSelectBooking}
+                />
+              </div>
+              <div className="xl:col-span-1">
+                <CompactBookingList
+                  bookings={bookings}
+                  onSelectBooking={handleSelectBookingById}
+                  selectedBookingId={selectedBookingId}
+                />
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
