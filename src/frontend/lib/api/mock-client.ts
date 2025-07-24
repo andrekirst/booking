@@ -657,6 +657,7 @@ export class MockApiClient implements ApiClient {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async rejectUser(userId: number, reason?: string): Promise<RejectUserResponse> {
     await this.delay(800);
     if (!this.authenticated) {

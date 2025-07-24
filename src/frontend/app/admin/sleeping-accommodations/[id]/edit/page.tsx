@@ -50,7 +50,7 @@ export default function EditSleepingAccommodationPage({ params }: { params: Prom
   const handleToggleActive = async (id: string, isActive: boolean) => {
     if (!accommodation) return;
     
-    await api.updateSleepingAccommodation(id, {
+    await apiClient.updateSleepingAccommodation(id, {
       name: accommodation.name,
       type: accommodation.type,
       maxCapacity: accommodation.maxCapacity,
