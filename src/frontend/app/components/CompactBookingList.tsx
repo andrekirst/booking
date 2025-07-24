@@ -68,7 +68,7 @@ export default function CompactBookingList({
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full max-h-[600px] xl:max-h-[600px] lg:max-h-[400px]">
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-fit max-h-[600px] xl:max-h-[600px] lg:max-h-[400px]">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <h3 className="text-lg font-semibold text-gray-900">
           Buchungen ({bookings.length})

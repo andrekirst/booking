@@ -144,6 +144,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   return (
     <div 
       className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden"
+      style={{ height: 'fit-content' }}
       onMouseLeave={() => {
         // Hide tooltip when mouse leaves the entire calendar container
         setTooltip(prev => ({ ...prev, visible: false }));
