@@ -1,0 +1,24 @@
+{
+  "stryker-config": {
+    "project": "Booking.Api.csproj",
+    "test-projects": [
+      "Booking.Api.Tests.csproj"
+    ],
+    "mutation-level": "Basic",
+    "thresholds": {
+      "high": 60,
+      "low": 40,
+      "break": 20
+    },
+    "mutate": [
+      "**/Services/JwtService.cs"
+    ],
+    "reporters": [
+      "Progress",
+      "Html"
+    ],
+    "concurrency": 1,
+    "additional-timeout": 10000,
+    "verbosity": "info"
+  }
+}

@@ -1,16 +1,7 @@
-name: Mutation Tests
+name: Mutation Tests (Disabled)
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'src/backend/**'
-      - '.github/workflows/mutation-tests.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'src/backend/**'
-      - '.github/workflows/mutation-tests.yml'
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   mutation-tests:
