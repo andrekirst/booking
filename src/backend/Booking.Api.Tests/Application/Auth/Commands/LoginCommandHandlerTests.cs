@@ -80,7 +80,7 @@ public class LoginCommandHandlerTests : IDisposable
         // Assert
         result.Success.Should().BeFalse();
         result.Token.Should().BeNull();
-        result.ErrorMessage.Should().Be("Invalid email or password");
+        result.ErrorMessage.Should().Be("Ungültige E-Mail-Adresse oder Passwort.");
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class LoginCommandHandlerTests : IDisposable
         // Assert
         result.Success.Should().BeFalse();
         result.Token.Should().BeNull();
-        result.ErrorMessage.Should().Be("Invalid email or password");
+        result.ErrorMessage.Should().Be("Ungültige E-Mail-Adresse oder Passwort.");
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class LoginCommandHandlerTests : IDisposable
         // Assert
         result.Success.Should().BeFalse();
         result.Token.Should().BeNull();
-        result.ErrorMessage.Should().Be("Invalid email or password");
+        result.ErrorMessage.Should().Be("Ungültige E-Mail-Adresse oder Passwort.");
     }
 
     public void Dispose()
