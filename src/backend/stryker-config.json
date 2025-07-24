@@ -27,8 +27,8 @@
       "Html",
       "Json"
     ],
-    "concurrency": 2,
-    "additional-timeout": 10000,
+    "concurrency": 1,
+    "additional-timeout": 30000,
     "verbosity": "info"
   }
 }

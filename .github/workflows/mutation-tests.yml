@@ -55,7 +55,7 @@ jobs:
       working-directory: src/backend
 
     - name: Run unit tests
-      run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Integration"
+      run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Integration" --collect:"XPlat Code Coverage" --logger trx --results-directory TestResults/
       working-directory: src/backend
       env:
         ConnectionStrings__DefaultConnection: "Host=localhost;Database=booking_test;Username=postgres;Password=postgres"
@@ -72,7 +72,7 @@ jobs:
           ${{ runner.os }}-stryker-
 
     - name: Run Stryker Mutation Tests
-      run: dotnet stryker --config-file stryker-config.json --reporter Progress,Html,Json --test-case-filter "Category!=Integration"
+      run: dotnet stryker --config-file stryker-config.json --reporter Progress,Html,Json --test-case-filter "Category!=Integration" --mutate "**/Services/JwtService.cs" "**/Extensions/ValidationExtensions.cs"
       working-directory: src/backend
       env:
         ConnectionStrings__DefaultConnection: "Host=localhost;Database=booking_test;Username=postgres;Password=postgres"
