@@ -446,12 +446,12 @@ export default function BookingsPage() {
                 </>
               ) : (
                 // Real content with hybrid layout
-                <div className="min-h-[600px]">
+                <div>
                   {!isTransitioning ? (
                     // Normal display without animations
                     <>
                       {viewMode === 'calendar' ? (
-                        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6 h-fit">
                           <div className="xl:col-span-2 order-2 xl:order-1">
                             <CalendarView
                               bookings={bookings}
@@ -490,7 +490,7 @@ export default function BookingsPage() {
                           ? 'animate-cross-fade-in z-20'
                           : 'animate-cross-fade-out absolute inset-0 z-10'
                       }`}>
-                        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6 h-fit">
                           <div className="xl:col-span-2 order-2 xl:order-1">
                             <CalendarView
                               bookings={bookings}
