@@ -6,6 +6,43 @@
   font-family: inherit;
 }
 
+/* OVERRIDE ALL TEXT COLORS WITH HIGHEST SPECIFICITY */
+.rbc-calendar .rbc-month-view * {
+  color: #000000 !important;
+}
+
+.rbc-calendar .rbc-toolbar * {
+  color: #000000 !important;
+}
+
+.rbc-calendar .rbc-header * {
+  color: #000000 !important;
+}
+
+.rbc-calendar .rbc-date-cell * {
+  color: #000000 !important;
+}
+
+/* Force black text for ALL calendar elements */
+.rbc-calendar * {
+  color: #000000 !important;
+}
+
+/* Exception for event text which should remain white on colored backgrounds */
+.rbc-calendar .rbc-event * {
+  color: white !important;
+}
+
+/* Exception for active/selected buttons */
+.rbc-calendar .rbc-active {
+  color: white !important;
+}
+
+/* Exception for button backgrounds */
+.rbc-calendar .rbc-btn-group .rbc-active {
+  color: white !important;
+}
+
 
 .rbc-today {
   background-color: #eff6ff;

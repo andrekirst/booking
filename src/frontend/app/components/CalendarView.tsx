@@ -137,7 +137,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         </button>
         <button
           onClick={() => onNavigate('TODAY')}
-          className="px-3 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="px-3 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-black"
         >
           Heute
         </button>
@@ -151,7 +151,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         </button>
       </div>
       
-      <h2 className="text-lg font-semibold text-gray-900">{label}</h2>
+      <h2 className="text-lg font-semibold text-black">{label}</h2>
       
       <div className="flex items-center space-x-1 bg-white border border-gray-300 rounded-lg p-1">
         <button
@@ -159,7 +159,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
           className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
             view === 'month'
               ? 'bg-blue-100 text-blue-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              : 'text-black hover:text-black hover:bg-gray-50'
           }`}
         >
           Monat
@@ -169,7 +169,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
           className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
             view === 'week'
               ? 'bg-blue-100 text-blue-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              : 'text-black hover:text-black hover:bg-gray-50'
           }`}
         >
           Woche
@@ -179,7 +179,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
           className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
             view === 'day'
               ? 'bg-blue-100 text-blue-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              : 'text-black hover:text-black hover:bg-gray-50'
           }`}
         >
           Tag
