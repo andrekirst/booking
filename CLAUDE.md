@@ -604,7 +604,86 @@ A: Jede Session hat eigenen Timeout. Bei Bedarf in jeweiligem Terminal neu start
 # Alle arbeiten GLEICHZEITIG ohne Konflikte!
 ```
 
-## 14. Kommunikation
+## 14. Benutzerhandbuch und Dokumentation
+
+### 14.1 Dokumentations-Struktur
+Das Projekt verfügt über ein vollständiges Benutzerhandbuch-System mit drei Formaten:
+
+#### 📄 LaTeX/PDF-Dokumentation
+- **Speicherort**: `/docs/manual/`
+- **Hauptdatei**: `main.tex`
+- **Kapitel**: 7 strukturierte Kapitel in `/docs/manual/chapters/`
+- **Automatische Generierung**: GitHub Actions erstellt bei jedem Push/PR ein PDF
+- **Versionierung**: Automatische Version und Datum basierend auf Git-Tags
+
+#### 📖 README-basierte Online-Dokumentation  
+- **Speicherort**: `/docs/README-manual/`
+- **Hauptnavigation**: `README.md` mit interaktivem Inhaltsverzeichnis
+- **Kapitelweise Aufteilung**: Separate .md-Dateien für jedes Kapitel
+- **Direkte Verlinkung**: Anchor-Links für spezifische Abschnitte
+
+#### 🎯 UI-integrierte Hilfe
+- **HelpButton-Komponente**: `/src/frontend/components/ui/HelpButton.tsx`
+- **Kontextsensitive Links**: Mapping von UI-Bereichen zu Dokumentationsabschnitten
+- **Mehrere Varianten**: Icon, Text, Full-Button
+- **Globale Verfügbarkeit**: Floating-Button in Layout + spezifische Bereiche
+
+### 14.2 Dokumentations-Wartung (WICHTIG)
+
+**OBLIGATORISCH**: Bei JEDER Änderung an der Anwendung MÜSSEN die Dokumentationen aktuell gehalten werden!
+
+#### Wann Dokumentation aktualisieren:
+- ✅ **Neue Features**: Beschreibung in relevanten Kapiteln ergänzen
+- ✅ **UI-Änderungen**: Screenshots und Beschreibungen anpassen
+- ✅ **Workflow-Änderungen**: Schritt-für-Schritt-Anleitungen überarbeiten
+- ✅ **API-Änderungen**: Admin-Dokumentation erweitern
+- ✅ **Fehlerbehebungen**: FAQ und Troubleshooting-Abschnitt erweitern
+
+#### Dokumentations-Workflow:
+1. **Parallel-Update**: Dokumentation GLEICHZEITIG mit Code-Änderungen updaten
+2. **Beide Formate**: LaTeX UND README-Version synchron halten
+3. **UI-Links prüfen**: HelpButton-Mappings bei UI-Änderungen anpassen
+4. **Screenshots aktualisieren**: Bei visuellen Änderungen neue Bilder erstellen
+5. **Test der Links**: Alle Hilfe-Links auf Funktionalität prüfen
+
+#### Praktisches Beispiel:
+```bash
+# Bei neuem Feature "Buchungserinnerungen"
+1. Code implementieren
+2. /docs/manual/chapters/03-buchungen.tex erweitern
+3. /docs/README-manual/03-buchungen.md synchron updaten  
+4. HelpButton-Mapping für neue UI-Elemente ergänzen
+5. Neue Screenshots für relevante Bereiche erstellen
+6. Alles zusammen committen und pushen
+```
+
+#### Qualitätssicherung:
+- **GitHub Actions**: Automatische Validierung der README-Struktur
+- **PDF-Generierung**: Erfolgreiche LaTeX-Kompilierung sicherstellen
+- **Link-Validation**: Interne Links regelmäßig auf Gültigkeit prüfen
+- **Benutzerfeedback**: Hilfe-System regelmäßig auf Vollständigkeit testen
+
+### 14.3 Hilfe-Button Integration
+
+Bei neuen UI-Komponenten oder -Bereichen:
+
+```tsx
+// Neuen Help-Topic in HelpButton.tsx ergänzen
+const helpTopics = {
+  'neue-funktion': { 
+    url: `${HELP_BASE_URL}/03-buchungen.md#neue-funktion-verwenden`, 
+    title: 'Neue Funktion' 
+  },
+  // ...
+};
+
+// In der UI-Komponente verwenden
+<HelpButton topic="neue-funktion" variant="text" size="sm" />
+```
+
+**REGEL**: Keine neue UI-Funktionalität ohne entsprechende Dokumentation und Hilfe-Integration!
+
+## 15. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
