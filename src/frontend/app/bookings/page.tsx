@@ -332,8 +332,8 @@ export default function BookingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="container mx-auto px-4 py-8 min-h-screen">
+        <div className="max-w-6xl mx-auto h-full flex flex-col">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
@@ -398,140 +398,142 @@ export default function BookingsPage() {
           )}
 
           {/* Main Content */}
-          {bookings.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-              <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-              </svg>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Noch keine Buchungen
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Sie haben noch keine Buchungen erstellt. Starten Sie mit Ihrer ersten Buchung!
-              </p>
-              <CreateBookingButton
-                variant="large"
-                onClick={handleCreateBooking}
-              />
-            </div>
-          ) : (
-            <div className="relative">
-              {isLoading ? (
-                // Loading Skeletons
-                <>
-                  {/* Calendar skeleton view */}
-                  <div className={`${
-                    viewMode === 'calendar' ? 'block' : 'hidden'
-                  }`}>
-                    <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
-                      <div className="xl:col-span-2 order-2 xl:order-1">
-                        <CalendarViewSkeleton />
-                      </div>
-                      <div className="xl:col-span-1 order-1 xl:order-2">
-                        <CompactBookingListSkeleton />
+          <div className="flex-1">
+            {bookings.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+                </svg>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Noch keine Buchungen
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Sie haben noch keine Buchungen erstellt. Starten Sie mit Ihrer ersten Buchung!
+                </p>
+                <CreateBookingButton
+                  variant="large"
+                  onClick={handleCreateBooking}
+                />
+              </div>
+            ) : (
+              <>
+                {isLoading ? (
+                  // Loading Skeletons
+                  <>
+                    {/* Calendar skeleton view */}
+                    <div className={`${
+                      viewMode === 'calendar' ? 'block' : 'hidden'
+                    }`}>
+                      <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                        <div className="xl:col-span-2 order-2 xl:order-1">
+                          <CalendarViewSkeleton />
+                        </div>
+                        <div className="xl:col-span-1 order-1 xl:order-2">
+                          <CompactBookingListSkeleton />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* List skeleton view */}
-                  <div className={`${
-                    viewMode === 'list' ? 'block' : 'hidden'
-                  }`}>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <BookingCardSkeleton key={i} />
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                // Real content with hybrid layout
-                <div>
-                  {!isTransitioning ? (
-                    // Normal display without animations
-                    <>
-                      {viewMode === 'calendar' ? (
-                        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6 h-fit">
-                          <div className="xl:col-span-2 order-2 xl:order-1">
-                            <CalendarView
-                              bookings={bookings}
-                              onSelectBooking={handleSelectBooking}
-                            />
-                          </div>
-                          <div className="xl:col-span-1 order-1 xl:order-2">
-                            <CompactBookingList
-                              bookings={bookings}
-                              onSelectBooking={handleSelectBookingById}
-                              selectedBookingId={selectedBookingId}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {bookings.map((booking) => (
-                            <BookingCard
-                              key={booking.id}
-                              booking={booking}
-                              onClick={() => router.push(`/bookings/${booking.id}`)}
-                              userRole={userRole}
-                              onAccept={handleAcceptBooking}
-                              onReject={handleRejectBooking}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    // Transition with overlays for smooth animation
-                    <div className="relative">
-                      {/* Calendar view */}
-                      <div className={`${
-                        viewMode === 'calendar' 
-                          ? 'animate-cross-fade-in z-20'
-                          : 'animate-cross-fade-out absolute inset-0 z-10'
-                      }`}>
-                        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6 h-fit">
-                          <div className="xl:col-span-2 order-2 xl:order-1">
-                            <CalendarView
-                              bookings={bookings}
-                              onSelectBooking={handleSelectBooking}
-                            />
-                          </div>
-                          <div className="xl:col-span-1 order-1 xl:order-2">
-                            <CompactBookingList
-                              bookings={bookings}
-                              onSelectBooking={handleSelectBookingById}
-                              selectedBookingId={selectedBookingId}
-                            />
-                          </div>
-                        </div>
+                    {/* List skeleton view */}
+                    <div className={`${
+                      viewMode === 'list' ? 'block' : 'hidden'
+                    }`}>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <BookingCardSkeleton key={i} />
+                        ))}
                       </div>
+                    </div>
+                  </>
+                ) : (
+                  // Real content with hybrid layout
+                  <>
+                    {!isTransitioning ? (
+                      // Normal display without animations
+                      <>
+                        {viewMode === 'calendar' ? (
+                          <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                            <div className="xl:col-span-2 order-2 xl:order-1">
+                              <CalendarView
+                                bookings={bookings}
+                                onSelectBooking={handleSelectBooking}
+                              />
+                            </div>
+                            <div className="xl:col-span-1 order-1 xl:order-2">
+                              <CompactBookingList
+                                bookings={bookings}
+                                onSelectBooking={handleSelectBookingById}
+                                selectedBookingId={selectedBookingId}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {bookings.map((booking) => (
+                              <BookingCard
+                                key={booking.id}
+                                booking={booking}
+                                onClick={() => router.push(`/bookings/${booking.id}`)}
+                                userRole={userRole}
+                                onAccept={handleAcceptBooking}
+                                onReject={handleRejectBooking}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      // Transition with overlays for smooth animation
+                      <div className="relative">
+                        {/* Calendar view */}
+                        <div className={`${
+                          viewMode === 'calendar' 
+                            ? 'animate-cross-fade-in z-20'
+                            : 'animate-cross-fade-out absolute inset-0 z-10'
+                        }`}>
+                          <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                            <div className="xl:col-span-2 order-2 xl:order-1">
+                              <CalendarView
+                                bookings={bookings}
+                                onSelectBooking={handleSelectBooking}
+                              />
+                            </div>
+                            <div className="xl:col-span-1 order-1 xl:order-2">
+                              <CompactBookingList
+                                bookings={bookings}
+                                onSelectBooking={handleSelectBookingById}
+                                selectedBookingId={selectedBookingId}
+                              />
+                            </div>
+                          </div>
+                        </div>
 
-                      {/* List view */}
-                      <div className={`${
-                        viewMode === 'list' 
-                          ? 'animate-cross-fade-in z-20'
-                          : 'animate-cross-fade-out absolute inset-0 z-10'
-                      }`}>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {bookings.map((booking) => (
-                            <BookingCard
-                              key={booking.id}
-                              booking={booking}
-                              onClick={() => router.push(`/bookings/${booking.id}`)}
-                              userRole={userRole}
-                              onAccept={handleAcceptBooking}
-                              onReject={handleRejectBooking}
-                            />
-                          ))}
+                        {/* List view */}
+                        <div className={`${
+                          viewMode === 'list' 
+                            ? 'animate-cross-fade-in z-20'
+                            : 'animate-cross-fade-out absolute inset-0 z-10'
+                        }`}>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {bookings.map((booking) => (
+                              <BookingCard
+                                key={booking.id}
+                                booking={booking}
+                                onClick={() => router.push(`/bookings/${booking.id}`)}
+                                userRole={userRole}
+                                onAccept={handleAcceptBooking}
+                                onReject={handleRejectBooking}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
