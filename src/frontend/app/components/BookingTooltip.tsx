@@ -57,11 +57,12 @@ export default function BookingTooltip({ booking, position, visible }: BookingTo
 
   return (
     <div
-      className="fixed z-50 pointer-events-none"
+      className="fixed z-50"
       style={{
         left: position.x + 10,
         top: position.y - 10,
         transform: 'translateY(-100%)',
+        pointerEvents: 'none',
       }}
     >
       <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 max-w-xs">

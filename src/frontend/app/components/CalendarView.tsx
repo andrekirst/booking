@@ -4,7 +4,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/de';
 import { Booking, BookingStatus } from '../../lib/types/api';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import BookingTooltip from './BookingTooltip';
 import './calendar.css';
 
@@ -37,6 +37,16 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   });
 
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Transform bookings to calendar events
   const events: CalendarEvent[] = bookings.map((booking) => {
@@ -96,6 +106,12 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       <div 
         className="text-xs"
         onMouseEnter={(e) => {
+          // Clear any existing hide timeout
+          if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+            hideTimeoutRef.current = null;
+          }
+          
           const rect = e.currentTarget.getBoundingClientRect();
           setTooltip({
             booking,
@@ -104,7 +120,10 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
           });
         }}
         onMouseLeave={() => {
-          setTooltip(prev => ({ ...prev, visible: false }));
+          // Add a small delay before hiding to prevent flickering
+          hideTimeoutRef.current = setTimeout(() => {
+            setTooltip(prev => ({ ...prev, visible: false }));
+          }, 100);
         }}
       >
         <div className="font-medium">{event.title}</div>
@@ -207,7 +226,13 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-6">
+    <div 
+      className="bg-white rounded-2xl shadow-xl p-6"
+      onMouseLeave={() => {
+        // Hide tooltip when mouse leaves the entire calendar container
+        setTooltip(prev => ({ ...prev, visible: false }));
+      }}
+    >
       <Calendar
         localizer={localizer}
         events={events}
