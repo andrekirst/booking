@@ -196,23 +196,20 @@ export default function BookingsPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [previousViewMode, setPreviousViewMode] = useState<typeof viewMode>(viewMode);
 
-  // Handle view transitions with blur & reveal animation
+  // Handle view transitions with cross-fade animation
   useEffect(() => {
     if (viewMode !== previousViewMode) {
       setIsTransitioning(true);
       
-      // Short delay to let blur-out animation finish before switching content
-      const switchTimer = setTimeout(() => {
-        setPreviousViewMode(viewMode);
-      }, 200); // blur-out duration
+      // Update previous view mode immediately for cross-fade
+      setPreviousViewMode(viewMode);
       
-      // End transition after reveal-in animation completes
+      // End transition after cross-fade animation completes
       const endTimer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 500); // 200ms blur-out + 300ms reveal-in
+      }, 400); // 400ms cross-fade duration
       
       return () => {
-        clearTimeout(switchTimer);
         clearTimeout(endTimer);
       };
     }
@@ -416,44 +413,47 @@ export default function BookingsPage() {
             </div>
           ) : (
             <div className="relative">
-              {/* Show the content that's currently being viewed or transitioned away from */}
+              {/* Calendar view */}
               <div className={`${
-                isTransitioning && viewMode !== previousViewMode 
-                  ? 'animate-blur-out' 
-                  : isTransitioning && viewMode === previousViewMode
-                  ? 'animate-reveal-in'
-                  : ''
-              }`}>
-                {(isTransitioning ? previousViewMode : viewMode) === 'calendar' ? (
-                  <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
-                    <div className="xl:col-span-2 order-2 xl:order-1">
-                      <CalendarView
-                        bookings={bookings}
-                        onSelectBooking={handleSelectBooking}
-                      />
-                    </div>
-                    <div className="xl:col-span-1 order-1 xl:order-2">
-                      <CompactBookingList
-                        bookings={bookings}
-                        onSelectBooking={handleSelectBookingById}
-                        selectedBookingId={selectedBookingId}
-                      />
-                    </div>
+                viewMode === 'calendar' 
+                  ? (isTransitioning ? 'animate-cross-fade-in' : 'opacity-100')
+                  : (isTransitioning ? 'animate-cross-fade-out' : 'opacity-0 pointer-events-none')
+              } ${viewMode !== 'calendar' && !isTransitioning ? 'absolute inset-0' : ''}`}>
+                <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                  <div className="xl:col-span-2 order-2 xl:order-1">
+                    <CalendarView
+                      bookings={bookings}
+                      onSelectBooking={handleSelectBooking}
+                    />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {bookings.map((booking) => (
-                      <BookingCard
-                        key={booking.id}
-                        booking={booking}
-                        onClick={() => router.push(`/bookings/${booking.id}`)}
-                        userRole={userRole}
-                        onAccept={handleAcceptBooking}
-                        onReject={handleRejectBooking}
-                      />
-                    ))}
+                  <div className="xl:col-span-1 order-1 xl:order-2">
+                    <CompactBookingList
+                      bookings={bookings}
+                      onSelectBooking={handleSelectBookingById}
+                      selectedBookingId={selectedBookingId}
+                    />
                   </div>
-                )}
+                </div>
+              </div>
+
+              {/* List view */}
+              <div className={`${
+                viewMode === 'list' 
+                  ? (isTransitioning ? 'animate-cross-fade-in' : 'opacity-100')
+                  : (isTransitioning ? 'animate-cross-fade-out' : 'opacity-0 pointer-events-none')
+              } ${viewMode !== 'list' && !isTransitioning ? 'absolute inset-0' : ''}`}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {bookings.map((booking) => (
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      onClick={() => router.push(`/bookings/${booking.id}`)}
+                      userRole={userRole}
+                      onAccept={handleAcceptBooking}
+                      onReject={handleRejectBooking}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}

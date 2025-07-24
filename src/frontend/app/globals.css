@@ -41,38 +41,34 @@ body {
   animation: fade-in 0.4s ease-out forwards;
 }
 
-/* Blur & Reveal animations */
-@keyframes blur-out {
+/* Cross-fade animations for transparent overlap */
+@keyframes fade-out {
   0% {
     opacity: 1;
-    filter: blur(0px);
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    filter: blur(10px);
     transform: scale(1.02);
   }
 }
 
-@keyframes reveal-in {
+@keyframes fade-in {
   0% {
     opacity: 0;
-    filter: blur(10px);
     transform: scale(0.98);
   }
   100% {
     opacity: 1;
-    filter: blur(0px);
     transform: scale(1);
   }
 }
 
-/* Animation classes */
-.animate-blur-out {
-  animation: blur-out 0.2s ease-out forwards;
+/* Animation classes for cross-fade */
+.animate-cross-fade-out {
+  animation: fade-out 0.4s ease-out forwards;
 }
 
-.animate-reveal-in {
-  animation: reveal-in 0.3s ease-out forwards;
+.animate-cross-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
 }
