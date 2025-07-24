@@ -3,9 +3,21 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RegistrationForm } from '../RegistrationForm';
 import { ApiContextProvider } from '@/contexts/ApiContext';
 
-// Mock fetch for the tests
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
+// Mock the API factory to return a controlled mock
+jest.mock('@/lib/api/factory', () => {
+  const mockRegister = jest.fn();
+  const mockClient = {
+    register: mockRegister,
+  };
+  return {
+    getApiClient: () => mockClient,
+    apiClient: mockClient,
+  };
+});
+
+// Get the mocked register function for test assertions
+import { apiClient } from '@/lib/api/factory';
+const mockRegister = (apiClient as any).register;
 
 const renderWithApiContext = (component: React.ReactElement) => {
     return render(
@@ -17,7 +29,8 @@ const renderWithApiContext = (component: React.ReactElement) => {
 
 describe('RegistrationForm', () => {
     beforeEach(() => {
-        mockFetch.mockClear();
+        // Reset all mocks before each test
+        mockRegister.mockClear();
     });
 
     it('renders all form fields', () => {
@@ -26,8 +39,8 @@ describe('RegistrationForm', () => {
         expect(screen.getByLabelText(/Vorname/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/Nachname/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/E-Mail-Adresse/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/^Passwort/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/Passwort bestätigen/i)).toBeInTheDocument();
+        expect(screen.getByLabelText('Passwort *')).toBeInTheDocument();
+        expect(screen.getByLabelText('Passwort bestätigen *')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Registrieren/i })).toBeInTheDocument();
     });
 
@@ -49,21 +62,29 @@ describe('RegistrationForm', () => {
     it('validates email format', async () => {
         renderWithApiContext(<RegistrationForm />);
         
-        const emailInput = screen.getByLabelText(/E-Mail-Adresse/i);
-        fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+        // Fill in all required fields except email with invalid format
+        fireEvent.change(screen.getByLabelText(/Vorname/i), { target: { value: 'John' } });
+        fireEvent.change(screen.getByLabelText(/Nachname/i), { target: { value: 'Doe' } });
+        fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: 'invalid-email' } });
+        fireEvent.change(screen.getByLabelText('Passwort *'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort bestätigen *'), { target: { value: 'password123' } });
         
         const submitButton = screen.getByRole('button', { name: /Registrieren/i });
         fireEvent.click(submitButton);
 
+        // The validation should prevent API call, so register should not be called
         await waitFor(() => {
             expect(screen.getByText('Ungültige E-Mail-Adresse')).toBeInTheDocument();
         });
+        
+        // API should not be called due to client-side validation
+        expect(mockRegister).not.toHaveBeenCalled();
     });
 
     it('validates password length', async () => {
         renderWithApiContext(<RegistrationForm />);
         
-        const passwordInput = screen.getByLabelText(/^Passwort/i);
+        const passwordInput = screen.getByLabelText('Passwort *');
         fireEvent.change(passwordInput, { target: { value: 'short' } });
         
         const submitButton = screen.getByRole('button', { name: /Registrieren/i });
@@ -77,8 +98,8 @@ describe('RegistrationForm', () => {
     it('validates password confirmation match', async () => {
         renderWithApiContext(<RegistrationForm />);
         
-        const passwordInput = screen.getByLabelText(/^Passwort/i);
-        const confirmPasswordInput = screen.getByLabelText(/Passwort bestätigen/i);
+        const passwordInput = screen.getByLabelText('Passwort *');
+        const confirmPasswordInput = screen.getByLabelText('Passwort bestätigen *');
         
         fireEvent.change(passwordInput, { target: { value: 'password123' } });
         fireEvent.change(confirmPasswordInput, { target: { value: 'different123' } });
@@ -94,7 +115,7 @@ describe('RegistrationForm', () => {
     it('shows password strength indicator when typing password', () => {
         renderWithApiContext(<RegistrationForm />);
         
-        const passwordInput = screen.getByLabelText(/^Passwort/i);
+        const passwordInput = screen.getByLabelText('Passwort *');
         fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
         expect(screen.getByText('Passwort-Stärke')).toBeInTheDocument();
@@ -123,9 +144,11 @@ describe('RegistrationForm', () => {
 
     it('submits form with valid data', async () => {
         const onSuccessMock = jest.fn();
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({ message: 'Registrierung erfolgreich', userId: 1 })
+        
+        // Mock successful registration response
+        mockRegister.mockResolvedValueOnce({
+            message: 'Registrierung erfolgreich',
+            userId: 'mock-user-123'
         });
 
         renderWithApiContext(<RegistrationForm onSuccess={onSuccessMock} />);
@@ -134,23 +157,19 @@ describe('RegistrationForm', () => {
         fireEvent.change(screen.getByLabelText(/Vorname/i), { target: { value: 'John' } });
         fireEvent.change(screen.getByLabelText(/Nachname/i), { target: { value: 'Doe' } });
         fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: 'john@example.com' } });
-        fireEvent.change(screen.getByLabelText(/^Passwort/i), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByLabelText(/Passwort bestätigen/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort *'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort bestätigen *'), { target: { value: 'password123' } });
 
         // Submit form
         const submitButton = screen.getByRole('button', { name: /Registrieren/i });
         fireEvent.click(submitButton);
 
         await waitFor(() => {
-            expect(mockFetch).toHaveBeenCalledWith('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: 'john@example.com',
-                    password: 'password123',
-                    firstName: 'John',
-                    lastName: 'Doe'
-                })
+            expect(mockRegister).toHaveBeenCalledWith({
+                email: 'john@example.com',
+                password: 'password123',
+                firstName: 'John',
+                lastName: 'Doe'
             });
         });
 
@@ -160,9 +179,9 @@ describe('RegistrationForm', () => {
     });
 
     it('displays error message on registration failure', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: false,
-            json: async () => ({ message: 'E-Mail-Adresse ist bereits registriert.' })
+        // Mock API error
+        mockRegister.mockRejectedValueOnce({
+            message: 'E-Mail-Adresse ist bereits registriert.'
         });
 
         renderWithApiContext(<RegistrationForm />);
@@ -171,11 +190,15 @@ describe('RegistrationForm', () => {
         fireEvent.change(screen.getByLabelText(/Vorname/i), { target: { value: 'John' } });
         fireEvent.change(screen.getByLabelText(/Nachname/i), { target: { value: 'Doe' } });
         fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: 'john@example.com' } });
-        fireEvent.change(screen.getByLabelText(/^Passwort/i), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByLabelText(/Passwort bestätigen/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort *'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort bestätigen *'), { target: { value: 'password123' } });
 
         // Submit form
         fireEvent.click(screen.getByRole('button', { name: /Registrieren/i }));
+
+        await waitFor(() => {
+            expect(mockRegister).toHaveBeenCalled();
+        });
 
         await waitFor(() => {
             expect(screen.getByText('E-Mail-Adresse ist bereits registriert.')).toBeInTheDocument();
@@ -183,7 +206,13 @@ describe('RegistrationForm', () => {
     });
 
     it('shows loading state during submission', async () => {
-        mockFetch.mockImplementationOnce(() => new Promise(resolve => setTimeout(resolve, 100)));
+        // Mock slow API response to test loading state
+        mockRegister.mockImplementationOnce(
+            () => new Promise(resolve => setTimeout(() => resolve({
+                message: 'Registrierung erfolgreich',
+                userId: 'test-user'
+            }), 100))
+        );
 
         renderWithApiContext(<RegistrationForm />);
         
@@ -191,14 +220,20 @@ describe('RegistrationForm', () => {
         fireEvent.change(screen.getByLabelText(/Vorname/i), { target: { value: 'John' } });
         fireEvent.change(screen.getByLabelText(/Nachname/i), { target: { value: 'Doe' } });
         fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: 'john@example.com' } });
-        fireEvent.change(screen.getByLabelText(/^Passwort/i), { target: { value: 'password123' } });
-        fireEvent.change(screen.getByLabelText(/Passwort bestätigen/i), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort *'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Passwort bestätigen *'), { target: { value: 'password123' } });
 
         // Submit form
         fireEvent.click(screen.getByRole('button', { name: /Registrieren/i }));
 
+        // Check loading state
         expect(screen.getByText('Registrierung läuft...')).toBeInTheDocument();
         expect(screen.getByRole('button')).toBeDisabled();
+
+        // Wait for completion
+        await waitFor(() => {
+            expect(mockRegister).toHaveBeenCalled();
+        });
     });
 
     it('displays helpful information about registration process', () => {
