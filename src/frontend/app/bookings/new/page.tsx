@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BookingForm from '../../components/booking/BookingForm';
+import HelpButton from '../../components/ui/HelpButton';
 
 export default function NewBookingPage() {
   const router = useRouter();
@@ -75,6 +76,10 @@ export default function NewBookingPage() {
         {/* Booking Form */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Neue Buchung erstellen</h1>
+              <HelpButton topic="booking-create" variant="text" size="md" />
+            </div>
             <BookingForm
               onSuccess={handleSuccess}
               onCancel={handleCancel}

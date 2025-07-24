@@ -1,10 +1,15 @@
+import HelpButton from '@/components/ui/HelpButton';
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
-          Garten Buchungssystem
-        </h1>
+        <div className="flex items-center justify-center mb-8">
+          <h1 className="text-4xl font-bold text-center text-gray-800">
+            Garten Buchungssystem
+          </h1>
+          <HelpButton topic="home" variant="icon" size="lg" className="ml-4" />
+        </div>
         
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
           <p className="text-gray-600 text-center mb-6">
@@ -25,9 +30,12 @@ export default function Home() {
             </div>
             
             <div className="bg-green-50 p-4 rounded-lg">
-              <h2 className="text-xl font-semibold text-green-900 mb-2">
-                Anmeldung
-              </h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xl font-semibold text-green-900">
+                  Anmeldung
+                </h2>
+                <HelpButton topic="login" variant="text" size="sm" />
+              </div>
               <p className="text-green-800 mb-4">
                 Melden Sie sich an, um das Buchungssystem zu nutzen.
               </p>

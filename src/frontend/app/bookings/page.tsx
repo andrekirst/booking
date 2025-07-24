@@ -6,6 +6,7 @@ import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import HelpButton from '../../components/ui/HelpButton';
 
 interface BookingCardProps {
   booking: Booking;
@@ -297,13 +298,16 @@ export default function BookingsPage() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                Meine Buchungen
-              </h1>
-              <p className="text-lg text-gray-600">
-                Verwalten Sie Ihre Garten-Buchungen
-              </p>
+            <div className="flex items-center">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                  Meine Buchungen
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Verwalten Sie Ihre Garten-Buchungen
+                </p>
+              </div>
+              <HelpButton topic="booking-overview" variant="text" size="md" className="ml-4" />
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
               <CreateBookingButton

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiClient } from "@/lib/api/client";
+import HelpButton from "@/components/ui/HelpButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,6 +48,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Login Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-100/20 border border-white/20 p-8">
+          {/* Header with Help Button */}
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Anmeldung</h1>
+            <HelpButton topic="login" variant="text" size="sm" />
+          </div>
+          
           {/* Back to Home Button */}
           <div className="mb-6">
             <Link

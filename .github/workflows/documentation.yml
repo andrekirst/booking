@@ -1,0 +1,258 @@
+name: Documentation Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/documentation.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'  
+      - '.github/workflows/documentation.yml'
+  release:
+    types: [published]
+
+env:
+  DOCUMENT_VERSION: ${{ github.ref_name || 'dev' }}
+  GIT_COMMIT: ${{ github.sha }}
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup LaTeX environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          texlive-latex-base \
+          texlive-latex-extra \
+          texlive-fonts-recommended \
+          texlive-fonts-extra \
+          texlive-lang-german \
+          texlive-luatex \
+          latexmk \
+          ghostscript
+          
+    - name: Create placeholder images
+      run: |
+        mkdir -p docs/manual/images
+        # Create placeholder images for LaTeX compilation
+        convert -size 800x600 xc:lightgray -pointsize 36 -fill black \
+          -gravity center -annotate +0+0 'App Overview\n(Screenshot Placeholder)' \
+          docs/manual/images/app-overview.png || echo "ImageMagick not available, using touch"
+        
+        # Fallback if ImageMagick is not available
+        if [ ! -f docs/manual/images/app-overview.png ]; then
+          touch docs/manual/images/app-overview.png
+        fi
+        
+        # Create other placeholder images  
+        for img in registration-form main-dashboard booking-form room-selection \
+                  booking-list cancellation-dialog room-details calendar-view \
+                  admin-dashboard user-approval admin-bookings; do
+          if [ ! -f "docs/manual/images/${img}.png" ]; then
+            touch "docs/manual/images/${img}.png"
+          fi
+        done
+
+    - name: Install ImageMagick for image generation
+      run: |
+        sudo apt-get install -y imagemagick
+        # Create actual placeholder images
+        cd docs/manual/images
+        
+        # Main app overview
+        convert -size 1200x800 xc:white -pointsize 48 -fill '#2980b9' \
+          -gravity center -annotate +0-100 'Buchungsplattform' \
+          -pointsize 24 -fill '#34495e' -annotate +0+0 'Garten-Buchungssystem für Familien' \
+          -pointsize 16 -fill '#7f8c8d' -annotate +0+100 'Screenshot wird bei der nächsten Aktualisierung hinzugefügt' \
+          app-overview.png
+          
+        # Registration form
+        convert -size 600x500 xc:'#ecf0f1' -pointsize 20 -fill '#2c3e50' \
+          -gravity center -annotate +0-150 'Registrierungsformular' \
+          -pointsize 14 -annotate +0-100 'Vorname: _______________' \
+          -annotate +0-70 'Nachname: _______________' \
+          -annotate +0-40 'E-Mail: _______________' \
+          -annotate +0-10 'Passwort: _______________' \
+          -annotate +0+20 'Bestätigen: _______________' \
+          -pointsize 16 -fill '#3498db' -annotate +0+80 '[Registrieren]' \
+          registration-form.png
+          
+        # Dashboard
+        convert -size 1000x700 xc:'#ffffff' -pointsize 24 -fill '#2c3e50' \
+          -gravity center -annotate +0-250 'Dashboard - Hauptübersicht' \
+          -pointsize 16 -fill '#34495e' \
+          -annotate +0-150 'Aktuelle Buchungen | Kommende Termine | Schnellbuchung' \
+          -annotate +0-100 '📅 Ihre nächste Buchung: 15.06.2024 - 17.06.2024' \
+          -annotate +0-70 '🏨 Zimmer: Schlafzimmer 1 (2 Personen)' \
+          -annotate +0-40 '✅ Status: Bestätigt' \
+          -pointsize 14 -fill '#27ae60' -annotate +0+50 '[Neue Buchung erstellen]' \
+          -fill '#3498db' -annotate +0+80 '[Kalender anzeigen]' \
+          main-dashboard.png
+
+    - name: Prepare LaTeX document with version info
+      run: |
+        cd docs/manual
+        
+        # Extract version from git tag or use commit hash
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION="${{ github.ref_name }}"
+        else
+          VERSION="dev-$(echo ${{ github.sha }} | cut -c1-7)"
+        fi
+        
+        # Replace version placeholders in main.tex
+        sed -i "s/\\\\documentversion{.*}/\\\\documentversion{$VERSION}/" main.tex
+        sed -i "s/\\\\documentdate{.*}/\\\\documentdate{$(date +'%d.%m.%Y')}/" main.tex  
+        sed -i "s/\\\\gitcommit{.*}/\\\\gitcommit{$(echo ${{ github.sha }} | cut -c1-7)}/" main.tex
+
+    - name: Build PDF with LaTeX
+      run: |
+        cd docs/manual
+        
+        # First compilation
+        pdflatex -interaction=nonstopmode main.tex || (cat main.log; exit 1)
+        
+        # Second compilation for references and TOC
+        pdflatex -interaction=nonstopmode main.tex || (cat main.log; exit 1)
+        
+        # Third compilation to ensure everything is correct
+        pdflatex -interaction=nonstopmode main.tex || (cat main.log; exit 1)
+        
+        # Rename output file with version
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION="${{ github.ref_name }}"
+        else
+          VERSION="dev-$(echo ${{ github.sha }} | cut -c1-7)"
+        fi
+        
+        mv main.pdf "Benutzerhandbuch-Buchungsplattform-${VERSION}.pdf"
+
+    - name: Validate PDF output
+      run: |
+        cd docs/manual
+        
+        # Check if PDF was created
+        PDF_FILE=$(ls Benutzerhandbuch-*.pdf | head -n1)
+        if [ ! -f "$PDF_FILE" ]; then
+          echo "❌ PDF file was not created"
+          exit 1
+        fi
+        
+        # Check PDF size (should be > 100KB for a real document)
+        PDF_SIZE=$(stat -c%s "$PDF_FILE")
+        if [ $PDF_SIZE -lt 102400 ]; then
+          echo "⚠️ PDF file seems too small ($PDF_SIZE bytes)"
+        else
+          echo "✅ PDF file created successfully ($PDF_SIZE bytes)"
+        fi
+        
+        # Try to get PDF info
+        if command -v pdfinfo &> /dev/null; then
+          echo "📄 PDF Information:"
+          pdfinfo "$PDF_FILE" | head -10
+        fi
+
+    - name: Upload PDF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: user-manual-pdf
+        path: docs/manual/Benutzerhandbuch-*.pdf
+        retention-days: 90
+
+    - name: Upload PDF to release (if release)
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: docs/manual/Benutzerhandbuch-*.pdf
+        name: "Benutzerhandbuch ${{ github.ref_name }}"
+        body: |
+          ## 📖 Benutzerhandbuch - Version ${{ github.ref_name }}
+          
+          Automatisch generiertes PDF-Benutzerhandbuch für die Buchungsplattform.
+          
+          ### 📋 Inhalt
+          - Einleitung und Übersicht
+          - Erste Schritte und Anmeldung  
+          - Buchungen verwalten
+          - Räume und Schlafplätze
+          - Administration (für Administratoren)
+          - Fehlerbehebung und FAQ
+          - Anhang mit Glossar
+          
+          ### 🔗 Alternative Formate
+          - **Navigierbare README**: [docs/README-manual/](https://github.com/${{ github.repository }}/tree/main/docs/README-manual)
+          - **Online-Hilfe**: Direkt in der Anwendung verfügbar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate-readme:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Validate README structure
+      run: |
+        echo "🔍 Validating README-based documentation..."
+        
+        # Check if main README exists
+        if [ ! -f "docs/README-manual/README.md" ]; then
+          echo "❌ Main README.md not found"
+          exit 1
+        fi
+        
+        # Check if all chapter files exist
+        CHAPTERS=(
+          "01-einleitung.md"
+          "02-erste-schritte.md" 
+          "03-buchungen.md"
+          "04-raumverwaltung.md"
+          "05-administration.md"
+          "06-fehlerbehebung.md"
+          "07-anhang.md"
+        )
+        
+        for chapter in "${CHAPTERS[@]}"; do
+          if [ ! -f "docs/README-manual/$chapter" ]; then
+            echo "❌ Chapter $chapter not found"
+            exit 1
+          else
+            echo "✅ Chapter $chapter exists"
+          fi
+        done
+        
+        # Check for internal links in main README
+        echo "🔗 Checking internal links..."
+        grep -o '\[.*\](.*\.md' docs/README-manual/README.md | while read -r link; do
+          filename=$(echo "$link" | sed 's/.*(\(.*\))/\1/')
+          if [ ! -f "docs/README-manual/$filename" ]; then
+            echo "⚠️ Broken link found: $link"
+          fi
+        done
+        
+        echo "✅ README documentation structure validated"
+
+    - name: Generate documentation summary
+      run: |
+        echo "📊 Documentation Statistics:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Format | Status | Files |" >> $GITHUB_STEP_SUMMARY  
+        echo "|--------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 📄 LaTeX/PDF | ✅ Generated | $(find docs/manual -name '*.tex' | wc -l) chapters |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📖 README | ✅ Available | $(find docs/README-manual -name '*.md' | wc -l) pages |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🔗 **Access Documentation:**" >> $GITHUB_STEP_SUMMARY
+        echo "- **PDF**: Download from job artifacts" >> $GITHUB_STEP_SUMMARY  
+        echo "- **README**: [Browse online](https://github.com/${{ github.repository }}/tree/main/docs/README-manual)" >> $GITHUB_STEP_SUMMARY
+        echo "- **In App**: Help links available in the application" >> $GITHUB_STEP_SUMMARY

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import HelpButton from "@/components/ui/HelpButton";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ApiProvider } from "@/contexts/ApiContext";
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <ApiProvider>
           {children}
+          <HelpButton topic="home" variant="full" position="fixed-bottom-right" />
         </ApiProvider>
       </body>
     </html>

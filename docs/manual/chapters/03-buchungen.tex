@@ -1,0 +1,154 @@
+\section{Buchungen verwalten}
+\label{sec:buchungen}
+
+\subsection{Neue Buchung erstellen}
+
+\subsubsection{Buchungsformular öffnen}
+
+\begin{enumerate}
+    \item Navigieren Sie zu \textbf{„Neue Buchung"} in der Hauptnavigation
+    \item Das Buchungsformular wird geöffnet
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/booking-form.png}
+    \caption{Buchungsformular für neue Buchungen}
+    \label{fig:booking-form}
+\end{figure}
+
+\subsubsection{Datum und Zeitraum wählen}
+
+\begin{enumerate}
+    \item \textbf{Anreisedatum}: Klicken Sie auf das Kalender-Icon und wählen Sie das gewünschte Anreisedatum
+    \item \textbf{Abreisedatum}: Wählen Sie das Abreisedatum (muss nach dem Anreisedatum liegen)
+    \item Das System zeigt automatisch die Anzahl der Nächte an
+    \item \textbf{Verfügbarkeit prüfen}: Das System prüft automatisch die Verfügbarkeit
+\end{enumerate}
+
+\textbf{Hinweise zur Datumswahl:}
+\begin{itemize}
+    \item Nur zukünftige Daten können gewählt werden
+    \item Das Abreisedatum muss nach dem Anreisedatum liegen
+    \item Buchungen sind für mindestens eine Nacht möglich
+    \item Maximale Buchungsdauer: 14 Nächte
+\end{itemize}
+
+\subsubsection{Räume und Schlafplätze auswählen}
+
+Nach der Datumswahl werden verfügbare Räume angezeigt:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/room-selection.png}
+    \caption{Auswahl verfügbarer Räume und Schlafplätze}
+    \label{fig:room-selection}
+\end{figure}
+
+Für jeden verfügbaren Raum können Sie:
+
+\begin{itemize}
+    \item \textbf{Raum auswählen}: Aktivieren Sie die Checkbox
+    \item \textbf{Personenanzahl}: Geben Sie die Anzahl der Personen für diesen Raum an
+    \item \textbf{Kapazität beachten}: Die maximale Kapazität wird angezeigt
+    \item \textbf{Mehrere Räume}: Sie können mehrere Räume gleichzeitig buchen
+\end{itemize}
+
+\subsubsection{Zusätzliche Informationen}
+
+\begin{description}
+    \item[Notizen] Optionale Notizen für Ihre Buchung (z.B. besondere Wünsche, Anmerkungen)
+    \item[Gesamtpersonen] Das System berechnet automatisch die Gesamtzahl der Personen
+    \item[Verfügbarkeit] Rote Räume sind bereits belegt, grüne sind verfügbar
+\end{description}
+
+\subsection{Buchung bestätigen und absenden}
+
+\begin{enumerate}
+    \item Überprüfen Sie alle Angaben in der Zusammenfassung
+    \item Klicken Sie auf \textbf{„Buchung erstellen"}
+    \item Sie erhalten eine Bestätigung mit der Buchungsnummer
+    \item Die Buchung hat zunächst den Status \textbf{„Pending"} (Wartend)
+\end{enumerate}
+
+\subsection{Buchungsübersicht}
+
+\subsubsection{Alle Buchungen anzeigen}
+
+Navigieren Sie zu \textbf{„Buchungen"} um alle Ihre Buchungen zu sehen:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/booking-list.png}
+    \caption{Übersicht aller Buchungen}
+    \label{fig:booking-list}
+\end{figure}
+
+\subsubsection{Buchungsstatus verstehen}
+
+\begin{description}
+    \item[Pending] \textcolor{orange}{Buchung wartet auf Administrator-Bestätigung}
+    \item[Confirmed] \textcolor{green}{Buchung ist bestätigt und verbindlich}
+    \item[Cancelled] \textcolor{red}{Buchung wurde storniert}
+    \item[Rejected] \textcolor{red}{Buchung wurde vom Administrator abgelehnt}
+\end{description}
+
+\subsection{Buchung bearbeiten}
+
+\subsubsection{Bestehende Buchung ändern}
+
+Nur Buchungen mit Status \textbf{„Pending"} können bearbeitet werden:
+
+\begin{enumerate}
+    \item Klicken Sie auf das \textbf{Bearbeiten-Symbol} (Stift) bei der gewünschten Buchung
+    \item Das Bearbeitungsformular öffnet sich mit den aktuellen Daten
+    \item Nehmen Sie die gewünschten Änderungen vor:
+        \begin{itemize}
+            \item Daten ändern
+            \item Räume hinzufügen oder entfernen
+            \item Personenanzahl anpassen
+            \item Notizen bearbeiten
+        \end{itemize}
+    \item Klicken Sie auf \textbf{„Änderungen speichern"}
+\end{enumerate}
+
+\textbf{Wichtig:} Bestätigte Buchungen können nicht mehr bearbeitet werden. Kontaktieren Sie in diesem Fall einen Administrator.
+
+\subsection{Buchung stornieren}
+
+\subsubsection{Stornierung durchführen}
+
+\begin{enumerate}
+    \item Klicken Sie auf das \textbf{Stornieren-Symbol} (X) bei der gewünschten Buchung
+    \item Ein Bestätigungsdialog erscheint
+    \item Bestätigen Sie die Stornierung
+    \item Die Buchung erhält den Status \textbf{„Cancelled"}
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/cancellation-dialog.png}
+    \caption{Bestätigungsdialog für Buchungsstornierung}
+    \label{fig:cancellation}
+\end{figure}
+
+\subsubsection{Stornierungsrichtlinien}
+
+\begin{itemize}
+    \item Buchungen können bis zu 24 Stunden vor Anreise storniert werden
+    \item Stornierte Buchungen können nicht wiederhergestellt werden
+    \item Bei kurzfristigen Stornierungen kontaktieren Sie einen Administrator
+\end{itemize}
+
+\subsection{Buchungsdetails anzeigen}
+
+Klicken Sie auf eine Buchung, um detaillierte Informationen zu sehen:
+
+\begin{itemize}
+    \item Vollständige Buchungsdetails
+    \item Historie aller Änderungen
+    \item Kontaktinformationen
+    \item Räume und Ausstattung
+\end{itemize}
+
+\newpage

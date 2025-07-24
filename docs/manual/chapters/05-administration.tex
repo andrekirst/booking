@@ -1,0 +1,181 @@
+\section{Administration}
+\label{sec:administration}
+
+\textbf{Hinweis:} Dieses Kapitel richtet sich an Administratoren der Buchungsplattform. Normale Benutzer haben keinen Zugang zu diesen Funktionen.
+
+\subsection{Administrator-Bereich aufrufen}
+
+\subsubsection{Zugang zum Admin-Panel}
+
+\begin{enumerate}
+    \item Melden Sie sich mit einem Administrator-Konto an
+    \item Klicken Sie auf \textbf{„Administration"} in der Navigation
+    \item Der Administrator-Bereich wird geöffnet
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/admin-dashboard.png}
+    \caption{Administrator-Dashboard mit Übersicht}
+    \label{fig:admin-dashboard}
+\end{figure}
+
+\subsection{Benutzerverwaltung}
+
+\subsubsection{Neue Benutzer freischalten}
+
+Neue Registrierungen müssen von Administratoren genehmigt werden:
+
+\begin{enumerate}
+    \item Navigieren Sie zu \textbf{„Benutzerverwaltung"}
+    \item Ausstehende Registrierungen werden angezeigt
+    \item Überprüfen Sie die Benutzerangaben
+    \item Klicken Sie auf \textbf{„Genehmigen"} oder \textbf{„Ablehnen"}
+    \item Der Benutzer erhält eine entsprechende Benachrichtigung
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/user-approval.png}
+    \caption{Freischaltung neuer Benutzerkonten}
+    \label{fig:user-approval}
+\end{figure}
+
+\subsubsection{Benutzerrollen verwalten}
+
+\begin{description}
+    \item[Member] Normale Familienmitglieder mit Buchungsrechten
+    \item[Administrator] Vollzugriff auf alle Funktionen
+    \item[Inactive] Deaktivierte Benutzer ohne Zugang
+\end{description}
+
+Rollen können über das Benutzer-Bearbeitungsformular geändert werden.
+
+\subsection{Buchungsmanagement}
+
+\subsubsection{Alle Buchungen verwalten}
+
+Administratoren können alle Buchungen im System einsehen und verwalten:
+
+\begin{itemize}
+    \item \textbf{Buchungen bestätigen}: Pending-Buchungen genehmigen
+    \item \textbf{Buchungen ablehnen}: Buchungen mit Begründung ablehnen
+    \item \textbf{Buchungen bearbeiten}: Auch bestätigte Buchungen können geändert werden
+    \item \textbf{Notfallstornierungen}: Buchungen in Ausnahmefällen stornieren
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/admin-bookings.png}
+    \caption{Administrator-Ansicht aller Buchungen}
+    \label{fig:admin-bookings}
+\end{figure}
+
+\subsubsection{Buchungsrichtlinien durchsetzen}
+
+\begin{itemize}
+    \item Maximale Buchungsdauer überwachen
+    \item Doppelbuchungen vermeiden
+    \item Faire Verteilung der Buchungszeiten sicherstellen
+    \item Besondere Anlässe berücksichtigen
+\end{itemize}
+
+\subsection{Raumverwaltung}
+
+\subsubsection{Neue Räume hinzufügen}
+
+\begin{enumerate}
+    \item Navigieren Sie zu \textbf{„Raumverwaltung"}
+    \item Klicken Sie auf \textbf{„Neuen Raum hinzufügen"}
+    \item Füllen Sie die Raumdetails aus:
+        \begin{itemize}
+            \item Name des Raumes
+            \item Typ (Zimmer, Schlafsaal, Camping, etc.)
+            \item Maximale Kapazität
+            \item Beschreibung und Ausstattung
+        \end{itemize}
+    \item Speichern Sie den neuen Raum
+\end{enumerate}
+
+\subsubsection{Bestehende Räume bearbeiten}
+
+\begin{itemize}
+    \item Raumdetails aktualisieren
+    \item Kapazität anpassen
+    \item Ausstattung ändern
+    \item Räume temporär deaktivieren (z.B. bei Renovierung)
+\end{itemize}
+
+\subsubsection{Raum-Wartung und Sperrungen}
+
+Für Wartungsarbeiten können Räume gesperrt werden:
+
+\begin{enumerate}
+    \item Wählen Sie den entsprechenden Raum
+    \item Klicken Sie auf \textbf{„Wartung/Sperrung"}
+    \item Geben Sie Zeitraum und Grund ein
+    \item Der Raum wird für den Zeitraum nicht buchbar
+\end{enumerate}
+
+\subsection{System-Einstellungen}
+
+\subsubsection{Globale Einstellungen}
+
+\begin{itemize}
+    \item \textbf{Maximale Buchungsdauer}: Standard-Limit für alle Benutzer
+    \item \textbf{Vorlaufzeit}: Mindestzeit zwischen Buchung und Anreise
+    \item \textbf{Stornierungsfrist}: Bis wann Buchungen storniert werden können
+    \item \textbf{Wartungsmodus}: System für Wartungsarbeiten sperren
+\end{itemize}
+
+\subsubsection{E-Mail-Benachrichtigungen}
+
+Konfiguration der automatischen E-Mails:
+
+\begin{itemize}
+    \item Buchungsbestätigungen
+    \item Erinnerungen vor Anreise
+    \item Stornierungsbenachrichtigungen
+    \item Admin-Benachrichtigungen bei neuen Buchungen
+\end{itemize}
+
+\subsection{Berichte und Statistiken}
+
+\subsubsection{Buchungsstatistiken}
+
+\begin{itemize}
+    \item Auslastung nach Zeiträumen
+    \item Beliebteste Räume
+    \item Buchungsverhalten der Benutzer
+    \item Stornierungsraten
+\end{itemize}
+
+\subsubsection{Exportfunktionen}
+
+\begin{itemize}
+    \item Buchungslisten als CSV exportieren
+    \item Belegungspläne als PDF erstellen
+    \item Statistiken für externe Auswertungen
+\end{itemize}
+
+\subsection{Backup und Wartung}
+
+\subsubsection{Regelmäßige Aufgaben}
+
+\begin{itemize}
+    \item Veraltete Buchungen archivieren
+    \item Benutzerkonten auf Aktualität prüfen
+    \item System-Logs überwachen
+    \item Performance-Metriken auswerten
+\end{itemize}
+
+\subsubsection{Notfall-Prozeduren}
+
+\begin{itemize}
+    \item System-Wiederherstellung aus Backup
+    \item Notfall-Buchungen erstellen
+    \item Benutzer-Support bei Login-Problemen
+    \item Datenintegrität prüfen
+\end{itemize}
+
+\newpage
