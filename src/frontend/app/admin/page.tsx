@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/contexts/ApiContext';
 import { EmailSettings, UpdateEmailSettingsRequest } from '@/lib/types/api';
@@ -111,9 +111,9 @@ export default function AdminDashboard() {
     if (activeTab === 'settings' && !emailSettings) {
       loadEmailSettings();
     }
-  }, [activeTab]);
+  }, [activeTab, emailSettings, loadEmailSettings]);
 
-  const loadEmailSettings = async () => {
+  const loadEmailSettings = useCallback(async () => {
     setIsLoadingEmailSettings(true);
     setEmailMessage(null);
     
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
     } finally {
       setIsLoadingEmailSettings(false);
     }
-  };
+  }, [apiClient]);
 
   const handleSaveEmailSettings = async (settings: UpdateEmailSettingsRequest) => {
     setIsSavingEmailSettings(true);

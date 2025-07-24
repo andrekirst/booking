@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useApi } from '@/contexts/ApiContext';
 import { PendingUser } from '@/lib/types/api';
@@ -18,7 +18,7 @@ export default function UserManagementPage() {
     const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
     const [rejectReason, setRejectReason] = useState('');
 
-    const fetchPendingUsers = async () => {
+    const fetchPendingUsers = useCallback(async () => {
         setLoading(true);
         setError(null);
         
@@ -33,7 +33,7 @@ export default function UserManagementPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [apiClient]);
 
     const approveUser = async (userId: number) => {
         setApprovingUserId(userId);
@@ -92,7 +92,7 @@ export default function UserManagementPage() {
 
     useEffect(() => {
         fetchPendingUsers();
-    }, []);
+    }, [fetchPendingUsers]);
 
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'N/A';

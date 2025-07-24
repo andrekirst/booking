@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useApi } from '@/contexts/ApiContext';
@@ -24,9 +24,9 @@ export default function VerifyEmailPage() {
         }
 
         verifyEmail(token);
-    }, [searchParams]);
+    }, [searchParams, verifyEmail]);
 
-    const verifyEmail = async (token: string) => {
+    const verifyEmail = useCallback(async (token: string) => {
         try {
             const data = await apiClient.verifyEmail({ token });
             setStatus('success');
@@ -39,7 +39,7 @@ export default function VerifyEmailPage() {
                 : 'Bestätigung fehlgeschlagen.';
             setMessage(errorMessage);
         }
-    };
+    }, [apiClient]);
 
     const getStatusIcon = () => {
         switch (status) {
