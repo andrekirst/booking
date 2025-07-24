@@ -193,6 +193,23 @@ export default function BookingsPage() {
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [previousViewMode, setPreviousViewMode] = useState<typeof viewMode>(viewMode);
+
+  // Handle view transitions with card shuffle animation
+  useEffect(() => {
+    if (viewMode !== previousViewMode) {
+      setIsTransitioning(true);
+      setPreviousViewMode(viewMode);
+      
+      // End transition after animation completes
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 1000); // 800ms animation + 200ms buffer
+      
+      return () => clearTimeout(timer);
+    }
+  }, [viewMode, previousViewMode]);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -391,19 +408,20 @@ export default function BookingsPage() {
               />
             </div>
           ) : (
-            <div className="transition-opacity duration-300 ease-in-out">
+            <div className="relative overflow-hidden">
               {viewMode === 'calendar' ? (
-                <div 
-                  key="calendar-view"
-                  className="animate-fade-in flex flex-col xl:grid xl:grid-cols-3 gap-6"
-                >
-                  <div className="xl:col-span-2 order-2 xl:order-1">
+                <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                  <div className={`xl:col-span-2 order-2 xl:order-1 ${
+                    isTransitioning ? 'animate-card-build-in' : ''
+                  }`} style={{ animationDelay: '0.3s' }}>
                     <CalendarView
                       bookings={bookings}
                       onSelectBooking={handleSelectBooking}
                     />
                   </div>
-                  <div className="xl:col-span-1 order-1 xl:order-2">
+                  <div className={`xl:col-span-1 order-1 xl:order-2 ${
+                    isTransitioning ? 'animate-card-build-in-alt' : ''
+                  }`} style={{ animationDelay: '0.5s' }}>
                     <CompactBookingList
                       bookings={bookings}
                       onSelectBooking={handleSelectBookingById}
@@ -412,19 +430,29 @@ export default function BookingsPage() {
                   </div>
                 </div>
               ) : (
-                <div 
-                  key="list-view"
-                  className="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-6"
-                >
-                  {bookings.map((booking) => (
-                    <BookingCard
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {bookings.map((booking, index) => (
+                    <div
                       key={booking.id}
-                      booking={booking}
-                      onClick={() => router.push(`/bookings/${booking.id}`)}
-                      userRole={userRole}
-                      onAccept={handleAcceptBooking}
-                      onReject={handleRejectBooking}
-                    />
+                      className={`${
+                        isTransitioning
+                          ? 'animate-card-build-in'
+                          : ''
+                      }`}
+                      style={{ 
+                        animationDelay: isTransitioning 
+                          ? `${index * 0.1}s` 
+                          : '0s' 
+                      }}
+                    >
+                      <BookingCard
+                        booking={booking}
+                        onClick={() => router.push(`/bookings/${booking.id}`)}
+                        userRole={userRole}
+                        onAccept={handleAcceptBooking}
+                        onReject={handleRejectBooking}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
