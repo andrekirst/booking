@@ -39,7 +39,9 @@ public class LoginCommandHandlerTests : IDisposable
             FirstName = "Test",
             LastName = "User",
             Role = UserRole.Member,
-            IsActive = true
+            IsActive = true,
+            EmailVerified = true,
+            IsApprovedForBooking = true
         };
 
         _context.Users.Add(user);
@@ -95,7 +97,9 @@ public class LoginCommandHandlerTests : IDisposable
             FirstName = "Test",
             LastName = "User",
             Role = UserRole.Member,
-            IsActive = true
+            IsActive = true,
+            EmailVerified = true,
+            IsApprovedForBooking = true
         };
 
         _context.Users.Add(user);
@@ -143,6 +147,76 @@ public class LoginCommandHandlerTests : IDisposable
         result.Success.Should().BeFalse();
         result.Token.Should().BeNull();
         result.ErrorMessage.Should().Be("Ungültige E-Mail-Adresse oder Passwort.");
+    }
+
+    [Fact]
+    public async Task Handle_UnverifiedEmail_ReturnsFailure()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = 1,
+            Email = "test@example.com",
+            PasswordHash = "hashedPassword",
+            FirstName = "Test",
+            LastName = "User",
+            Role = UserRole.Member,
+            IsActive = true,
+            EmailVerified = false, // Email not verified
+            IsApprovedForBooking = true
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var command = new LoginCommand("test@example.com", "password123");
+        
+        _passwordServiceMock
+            .Setup(x => x.VerifyPassword("password123", "hashedPassword"))
+            .Returns(true);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Token.Should().BeNull();
+        result.ErrorMessage.Should().Be("Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Überprüfen Sie Ihr E-Mail-Postfach oder fordern Sie eine neue Bestätigungs-E-Mail an.");
+    }
+
+    [Fact]
+    public async Task Handle_UnapprovedUser_ReturnsFailure()
+    {
+        // Arrange
+        var user = new User
+        {
+            Id = 1,
+            Email = "test@example.com",
+            PasswordHash = "hashedPassword",
+            FirstName = "Test",
+            LastName = "User",
+            Role = UserRole.Member,
+            IsActive = true,
+            EmailVerified = true,
+            IsApprovedForBooking = false // User not approved for booking
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var command = new LoginCommand("test@example.com", "password123");
+        
+        _passwordServiceMock
+            .Setup(x => x.VerifyPassword("password123", "hashedPassword"))
+            .Returns(true);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Token.Should().BeNull();
+        result.ErrorMessage.Should().Be("Ihr Konto wartet noch auf die Freigabe durch einen Administrator. Sie werden per E-Mail benachrichtigt, sobald Ihr Konto freigeschaltet wurde.");
     }
 
     public void Dispose()
