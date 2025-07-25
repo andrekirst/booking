@@ -29,9 +29,9 @@ function AnimatedNumber({ value, className = '' }: AnimatedNumberProps) {
           exit={{ y: -20, opacity: 0 }}
           transition={{
             type: "spring",
-            stiffness: 300,
-            damping: 30,
-            duration: 0.2
+            stiffness: 600,
+            damping: 25,
+            duration: 0.15
           }}
           className="block"
         >
