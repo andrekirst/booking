@@ -637,6 +637,140 @@ A: Jede Session hat eigenen Timeout. Bei Bedarf in jeweiligem Terminal neu start
 # Alle arbeiten GLEICHZEITIG ohne Konflikte!
 ```
 
+### 13.10 Docker-basierte Multi-Agent-Entwicklungsumgebungen
+
+#### Übersicht
+**Ziel**: Automatisierte, isolierte Docker-Umgebungen für jeden Agenten mit eigenem Port-Bereich und sofort verfügbarer Entwicklungsumgebung. Diese Lösung eliminiert das manuelle Starten von `npm run dev` und IDE-Setup für jeden Agenten.
+
+#### Port-Schema (60000er Bereich)
+**WICHTIG**: Verwendet 60000er Bereich zur Vermeidung von Standard-Port-Konflikten:
+
+| Agent | Port-Bereich | Frontend | Backend | PostgreSQL | Redis | Weitere Services |
+|-------|--------------|----------|---------|------------|-------|------------------|
+| Agent 1 | 60100-60199 | 60101 | 60102 | 60103 | 60104 | 60105-60199 |
+| Agent 2 | 60200-60299 | 60201 | 60202 | 60203 | 60204 | 60205-60299 |
+| Agent 3 | 60300-60399 | 60301 | 60302 | 60303 | 60304 | 60305-60399 |
+| Agent 4 | 60400-60499 | 60401 | 60402 | 60403 | 60404 | 60405-60499 |
+
+**Vorteile des 60000er Bereichs:**
+- ✅ **Keine Konflikte** mit Standard-Ports (80, 443, 3000, 5000, etc.)
+- ✅ **Klare Struktur**: 100er Blöcke pro Agent
+- ✅ **Erweiterbar**: Platz für zusätzliche Services pro Agent
+- ✅ **Hohe Ports**: Keine Admin-Rechte erforderlich
+
+#### Docker-Setup pro Agent
+Jeder Agent erhält isolierte Docker-Services:
+- **PostgreSQL**: Eigene Datenbank-Instanz
+- **Backend**: .NET API mit agentenspezifischer Konfiguration
+- **Frontend**: Next.js mit Hot-Reload
+- **Networking**: Isolierte Docker-Netzwerke
+
+#### Automatisierungs-Scripts
+
+##### Agent-Verwaltung
+```bash
+# Neuen Agenten starten (erstellt Worktree + Docker-Umgebung)
+./scripts/start-agent.sh 2 feat/49-user-manual
+
+# Agent stoppen
+./scripts/stop-agent.sh 2
+
+# Status aller Agenten
+./scripts/status-agents.sh
+
+# Alle Agenten stoppen
+./scripts/stop-all-agents.sh
+```
+
+##### Konfiguration generieren
+```bash
+# Regeneriert alle Docker Compose Files aus Template
+./scripts/generate-agent-configs.sh
+```
+
+#### Template-System
+- **Template**: `docker-compose.agent-template.yml`
+- **Generierte Files**: `docker-compose.agent{2-4}.yml`
+- **Platzhalter**: `{AGENT_NUMBER}`, `{FRONTEND_PORT}`, etc.
+- **Automatische Validation** der generierten Konfigurationen
+
+#### Features
+
+##### Automatisches Setup
+- Git Worktree wird automatisch erstellt oder aktualisiert
+- Dependencies werden im Container installiert
+- Datenbank-Migrationen laufen automatisch
+- Hot-Reload funktioniert out-of-the-box
+
+##### Isolation
+- Jeder Agent hat eigene Datenbank-Instanz
+- Keine Port-Konflikte zwischen Agenten
+- Unabhängige Node_modules und Build-Caches
+- Eigene Environment-Variablen pro Agent
+
+##### Monitoring
+- Docker Dashboard zeigt alle laufenden Agenten
+- Logs zentral über `docker-compose logs`
+- Health-Checks für alle Services
+- Restart-Policy für Stabilität
+
+#### Workflow-Integration
+
+##### Typischer Multi-Agent-Workflow
+```bash
+# 1. Starte mehrere Agenten parallel
+./scripts/start-agent.sh 2 feat/65-user-management
+./scripts/start-agent.sh 3 feat/66-api-enhancement
+./scripts/start-agent.sh 4 feat/67-testing
+
+# 2. Prüfe Status aller Agenten
+./scripts/status-agents.sh
+
+# 3. Arbeite in separaten Claude Sessions
+# Terminal 1: cd ../booking-agent2 && claude
+# Terminal 2: cd ../booking-agent3 && claude
+# Terminal 3: cd ../booking-agent4 && claude
+
+# 4. URLs für sofortige Review:
+# Agent 2: http://localhost:60201
+# Agent 3: http://localhost:60301  
+# Agent 4: http://localhost:60401
+```
+
+##### Hot-Reload Testing
+```bash
+# Änderungen in Agent-Worktrees werden automatisch live-reloaded
+echo "🐳 Docker Agent 2" > ../booking-agent2/src/frontend/app/test.txt
+# Änderung ist sofort in http://localhost:60201 sichtbar
+```
+
+#### Vorteile
+- ✅ **Zero-Setup**: Ein Befehl startet komplette Umgebung
+- ✅ **Parallel Review**: Alle Agenten gleichzeitig reviewbar
+- ✅ **Keine Konflikte**: Isolierte Ports und Datenbanken
+- ✅ **Persistent**: Container überleben IDE-Neustart
+- ✅ **Performance**: Docker-Cache beschleunigt Builds
+- ✅ **Saubere Ports**: 60000er Bereich ohne Standard-Port-Konflikte
+
+#### Technische Anforderungen
+- Docker Desktop oder Docker Engine
+- Docker Compose v2.0+
+- Ausreichend RAM (min. 8GB für 4 Agenten)
+- Port-Bereiche 60100-60499 frei
+
+#### Best Practices
+- **Ein Agent = Ein Issue**: Klare Trennung der Entwicklungsarbeiten
+- **Status prüfen**: Regelmäßig `./scripts/status-agents.sh` verwenden
+- **Aufräumen**: Gestoppte Container und Volumes regelmäßig löschen
+- **Resource Management**: Nicht benötigte Agenten stoppen
+- **Monitoring**: Docker Dashboard zur Überwachung nutzen
+
+#### Troubleshooting
+- **Port-Konflikte**: 60000er Bereich prüfen mit `netstat -tuln | grep 60`
+- **Container-Probleme**: Logs mit `docker-compose -f docker-compose.agent{N}.yml logs`
+- **Health-Checks**: Services können trotz "unhealthy" Status funktionieren
+- **Performance**: Bei >3 Agenten RAM-Überwachung empfohlen
+
 ## 14. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
