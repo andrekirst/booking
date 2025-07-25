@@ -30,8 +30,17 @@ Die `docker-compose.yml` enthält zwei neue Services:
 environment:
   - TZ=Europe/Berlin           # Zeitzone
   - APP_URL=http://localhost:6875  # BookStack URL
+  - APP_KEY=base64:Nm/CZI95YBTxCz7h92HDhL6ZSAv7UfqfhkOK7WZXrjs=  # Verschlüsselungsschlüssel
   - APP_LANG=de               # Deutsche Sprache
   - APP_DEFAULT_DARK_MODE=false  # Light Mode Standard
+```
+
+### APP_KEY generieren
+
+Falls ein neuer APP_KEY benötigt wird:
+
+```bash
+docker run --rm --entrypoint /bin/bash lscr.io/linuxserver/bookstack:latest appkey
 ```
 
 ### Ports
