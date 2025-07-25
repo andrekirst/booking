@@ -2,183 +2,64 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Booking, BookingStatus } from '../../lib/types/api';
+import { Booking } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import ViewToggle, { useViewMode } from '../components/ViewToggle';
+import BookingCalendarView from '../components/BookingCalendarView';
+import BookingListView from '../components/BookingListView';
+import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
+import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
+import BookingCardSkeleton from '../components/BookingCardSkeleton';
 
-interface BookingCardProps {
-  booking: Booking;
-  onClick: () => void;
-  userRole?: string | null;
-  onAccept?: (bookingId: string) => void;
-  onReject?: (bookingId: string) => void;
+// Smooth view transition container
+interface ViewTransitionContainerProps {
+  children: React.ReactNode;
+  viewKey: string;
 }
 
-function BookingCard({ booking, onClick, userRole, onAccept, onReject }: BookingCardProps) {
-  const getStatusBadge = (status: BookingStatus) => {
-    switch (status) {
-      case BookingStatus.Pending:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Ausstehend
-          </span>
-        );
-      case BookingStatus.Confirmed:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Bestätigt
-          </span>
-        );
-      case BookingStatus.Cancelled:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Storniert
-          </span>
-        );
-      case BookingStatus.Completed:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Abgeschlossen
-          </span>
-        );
-      case BookingStatus.Accepted:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Angenommen
-          </span>
-        );
-      case BookingStatus.Rejected:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
-            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-            </svg>
-            Abgelehnt
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            Unbekannt
-          </span>
-        );
-    }
-  };
+function ViewTransitionContainer({ children, viewKey }: ViewTransitionContainerProps) {
+  const [currentKey, setCurrentKey] = useState(viewKey);
+  const [currentContent, setCurrentContent] = useState(children);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
+  useEffect(() => {
+    if (viewKey !== currentKey) {
+      setIsTransitioning(true);
+      
+      // First fade-out current content
+      const fadeOutTimer = setTimeout(() => {
+        // Switch content and key after fade-out is complete
+        setCurrentContent(children);
+        setCurrentKey(viewKey);
+        
+        // Then fade-in new content
+        const fadeInTimer = setTimeout(() => {
+          setIsTransitioning(false);
+        }, 30); // Small delay to ensure content is switched
+        
+        return () => clearTimeout(fadeInTimer);
+      }, 200); // Duration of fade-out
+      
+      return () => clearTimeout(fadeOutTimer);
+    }
+  }, [viewKey, currentKey, children]);
 
   return (
-    <div
-      className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-[1.02]"
-      onClick={onClick}
-    >
-      <div className="p-6">
-        {/* Booking Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-2">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
-              </h3>
-              {getStatusBadge(booking.status)}
-            </div>
-          </div>
-        </div>
-
-        {/* Booking Details */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="flex items-center text-sm text-gray-600">
-            <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-            <span>{booking.numberOfNights} {booking.numberOfNights === 1 ? 'Nacht' : 'Nächte'}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span>{booking.totalPersons} {booking.totalPersons === 1 ? 'Person' : 'Personen'}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2-2v16m14 0V9a2 2 0 00-2-2H9a2 2 0 00-2-2v12a2 2 0 002 2h10a2 2 0 002-2z" />
-            </svg>
-            <span>{booking.bookingItems.length} {booking.bookingItems.length === 1 ? 'Schlafmöglichkeit' : 'Schlafmöglichkeiten'}</span>
-          </div>
-        </div>
-
-
-      </div>
-
-      {/* Action Buttons */}
-      <div className="bg-gray-50 px-6 py-3">
-        {userRole === 'Administrator' && booking.status === BookingStatus.Pending ? (
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAccept?.(booking.id);
-                }}
-                className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition-colors"
-              >
-                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Annehmen
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReject?.(booking.id);
-                }}
-                className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg transition-colors"
-              >
-                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Ablehnen
-              </button>
-            </div>
-            <span className="text-xs text-gray-500">Admin-Aktionen</span>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Details anzeigen</span>
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        )}
+    <div className="relative min-h-[400px]">
+      <div className={`transition-opacity duration-200 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        {currentContent}
       </div>
     </div>
   );
 }
 
+// BookingCard component has been moved to BookingListView.tsx
+
 export default function BookingsPage() {
   const router = useRouter();
+  const [viewMode, setViewMode] = useViewMode();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -238,6 +119,14 @@ export default function BookingsPage() {
 
   const handleCreateBooking = () => {
     router.push('/bookings/new');
+  };
+
+  const handleSelectBooking = (booking: Booking) => {
+    router.push(`/bookings/${booking.id}`);
+  };
+
+  const handleSelectBookingById = (bookingId: string) => {
+    router.push(`/bookings/${bookingId}`);
   };
 
   const handleAcceptBooking = (bookingId: string) => {
@@ -306,6 +195,10 @@ export default function BookingsPage() {
               </p>
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
+              <ViewToggle 
+                currentView={viewMode}
+                onViewChange={setViewMode}
+              />
               <CreateBookingButton
                 variant="large"
                 onClick={handleCreateBooking}
@@ -354,37 +247,77 @@ export default function BookingsPage() {
             </div>
           )}
 
-          {/* Bookings Grid */}
-          {bookings.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-              <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-              </svg>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Noch keine Buchungen
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Sie haben noch keine Buchungen erstellt. Starten Sie mit Ihrer ersten Buchung!
-              </p>
-              <CreateBookingButton
-                variant="large"
-                onClick={handleCreateBooking}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {bookings.map((booking) => (
-                <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  onClick={() => router.push(`/bookings/${booking.id}`)}
-                  userRole={userRole}
-                  onAccept={handleAcceptBooking}
-                  onReject={handleRejectBooking}
+          {/* Main Content */}
+          <div>
+            {bookings.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+                </svg>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Noch keine Buchungen
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Sie haben noch keine Buchungen erstellt. Starten Sie mit Ihrer ersten Buchung!
+                </p>
+                <CreateBookingButton
+                  variant="large"
+                  onClick={handleCreateBooking}
                 />
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <>
+                {isLoading ? (
+                  // Loading Skeletons
+                  <>
+                    {/* Calendar skeleton view */}
+                    <div className={`${
+                      viewMode === 'calendar' ? 'block' : 'hidden'
+                    }`}>
+                      <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                        <div className="xl:col-span-2 order-2 xl:order-1">
+                          <CalendarViewSkeleton />
+                        </div>
+                        <div className="xl:col-span-1 order-1 xl:order-2">
+                          <CompactBookingListSkeleton />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* List skeleton view */}
+                    <div className={`${
+                      viewMode === 'list' ? 'block' : 'hidden'
+                    }`}>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <BookingCardSkeleton key={i} />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // Smooth animated content transition
+                  <ViewTransitionContainer viewKey={viewMode}>
+                    {viewMode === 'calendar' ? (
+                      <BookingCalendarView
+                        bookings={bookings}
+                        onSelectBooking={handleSelectBooking}
+                        onSelectBookingById={handleSelectBookingById}
+                        selectedBookingId={selectedBookingId}
+                      />
+                    ) : (
+                      <BookingListView
+                        bookings={bookings}
+                        userRole={userRole}
+                        onAccept={handleAcceptBooking}
+                        onReject={handleRejectBooking}
+                      />
+                    )}
+                  </ViewTransitionContainer>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
