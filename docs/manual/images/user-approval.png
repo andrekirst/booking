@@ -1,0 +1,13 @@
+# PLACEHOLDER - User Approval Screenshot
+#
+# This file is a placeholder for the user approval interface screenshot.
+# The actual screenshot should show:
+# - Admin user management page with pending users table
+# - User list showing name, email, registration date, email verification status
+# - Approve/Reject buttons for each pending user
+# - Email verification status indicators (✅ verified / ⚠️ pending)
+# - Clean admin interface design with help button integration
+#
+# Dimensions: Recommended 1400x900px for table visibility
+# Format: PNG with good contrast
+# Content: Admin dashboard user approval interface
