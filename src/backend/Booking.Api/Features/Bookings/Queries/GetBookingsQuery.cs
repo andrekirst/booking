@@ -5,11 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using MediatR;
 using System.Text.Json;
 using Booking.Api.Domain.ValueObjects;
+using Booking.Api.Domain.Enums;
 
 namespace Booking.Api.Features.Bookings.Queries;
 
 public record GetBookingsQuery(
-    int? UserId = null
+    int? UserId = null,
+    TimeRange? TimeRange = null,
+    BookingStatus? Status = null
 ) : IRequest<List<BookingDto>>;
 
 public class GetBookingsQueryHandler(
@@ -19,7 +22,8 @@ public class GetBookingsQueryHandler(
 {
     public async Task<List<BookingDto>> Handle(GetBookingsQuery request, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Getting bookings for user {UserId}", request.UserId);
+        logger.LogInformation("Getting bookings for user {UserId} with time range {TimeRange} and status {Status}", 
+            request.UserId, request.TimeRange, request.Status);
 
         var query = context.BookingReadModels.AsQueryable();
 
@@ -27,6 +31,26 @@ public class GetBookingsQueryHandler(
         {
             query = query.Where(b => b.UserId == request.UserId.Value);
         }
+
+        // Apply status filter
+        if (request.Status.HasValue)
+        {
+            query = query.Where(b => b.Status == request.Status.Value);
+        }
+
+        // Apply time range filter
+        var today = DateTime.UtcNow.Date;
+        var timeRange = request.TimeRange ?? TimeRange.Future; // Default to Future
+        
+        query = timeRange switch
+        {
+            TimeRange.Future => query.Where(b => b.StartDate >= today),
+            TimeRange.All => query, // No filter, show all
+            TimeRange.Past => query.Where(b => b.StartDate < today),
+            TimeRange.Last30Days => query.Where(b => b.StartDate >= today.AddDays(-30)),
+            TimeRange.LastYear => query.Where(b => b.StartDate >= today.AddYears(-1)),
+            _ => query.Where(b => b.StartDate >= today) // Default to Future
+        };
 
         var bookings = await query
             .OrderBy(b => b.StartDate)

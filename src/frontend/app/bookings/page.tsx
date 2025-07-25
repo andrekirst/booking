@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Booking } from '../../lib/types/api';
+import { Booking, TimeRange } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
@@ -14,6 +14,7 @@ import BookingListView from '../components/BookingListView';
 import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
 import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
 import BookingCardSkeleton from '../components/BookingCardSkeleton';
+import TimeRangeFilter from '../components/TimeRangeFilter';
 
 // Smooth view transition container
 interface ViewTransitionContainerProps {
@@ -70,13 +71,14 @@ export default function BookingsPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>(TimeRange.Future);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (timeRange?: TimeRange) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await apiClient.getBookings();
+      const data = await apiClient.getBookings(timeRange ?? selectedTimeRange);
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -182,6 +184,11 @@ export default function BookingsPage() {
     }
   };
 
+  const handleTimeRangeChange = (timeRange: TimeRange) => {
+    setSelectedTimeRange(timeRange);
+    fetchBookings(timeRange);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
@@ -208,6 +215,10 @@ export default function BookingsPage() {
               </p>
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
+              <TimeRangeFilter
+                selectedTimeRange={selectedTimeRange}
+                onChange={handleTimeRangeChange}
+              />
               <ViewToggle 
                 currentView={viewMode}
                 onViewChange={setViewMode}
