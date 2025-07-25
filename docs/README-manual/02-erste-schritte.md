@@ -30,6 +30,7 @@ Wenn Sie zum ersten Mal die Buchungsplattform nutzen, müssen Sie sich zunächst
    ```
 
 4. **✅ Registrierung abschließen**
+   - Beachten Sie die Passwort-Stärke-Anzeige
    - Klicken Sie auf **„Registrieren"**
    - Sie erhalten eine Bestätigungsnachricht
 
@@ -44,11 +45,45 @@ Wenn Sie zum ersten Mal die Buchungsplattform nutzen, müssen Sie sich zunächst
 │ Passwort:    [____________]     │
 │ Bestätigen:  [____________]     │
 │                                 │
+│ Passwort-Stärke: ████████      │
+│                                 │
 │        [Registrieren]           │
 └─────────────────────────────────┘
 ```
 
-> ⚠️ **Wichtig**: Nach der Registrierung muss Ihr Konto von einem Administrator freigeschaltet werden, bevor Sie Buchungen vornehmen können.
+### 📧 E-Mail-Verifizierung
+
+Nach der Registrierung müssen Sie Ihre E-Mail-Adresse verifizieren:
+
+#### 📬 **Schritt 1: E-Mail prüfen**
+1. **📨 Posteingang**: Prüfen Sie Ihr E-Mail-Postfach
+2. **📁 Spam-Ordner**: Falls keine E-Mail im Posteingang ist, prüfen Sie den Spam-Ordner
+3. **📧 Betreff**: Suchen Sie nach „E-Mail-Adresse bestätigen"
+
+#### 🔗 **Schritt 2: Verifizierung durchführen**
+1. **🖱️ Link klicken**: Klicken Sie auf den Bestätigungslink in der E-Mail
+2. **🌐 Weiterleitung**: Sie werden zur Anwendung weitergeleitet
+3. **✅ Automatisch**: Die Verifizierung erfolgt automatisch
+4. **📄 Bestätigung**: Sie sehen eine Erfolgsmeldung
+
+#### 🔄 **E-Mail erneut senden**
+Falls Sie keine E-Mail erhalten haben:
+1. **🔁 Erneut senden**: Klicken Sie auf „E-Mail erneut senden"
+2. **⏱️ Warten**: Warten Sie 1-2 Minuten
+3. **📬 Erneut prüfen**: Überprüfen Sie Posteingang und Spam-Ordner
+
+### 👑 Administrator-Freigabe
+
+Nach der E-Mail-Verifizierung muss Ihr Konto noch freigeschaltet werden:
+
+#### 📋 **Ablauf der Freischaltung:**
+1. **🔔 Benachrichtigung**: Administrator erhält Info über neue Registrierung
+2. **👀 Prüfung**: Er prüft Ihre Daten und Verifizierungsstatus
+3. **✅ Freischaltung**: Bei Genehmigung wird Ihr Konto aktiviert
+4. **📧 Benachrichtigung**: Sie erhalten eine E-Mail über die Freischaltung
+5. **🎉 Fertig**: Sie können sich anmelden und buchen!
+
+> ⚠️ **Wichtig**: Die Freischaltung kann je nach Verfügbarkeit des Administrators etwas Zeit in Anspruch nehmen. Sie werden per E-Mail benachrichtigt.
 
 #### ✅ **Passwort-Anforderungen**
 - Mindestens **8 Zeichen**
