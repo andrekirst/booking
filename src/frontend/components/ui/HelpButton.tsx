@@ -16,45 +16,43 @@ interface HelpButtonProps {
   className?: string;
 }
 
-const HELP_BASE_URL = '/docs/README-manual';
-
 const helpTopics = {
   // Landing page
-  'home': { url: `${HELP_BASE_URL}/README.md`, title: 'Benutzerhandbuch' },
+  'home': { url: '/help', title: 'Benutzerhandbuch' },
   
   // Authentication
-  'login': { url: `${HELP_BASE_URL}/02-erste-schritte.md#anmeldung-und-registrierung`, title: 'Anmeldung' },
-  'register': { url: `${HELP_BASE_URL}/02-erste-schritte.md#erstmalige-registrierung`, title: 'Registrierung' },
-  'email-verification': { url: `${HELP_BASE_URL}/02-erste-schritte.md#e-mail-verifizierung`, title: 'E-Mail-Verifizierung' },
-  'admin-approval': { url: `${HELP_BASE_URL}/02-erste-schritte.md#administrator-freigabe`, title: 'Administrator-Freigabe' },
+  'login': { url: '/help/erste-schritte#anmeldung', title: 'Anmeldung' },
+  'register': { url: '/help/erste-schritte#registrierung', title: 'Registrierung' },
+  'email-verification': { url: '/help/erste-schritte#email-verifizierung', title: 'E-Mail-Verifizierung' },
+  'admin-approval': { url: '/help/erste-schritte#administrator-freigabe', title: 'Administrator-Freigabe' },
   
   // Bookings
-  'booking-create': { url: `${HELP_BASE_URL}/03-buchungen.md#neue-buchung-erstellen`, title: 'Buchung erstellen' },
-  'booking-edit': { url: `${HELP_BASE_URL}/03-buchungen.md#buchung-bearbeiten`, title: 'Buchung bearbeiten' },
-  'booking-cancel': { url: `${HELP_BASE_URL}/03-buchungen.md#buchung-stornieren`, title: 'Buchung stornieren' },
-  'booking-overview': { url: `${HELP_BASE_URL}/03-buchungen.md#buchungsübersicht`, title: 'Buchungsübersicht' },
-  'booking-list-view': { url: `${HELP_BASE_URL}/03-buchungen.md#listenansicht`, title: 'Listenansicht' },
-  'booking-calendar-view': { url: `${HELP_BASE_URL}/03-buchungen.md#kalenderansicht`, title: 'Kalenderansicht' },
-  'view-toggle': { url: `${HELP_BASE_URL}/03-buchungen.md#ansichtsmodi`, title: 'Ansicht wechseln' },
-  'booking-status': { url: `${HELP_BASE_URL}/03-buchungen.md#buchungsstatus-verstehen`, title: 'Buchungsstatus' },
+  'booking-create': { url: '/help/buchungen#erstellen', title: 'Buchung erstellen' },
+  'booking-edit': { url: '/help/buchungen#bearbeiten', title: 'Buchung bearbeiten' },
+  'booking-cancel': { url: '/help/buchungen#stornieren', title: 'Buchung stornieren' },
+  'booking-overview': { url: '/help/buchungen#uebersicht', title: 'Buchungsübersicht' },
+  'booking-list-view': { url: '/help/buchungen#listenansicht', title: 'Listenansicht' },
+  'booking-calendar-view': { url: '/help/buchungen#kalenderansicht', title: 'Kalenderansicht' },
+  'view-toggle': { url: '/help/buchungen#ansichtsmodi', title: 'Ansicht wechseln' },
+  'booking-status': { url: '/help/buchungen#status', title: 'Buchungsstatus' },
   
   // Rooms  
-  'rooms': { url: `${HELP_BASE_URL}/04-raumverwaltung.md`, title: 'Räume und Schlafplätze' },
-  'room-selection': { url: `${HELP_BASE_URL}/04-raumverwaltung.md#raumdetails-anzeigen`, title: 'Raumauswahl' },
-  'availability': { url: `${HELP_BASE_URL}/04-raumverwaltung.md#verfügbarkeit-prüfen`, title: 'Verfügbarkeit prüfen' },
+  'rooms': { url: '/help/raeume', title: 'Räume und Schlafplätze' },
+  'room-selection': { url: '/help/raeume#auswahl', title: 'Raumauswahl' },
+  'availability': { url: '/help/raeume#verfügbarkeit', title: 'Verfügbarkeit prüfen' },
   
   // Administration
-  'admin': { url: `${HELP_BASE_URL}/05-administration.md`, title: 'Administration' },
-  'admin-dashboard': { url: `${HELP_BASE_URL}/05-administration.md#administrator-bereich`, title: 'Admin-Dashboard' },
-  'user-management': { url: `${HELP_BASE_URL}/05-administration.md#benutzerverwaltung`, title: 'Benutzerverwaltung' },
-  'user-approval': { url: `${HELP_BASE_URL}/05-administration.md#neue-benutzer-freischalten`, title: 'Benutzer freischalten' },
-  'email-settings': { url: `${HELP_BASE_URL}/05-administration.md#e-mail-konfiguration`, title: 'E-Mail-Einstellungen' },
-  'smtp-config': { url: `${HELP_BASE_URL}/05-administration.md#smtp-server-einrichten`, title: 'SMTP-Konfiguration' },
-  'booking-management': { url: `${HELP_BASE_URL}/05-administration.md#buchungsmanagement`, title: 'Buchungsmanagement' },
+  'admin': { url: '/help/administration', title: 'Administration' },
+  'admin-dashboard': { url: '/help/administration#dashboard', title: 'Admin-Dashboard' },
+  'user-management': { url: '/help/administration#benutzerverwaltung', title: 'Benutzerverwaltung' },
+  'user-approval': { url: '/help/administration#freischaltung', title: 'Benutzer freischalten' },
+  'email-settings': { url: '/help/administration#email-konfiguration', title: 'E-Mail-Einstellungen' },
+  'smtp-config': { url: '/help/administration#smtp-konfiguration', title: 'SMTP-Konfiguration' },
+  'booking-management': { url: '/help/administration#buchungsmanagement', title: 'Buchungsmanagement' },
   
   // FAQ and troubleshooting
-  'faq': { url: `${HELP_BASE_URL}/06-fehlerbehebung.md#häufig-gestellte-fragen-faq`, title: 'Häufige Fragen' },
-  'troubleshooting': { url: `${HELP_BASE_URL}/06-fehlerbehebung.md`, title: 'Fehlerbehebung' },
+  'faq': { url: '/help/faq', title: 'Häufige Fragen' },
+  'troubleshooting': { url: '/help/faq', title: 'Fehlerbehebung' },
 };
 
 export default function HelpButton({ 

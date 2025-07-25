@@ -722,6 +722,33 @@ const helpTopics = {
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
 - Commit-Nachrichten können auf Englisch oder Deutsch sein
 
+## 16. Benutzerfreundliche Dokumentation (Issue #49)
+
+### HTML-basierte Hilfe-System (25.07.2025)
+**Problem behoben**: HelpButton-Links führten zu 404-Fehlern und zeigten rohe Markdown-Dateien.
+
+**Implementierte Lösung:**
+- **HTML-Routen**: Alle Hilfe-Links führen jetzt zu benutzerfreundlichen HTML-Seiten (`/help/*`)
+- **Einheitliches Design**: Konsistente `DocumentationLayout` Komponente mit Navigation, Breadcrumbs und Styling
+- **Responsive Darstellung**: Mobile-optimierte Hilfe-Seiten mit Touch-Navigation
+- **Suchfunktion**: FAQ-Seite mit Filter- und Suchfunktionen für schnelle Problemlösung
+- **Kontextsensitive Hilfe**: HelpButton-Komponente mit direkten Links zu relevanten Abschnitten
+
+**Struktur der neuen Hilfe-Seiten:**
+- `/help` - Hauptübersicht mit Schnellzugriff
+- `/help/einleitung` - Willkommen und Systemvoraussetzungen
+- `/help/erste-schritte` - Registrierung, Anmeldung, E-Mail-Verifizierung
+- `/help/buchungen` - Buchungserstellung, -verwaltung, Kalender- und Listenansicht
+- `/help/raeume` - Raumauswahl, Verfügbarkeitsprüfung, Kapazitäten
+- `/help/administration` - Admin-Funktionen, Benutzerverwaltung, E-Mail-Konfiguration
+- `/help/faq` - Interaktive FAQ mit Kategorien und Suchfunktion
+
+**Technische Details:**
+- Alle HelpButton `helpTopics` auf neue HTML-Routen umgestellt
+- Tests aktualisiert (`HelpButton.test.tsx`)
+- Breadcrumb-Navigation für einfache Orientierung
+- Anchor-Links für direkten Sprung zu spezifischen Abschnitten
+
 ---
 
 Diese Datei kann bei Bedarf erweitert oder angepasst werden.

@@ -39,7 +39,7 @@ describe('HelpButton', () => {
       render(<HelpButton />);
       const button = screen.getByRole('link');
       expect(button).toBeInTheDocument();
-      expect(button).toHaveAttribute('href', '/docs/README-manual/README.md');
+      expect(button).toHaveAttribute('href', '/help');
     });
 
     it('renders text variant correctly', () => {
@@ -59,21 +59,21 @@ describe('HelpButton', () => {
     it('maps login topic correctly', () => {
       render(<HelpButton topic="login" />);
       const button = screen.getByRole('link');
-      expect(button).toHaveAttribute('href', '/docs/README-manual/02-erste-schritte.md#anmeldung-und-registrierung');
+      expect(button).toHaveAttribute('href', '/help/erste-schritte#anmeldung');
       expect(button).toHaveAttribute('title', 'Hilfe: Anmeldung');
     });
 
     it('maps booking-create topic correctly', () => {
       render(<HelpButton topic="booking-create" />);
       const button = screen.getByRole('link');
-      expect(button).toHaveAttribute('href', '/docs/README-manual/03-buchungen.md#neue-buchung-erstellen');
+      expect(button).toHaveAttribute('href', '/help/buchungen#erstellen');
       expect(button).toHaveAttribute('title', 'Hilfe: Buchung erstellen');
     });
 
     it('falls back to home for unknown topics', () => {
       render(<HelpButton topic="unknown-topic" />);
       const button = screen.getByRole('link');
-      expect(button).toHaveAttribute('href', '/docs/README-manual/README.md');
+      expect(button).toHaveAttribute('href', '/help');
       expect(button).toHaveAttribute('title', 'Hilfe: Benutzerhandbuch');
     });
   });
