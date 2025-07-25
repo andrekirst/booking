@@ -48,6 +48,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:80"
       ConnectionStrings__DefaultConnection: "Host=postgres-agent4;Port=5432;Database=booking_agent4;Username=booking_user;Password=booking_password"
+      CorsSettings__AllowedOrigins: "http://localhost:60401"
       JwtSettings__Secret: "development-jwt-secret-key-for-agent4-testing-only-256-bits-minimum"
       JwtSettings__Issuer: "BookingApi-Agent4"
       JwtSettings__Audience: "BookingApp-Agent4"
