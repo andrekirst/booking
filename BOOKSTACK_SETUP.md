@@ -31,6 +31,11 @@ environment:
   - TZ=Europe/Berlin           # Zeitzone
   - APP_URL=http://localhost:6875  # BookStack URL
   - APP_KEY=base64:Nm/CZI95YBTxCz7h92HDhL6ZSAv7UfqfhkOK7WZXrjs=  # Verschlüsselungsschlüssel
+  - DB_HOST=bookstack-db       # Datenbank Host
+  - DB_PORT=3306              # Datenbank Port
+  - DB_USERNAME=bookstack     # Datenbank Benutzer
+  - DB_PASSWORD=bookstack_password  # Datenbank Passwort
+  - DB_DATABASE=bookstack     # Datenbank Name
   - APP_LANG=de               # Deutsche Sprache
   - APP_DEFAULT_DARK_MODE=false  # Light Mode Standard
 ```
