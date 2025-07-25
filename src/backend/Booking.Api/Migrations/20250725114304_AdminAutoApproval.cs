@@ -5,13 +5,13 @@
 namespace Booking.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class FixAutoApproveAdministratorsEnumComparison : Migration
+    public partial class AdminAutoApproval : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Fix: Korrekte String-basierte Enum-Vergleiche für Administrator Auto-Approval
-            // Das Role-Enum wird als String gespeichert, daher 'Administrator' statt 1
+            // Automatische Freigabe aller Administrator-Benutzer für Buchungen
+            // Verwendet korrekten String-Vergleich da Role als String gespeichert wird
             migrationBuilder.Sql(@"
                 UPDATE ""Users"" 
                 SET ""IsApprovedForBooking"" = true, 
