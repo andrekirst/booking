@@ -777,6 +777,179 @@ echo "🐳 Docker Agent 2" > ../booking-agent2/src/frontend/app/test.txt
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
 - Commit-Nachrichten können auf Englisch oder Deutsch sein
 
+## 15. Docker Multi-Agent Workflow - OBLIGATORISCHE ANWEISUNGEN
+
+### 15.1 Issue-Start-Protokoll (IMMER AUSFÜHREN)
+
+**WICHTIG**: Wenn der User sagt "Arbeite an Issue #XX" oder ein neues Issue zuweist, führe AUTOMATISCH diese Schritte aus:
+
+```bash
+# SCHRITT 1: Status prüfen
+./scripts/status-agents.sh
+
+# SCHRITT 2: Freien Agent wählen (2, 3 oder 4)
+AGENT=<erster_freier_agent>
+BRANCH="feat/XX-kurze-beschreibung"
+
+# SCHRITT 3: Agent starten
+./scripts/start-agent.sh $AGENT $BRANCH
+
+# SCHRITT 4: Zum Worktree wechseln
+cd ../booking-agent$AGENT
+
+# SCHRITT 5: User informieren
+"✅ Agent $AGENT gestartet für Issue #XX
+🌐 Test-URLs:
+- Frontend: http://localhost:60${AGENT}01
+- Backend:  http://localhost:60${AGENT}02
+- Worktree: ../booking-agent$AGENT"
+```
+
+### 15.2 Entwicklungs-Protokoll (WÄHREND DER ARBEIT)
+
+#### Bei JEDER Code-Änderung:
+1. Speichere die Datei
+2. Warte 2-3 Sekunden (Hot-Reload)
+3. Informiere User: "✅ Änderung live unter http://localhost:60${AGENT}01"
+
+#### User-Feedback-Integration:
+- **User sagt "Das funktioniert nicht"**: 
+  - Frage nach Details
+  - Zeige Logs wenn nötig
+  - Korrigiere und informiere über neue Test-URL
+  
+- **User sagt "Ich habe was geändert"**:
+  ```bash
+  git status  # Prüfe Änderungen
+  git diff    # Verstehe Änderungen  
+  git add -p  # Übernehme Änderungen
+  "✅ Deine Änderungen integriert"
+  ```
+
+### 15.3 Test- und Commit-Protokoll
+
+#### VOR JEDEM COMMIT ausführen:
+```bash
+# Frontend Tests
+cd src/frontend && npm test
+
+# Backend Tests  
+cd src/backend && dotnet test
+
+# Bei Erfolg: Commit mit Test-URLs
+git commit -m "feat: implement XYZ
+
+Test-Umgebung:
+- Frontend: http://localhost:60${AGENT}01
+- Backend:  http://localhost:60${AGENT}02
+- Feature:  http://localhost:60${AGENT}01/feature-path
+
+Fixes #XX"
+```
+
+### 15.4 PR-Erstellungs-Protokoll
+
+**IMMER in PR-Body angeben**:
+```markdown
+## Test-Umgebung für Review
+
+Reviewer können sofort testen:
+\`\`\`bash
+./scripts/start-agent.sh 3 $BRANCH_NAME
+\`\`\`
+
+URLs:
+- Frontend: http://localhost:60301
+- Backend:  http://localhost:60302
+- Feature:  http://localhost:60301/feature-path
+```
+
+### 15.5 Post-Merge Cleanup-Protokoll (OBLIGATORISCH)
+
+**Nach JEDEM PR-Merge AUTOMATISCH ausführen**:
+
+```bash
+# SCHRITT 1: Zum Hauptrepository
+cd ~/git/github/andrekirst/booking
+
+# SCHRITT 2: Main branch updaten
+git checkout main && git pull origin main
+
+# SCHRITT 3: Cleanup durchführen
+./scripts/cleanup-after-merge.sh $AGENT $BRANCH
+
+# SCHRITT 4: Status zeigen
+./scripts/status-agents.sh
+
+# SCHRITT 5: User informieren
+"✅ Issue #XX abgeschlossen und aufgeräumt
+- Agent $AGENT wieder verfügbar
+- Branch $BRANCH gelöscht
+- Docker Container entfernt"
+```
+
+### 15.6 Fehlerbehandlung
+
+#### Container-Probleme:
+```bash
+# Logs prüfen
+docker-compose -f docker-compose.agent$AGENT.yml logs
+
+# Neustart versuchen
+docker-compose -f docker-compose.agent$AGENT.yml restart
+
+# Bei anhaltenden Problemen
+./scripts/stop-agent.sh $AGENT
+./scripts/start-agent.sh $AGENT $BRANCH
+```
+
+#### Port-Konflikte:
+```bash
+# Blockierenden Prozess finden
+lsof -i :60${AGENT}01
+
+# Alternativen Agent verwenden
+"⚠️ Port belegt - verwende Agent $NEXT_AGENT"
+```
+
+### 15.7 Proaktive Kommunikation
+
+**IMMER proaktiv informieren über**:
+- URLs nach Änderungen: "✅ Teste unter http://localhost:60${AGENT}01"
+- Status-Updates: "🔄 Backend wird neu gestartet..."
+- Hilfsangebote: "Soll ich die Logs zeigen?"
+- Cleanup-Erinnerung: "PR gemerged? Führe Cleanup durch..."
+
+### 15.8 Checkliste für JEDEN Issue
+
+- [ ] **Start**: Agent automatisch starten mit `start-agent.sh`
+- [ ] **URLs**: User über Test-URLs informieren
+- [ ] **Entwicklung**: Code mit Hot-Reload entwickeln
+- [ ] **Tests**: Vor Commits IMMER Tests ausführen
+- [ ] **Commit**: Test-URLs in Commit-Message angeben
+- [ ] **PR**: Test-Anleitung im PR-Body
+- [ ] **Cleanup**: Nach Merge IMMER `cleanup-after-merge.sh`
+- [ ] **Status**: Finalen Status mit `status-agents.sh` zeigen
+
+### 15.9 Quick-Reference für Docker-Befehle
+
+```bash
+# Logs anzeigen
+docker-compose -f docker-compose.agent$AGENT.yml logs -f
+
+# Service neustarten
+docker-compose -f docker-compose.agent$AGENT.yml restart backend-agent$AGENT
+
+# In Container einloggen
+docker-compose -f docker-compose.agent$AGENT.yml exec backend-agent$AGENT bash
+
+# Datenbank-Zugriff
+docker-compose -f docker-compose.agent$AGENT.yml exec postgres-agent$AGENT \
+  psql -U booking_user -d booking_agent$AGENT
+```
+
+**WICHTIG**: Diese Workflow-Schritte sind NICHT optional. Sie müssen bei JEDER Issue-Bearbeitung durchgeführt werden, um konsistente Entwicklungsumgebungen und saubere Aufräumvorgänge zu gewährleisten.
+
 ---
 
 Diese Datei kann bei Bedarf erweitert oder angepasst werden.
