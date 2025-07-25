@@ -9,9 +9,9 @@ export default function FAQPage() {
       prevPage={{ title: 'Administration', href: '/help/administration' }}
       nextPage={{ title: 'Übersicht', href: '/help' }}
     >
-      <div className="space-y-12">
+      <div className="space-y-8">
         {/* Intro */}
-        <div className="border-l-4 border-gray-300 pl-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-gray-900 mb-3">
             Schnelle Antworten auf häufige Fragen
           </h2>
@@ -21,9 +21,12 @@ export default function FAQPage() {
         </div>
 
         {/* Anmeldung & Registrierung */}
-        <section>
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Anmeldung & Registrierung</h3>
-          <div className="space-y-6">
+        <section className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Anmeldung & Registrierung</h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-6">
             
             <div className="border-l-4 border-gray-200 pl-4">
               <h4 className="font-medium text-gray-900 mb-2">Warum kann ich mich nicht anmelden?</h4>
@@ -40,12 +43,16 @@ export default function FAQPage() {
             </div>
 
           </div>
+        </div>
         </section>
 
         {/* Buchungen */}
-        <section>
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Buchungen</h3>
-          <div className="space-y-6">
+        <section className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Buchungen</h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-6">
             
             <div className="border-l-4 border-gray-200 pl-4">
               <h4 className="font-medium text-gray-900 mb-2">Warum kann ich keine Buchung erstellen?</h4>

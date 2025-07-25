@@ -9,12 +9,15 @@ export default function ErsteSchrittePage() {
       prevPage={{ title: 'Einleitung', href: '/help/einleitung' }}
       nextPage={{ title: 'Buchungen verwalten', href: '/help/buchungen' }}
     >
-      <div className="space-y-12">
+      <div className="space-y-8">
         {/* Anmeldung Section */}
-        <section id="anmeldung">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            Anmeldung und Registrierung
-          </h2>
+        <section id="anmeldung" className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Anmeldung und Registrierung
+            </h2>
+          </div>
+          <div className="p-6">
 
           {/* Erstmalige Registrierung */}
           <div id="registrierung" className="mb-8">
@@ -185,13 +188,17 @@ export default function ErsteSchrittePage() {
               </ol>
             </div>
           </div>
+        </div>
         </section>
 
         {/* Benutzeroberfläche */}
-        <section id="benutzeroberflaeche">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            🖥️ Übersicht der Benutzeroberfläche
-          </h2>
+        <section id="benutzeroberflaeche" className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Übersicht der Benutzeroberfläche
+            </h2>
+          </div>
+          <div className="p-6">
 
           <div className="bg-gray-50 rounded-lg p-6">
             <p className="text-gray-700 mb-4">
@@ -220,13 +227,17 @@ export default function ErsteSchrittePage() {
               </div>
             </div>
           </div>
+        </div>
         </section>
 
         {/* Kontexthilfe */}
-        <section id="kontexthilfe">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            ❓ Kontexthilfe verwenden
-          </h2>
+        <section id="kontexthilfe" className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Kontexthilfe verwenden
+            </h2>
+          </div>
+          <div className="p-6">
 
           <div className="bg-blue-50 rounded-lg p-6">
             <p className="text-blue-800 mb-4">
@@ -259,29 +270,34 @@ export default function ErsteSchrittePage() {
               </div>
             </div>
           </div>
+        </div>
         </section>
 
         {/* Next Steps */}
-        <div className="bg-green-50 rounded-lg p-6 border-l-4 border-green-400">
-          <h3 className="text-lg font-semibold text-green-900 mb-3">🎯 Nächste Schritte</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <Link 
-              href="/help/buchungen" 
-              className="block p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="text-green-600 text-xl mb-2">📅</div>
-              <h4 className="font-medium text-green-900">Buchungen verwalten</h4>
-              <p className="text-sm text-green-700 mt-1">Lernen Sie, wie Sie Buchungen erstellen und verwalten</p>
-            </Link>
-            
-            <Link 
-              href="/help/raeume" 
-              className="block p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="text-green-600 text-xl mb-2">🏨</div>
-              <h4 className="font-medium text-green-900">Räume entdecken</h4>
-              <p className="text-sm text-green-700 mt-1">Alle verfügbaren Schlafplätze kennenlernen</p>
-            </Link>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Nächste Schritte</h3>
+          </div>
+          <div className="p-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <Link 
+                href="/help/buchungen" 
+                className="block p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              >
+                <div className="text-blue-600 text-xl mb-2">📅</div>
+                <h4 className="font-medium text-blue-900">Buchungen verwalten</h4>
+                <p className="text-sm text-blue-700 mt-1">Lernen Sie, wie Sie Buchungen erstellen und verwalten</p>
+              </Link>
+              
+              <Link 
+                href="/help/raeume" 
+                className="block p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              >
+                <div className="text-blue-600 text-xl mb-2">🏨</div>
+                <h4 className="font-medium text-blue-900">Räume entdecken</h4>
+                <p className="text-sm text-blue-700 mt-1">Alle verfügbaren Schlafplätze kennenlernen</p>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
