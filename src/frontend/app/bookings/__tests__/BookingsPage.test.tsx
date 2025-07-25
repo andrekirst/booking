@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import BookingsPage from '../page';
 import { apiClient } from '../../../lib/api/client';
 import { Booking, BookingStatus } from '../../../lib/types/api';
+import { getCurrentUser } from '../../../lib/auth/jwt';
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -17,6 +18,16 @@ jest.mock('../../../lib/api/client', () => ({
   },
 }));
 
+jest.mock('../../../lib/auth/jwt', () => ({
+  getCurrentUser: jest.fn(() => ({
+    name: 'Test User',
+    email: 'test@example.com', 
+    role: 'Member',
+    userId: 1,
+    isAdmin: false
+  })),
+}));
+
 jest.mock('../../components/CreateBookingButton', () => {
   return function CreateBookingButton({ onClick, variant }: { onClick: () => void; variant?: string }) {
     return (
@@ -26,6 +37,16 @@ jest.mock('../../components/CreateBookingButton', () => {
     );
   };
 });
+
+jest.mock('../../components/ui/UserMenuDropdown', () => ({
+  UserMenuDropdown: ({ userInfo, onLogout }: { userInfo: { name: string }; onLogout: () => void }) => (
+    <div data-testid="user-menu-dropdown">
+      <button aria-expanded="false" onClick={onLogout}>
+        {userInfo.name}
+      </button>
+    </div>
+  ),
+}));
 
 const mockRouter = {
   push: jest.fn(),
@@ -284,11 +305,11 @@ describe('BookingsPage', () => {
       expect(mockRouter.push).toHaveBeenCalledWith('/bookings/new');
     });
 
-    it('should show logout button', async () => {
+    it('should show user menu dropdown', async () => {
       render(<BookingsPage />);
       
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /abmelden/i })).toBeInTheDocument();
+        expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
       });
     });
 
@@ -296,10 +317,10 @@ describe('BookingsPage', () => {
       render(<BookingsPage />);
       
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /abmelden/i })).toBeInTheDocument();
+        expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
       });
       
-      const logoutButton = screen.getByRole('button', { name: /abmelden/i });
+      const logoutButton = screen.getByRole('button', { expanded: false });
       fireEvent.click(logoutButton);
       
       expect(apiClient.logout).toHaveBeenCalled();
@@ -315,27 +336,35 @@ describe('BookingsPage', () => {
       };
       const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + btoa(JSON.stringify(payload)) + '.signature';
       (apiClient.getToken as jest.Mock).mockReturnValue(mockToken);
-    });
-
-    it('should show admin button for administrators', async () => {
-      render(<BookingsPage />);
       
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /admin/i })).toBeInTheDocument();
+      // Mock getCurrentUser for admin user  
+      const getCurrentUserMock = getCurrentUser as jest.Mock;
+      getCurrentUserMock.mockReturnValue({
+        name: 'Admin User',
+        email: 'admin@example.com', 
+        role: 'Administrator',
+        userId: 1,
+        isAdmin: true
       });
     });
 
-    it('should navigate to admin page when admin button is clicked', async () => {
+    it('should show user menu for administrators', async () => {
       render(<BookingsPage />);
       
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /admin/i })).toBeInTheDocument();
+        expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
+      });
+    });
+
+    it('should show admin user name in dropdown', async () => {
+      render(<BookingsPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
       });
       
-      const adminButton = screen.getByRole('button', { name: /admin/i });
-      fireEvent.click(adminButton);
-      
-      expect(mockRouter.push).toHaveBeenCalledWith('/admin');
+      // Admin functionality is now handled within the UserMenuDropdown
+      expect(screen.getByText('Admin User')).toBeInTheDocument();
     });
   });
 
@@ -347,20 +376,43 @@ describe('BookingsPage', () => {
       };
       const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + btoa(JSON.stringify(payload)) + '.signature';
       (apiClient.getToken as jest.Mock).mockReturnValue(mockToken);
+      
+      // Reset getCurrentUser for regular user
+      const getCurrentUserMock = getCurrentUser as jest.Mock;
+      getCurrentUserMock.mockReturnValue({
+        name: 'Test User',
+        email: 'test@example.com', 
+        role: 'Member',
+        userId: 1,
+        isAdmin: false
+      });
     });
 
-    it('should not show admin button for regular users', async () => {
+    it('should show user menu for regular users', async () => {
       render(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
       });
       
-      expect(screen.queryByRole('button', { name: /admin/i })).not.toBeInTheDocument();
+      expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
+      expect(screen.getByText('Test User')).toBeInTheDocument();
     });
   });
 
   describe('Token Handling', () => {
+    beforeEach(() => {
+      // Reset to regular user for token handling tests
+      const getCurrentUserMock = getCurrentUser as jest.Mock;
+      getCurrentUserMock.mockReturnValue({
+        name: 'Test User',
+        email: 'test@example.com', 
+        role: 'Member',
+        userId: 1,
+        isAdmin: false
+      });
+    });
+
     it('should handle missing token gracefully', async () => {
       (apiClient.getToken as jest.Mock).mockReturnValue(null);
       
@@ -370,8 +422,8 @@ describe('BookingsPage', () => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
       });
       
-      // Should not crash and should not show admin button
-      expect(screen.queryByRole('button', { name: /admin/i })).not.toBeInTheDocument();
+      // Should not crash and should show regular user menu
+      expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
     });
 
     it('should handle malformed token gracefully', async () => {
@@ -384,8 +436,8 @@ describe('BookingsPage', () => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
       });
       
-      // Should not crash and should not show admin button
-      expect(screen.queryByRole('button', { name: /admin/i })).not.toBeInTheDocument();
+      // Should not crash and should show regular user menu
+      expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
       consoleSpy.mockRestore();
     });
   });
@@ -453,7 +505,8 @@ describe('BookingsPage', () => {
       render(<BookingsPage />);
       
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /abmelden/i })).toBeInTheDocument();
+        // Check that user menu dropdown is present (not the old separate logout button)
+        expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
       });
       
       expect(screen.getByTestId('create-booking-button')).toBeInTheDocument();

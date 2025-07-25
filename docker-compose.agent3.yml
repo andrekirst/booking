@@ -1,0 +1,92 @@
+# AUTOMATISCH GENERIERT - NICHT MANUELL BEARBEITEN!
+# Generiert von: generate-agent-configs.sh am Fr 25. Jul 20:29:42 CEST 2025
+# Template: docker-compose.agent-template.yml
+# Agent: 3 | Ports: 60301/60302/60303
+
+version: '3.8'
+
+# Multi-Agent Docker Compose Template
+# Dieses Template wird von generate-agent-configs.sh verwendet, um 
+# spezifische Agent-Konfigurationen zu generieren
+#
+# Platzhalter:
+# 3 - wird durch die Agent-Nummer (2-4) ersetzt
+# 60300 - wird durch den Basis-Port (60200, 60300, 60400) ersetzt
+# 60301 - wird durch Frontend-Port (60300+1) ersetzt
+# 60302 - wird durch Backend-Port (60300+2) ersetzt
+# 60303 - wird durch DB-Port (60300+3) ersetzt
+
+services:
+  postgres-agent3:
+    image: postgres:16-alpine
+    container_name: booking-postgres-agent3
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_agent3
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "60303:5432"  # Agent 3 PostgreSQL Port
+    volumes:
+      - postgres_agent3_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_agent3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - booking-agent3-network
+
+  backend-agent3:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: booking-api-agent3
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:80"
+      ConnectionStrings__DefaultConnection: "Host=postgres-agent3;Port=5432;Database=booking_agent3;Username=booking_user;Password=booking_password"
+      JwtSettings__Secret: "development-jwt-secret-key-for-agent3-testing-only-256-bits-minimum"
+      JwtSettings__Issuer: "BookingApi-Agent3"
+      JwtSettings__Audience: "BookingApp-Agent3"
+      JwtSettings__ExpirationMinutes: "480"
+    ports:
+      - "60302:80"  # Agent 3 Backend Port
+    depends_on:
+      postgres-agent3:
+        condition: service_healthy
+    volumes:
+      # Worktree-spezifisches Volume für Agent 3
+      - ../booking-agent3/src/backend:/app/src:ro
+    networks:
+      - booking-agent3-network
+    restart: unless-stopped
+
+  frontend-agent3:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    container_name: booking-frontend-agent3
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:60302"
+      PORT: "3000"
+    ports:
+      - "60301:3000"  # Agent 3 Frontend Port
+    volumes:
+      # Worktree-spezifisches Volume für Agent 3
+      - ../booking-agent3/src/frontend:/app:cached
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - booking-agent3-network
+    restart: unless-stopped
+
+volumes:
+  postgres_agent3_data:
+
+networks:
+  booking-agent3-network:
+    driver: bridge
+    name: booking-agent3-network
