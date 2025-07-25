@@ -11,7 +11,7 @@ describe('NumberSpinner', () => {
   it('renders with default props', () => {
     render(<NumberSpinner value={5} onChange={mockOnChange} />);
 
-    expect(screen.getByDisplayValue('5')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByLabelText('Verringern')).toBeInTheDocument();
     expect(screen.getByLabelText('Erhöhen')).toBeInTheDocument();
   });
@@ -26,7 +26,7 @@ describe('NumberSpinner', () => {
     );
 
     expect(screen.getByText('Test Label')).toBeInTheDocument();
-    expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
   });
 
   it('shows min-max range information', () => {
@@ -81,31 +81,14 @@ describe('NumberSpinner', () => {
     expect(mockOnChange).not.toHaveBeenCalled();
   });
 
-  it('handles direct input changes within bounds', () => {
-    render(<NumberSpinner value={5} onChange={mockOnChange} min={1} max={10} />);
-
-    const input = screen.getByDisplayValue('5');
-    fireEvent.change(input, { target: { value: '7' } });
-
-    expect(mockOnChange).toHaveBeenCalledWith(7);
-  });
-
-  it('ignores direct input changes outside bounds', () => {
-    render(<NumberSpinner value={5} onChange={mockOnChange} min={1} max={10} />);
-
-    const input = screen.getByDisplayValue('5');
-    fireEvent.change(input, { target: { value: '15' } });
-
-    expect(mockOnChange).not.toHaveBeenCalled();
-  });
-
-  it('ignores invalid input values', () => {
-    render(<NumberSpinner value={5} onChange={mockOnChange} min={1} max={10} />);
-
-    const input = screen.getByDisplayValue('5');
-    fireEvent.change(input, { target: { value: 'abc' } });
-
-    expect(mockOnChange).not.toHaveBeenCalled();
+  it('animates number display when value changes', () => {
+    const { rerender } = render(<NumberSpinner value={5} onChange={mockOnChange} min={1} max={10} />);
+    
+    expect(screen.getByText('5')).toBeInTheDocument();
+    
+    rerender(<NumberSpinner value={7} onChange={mockOnChange} min={1} max={10} />);
+    
+    expect(screen.getByText('7')).toBeInTheDocument();
   });
 
   it('uses custom step value', () => {
@@ -130,11 +113,10 @@ describe('NumberSpinner', () => {
 
     const incrementButton = screen.getByLabelText('Erhöhen');
     const decrementButton = screen.getByLabelText('Verringern');
-    const input = screen.getByDisplayValue('5');
 
     expect(incrementButton).toBeDisabled();
     expect(decrementButton).toBeDisabled();
-    expect(input).toBeDisabled();
+    expect(screen.getByText('5')).toBeInTheDocument();
 
     fireEvent.click(incrementButton);
     fireEvent.click(decrementButton);
@@ -153,11 +135,10 @@ describe('NumberSpinner', () => {
 
     const incrementButton = screen.getByLabelText('Erhöhen');
     const decrementButton = screen.getByLabelText('Verringern');
-    const input = screen.getByLabelText('Anzahl Personen');
 
     expect(incrementButton).toHaveAttribute('title', 'Erhöhen');
     expect(decrementButton).toHaveAttribute('title', 'Verringern');
-    expect(input).toHaveAttribute('aria-label', 'Anzahl Personen');
+    expect(screen.getByText('Anzahl Personen')).toBeInTheDocument();
   });
 
   it('supports custom className', () => {
@@ -169,7 +150,34 @@ describe('NumberSpinner', () => {
       />
     );
 
-    const container = screen.getByDisplayValue('5').closest('.custom-class');
+    const container = screen.getByText('5').closest('.custom-class');
     expect(container).toBeInTheDocument();
+  });
+
+  describe('Animation Features', () => {
+    it('renders AnimatedNumber component for value display', () => {
+      render(<NumberSpinner value={42} onChange={mockOnChange} />);
+      
+      expect(screen.getByText('42')).toBeInTheDocument();
+    });
+
+    it('updates animated display when value changes via increment', () => {
+      const { rerender } = render(<NumberSpinner value={1} onChange={mockOnChange} min={1} max={5} />);
+      
+      expect(screen.getByText('1')).toBeInTheDocument();
+      
+      rerender(<NumberSpinner value={2} onChange={mockOnChange} min={1} max={5} />);
+      
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    it('handles multiple rapid value changes', () => {
+      const { rerender } = render(<NumberSpinner value={1} onChange={mockOnChange} min={1} max={10} />);
+      
+      [2, 3, 4, 5].forEach(value => {
+        rerender(<NumberSpinner value={value} onChange={mockOnChange} min={1} max={10} />);
+        expect(screen.getByText(value.toString())).toBeInTheDocument();
+      });
+    });
   });
 });

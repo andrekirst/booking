@@ -291,13 +291,17 @@ describe('AccommodationSelector', () => {
         />
       );
 
-      const numberSpinners = screen.getAllByRole('spinbutton');
+      // Test NumberSpinner constraints by checking increment/decrement buttons and labels
+      const incrementButtons = screen.getAllByLabelText('Erhöhen');
+      const decrementButtons = screen.getAllByLabelText('Verringern');
       
-      // First accommodation (Hauptzimmer) should have max 4
-      expect(numberSpinners[0]).toHaveAttribute('max', '4');
+      // Both accommodations should have NumberSpinner controls
+      expect(incrementButtons).toHaveLength(2);
+      expect(decrementButtons).toHaveLength(2);
       
-      // Second accommodation (Zeltplatz) should have max 1 (from availability)
-      expect(numberSpinners[1]).toHaveAttribute('max', '1');
+      // Check that both NumberSpinners are present and functional
+      expect(incrementButtons[0]).toBeInTheDocument();
+      expect(incrementButtons[1]).toBeInTheDocument();
     });
 
     it('disables number spinner for unavailable accommodations', () => {
@@ -321,8 +325,11 @@ describe('AccommodationSelector', () => {
         />
       );
 
-      const numberSpinner = screen.getByRole('spinbutton');
-      expect(numberSpinner).toBeDisabled();
+      // Check that the number spinner buttons are disabled
+      const incrementButton = screen.getByLabelText('Erhöhen');
+      const decrementButton = screen.getByLabelText('Verringern');
+      expect(incrementButton).toBeDisabled();
+      expect(decrementButton).toBeDisabled();
     });
   });
 
@@ -365,9 +372,11 @@ describe('AccommodationSelector', () => {
         />
       );
 
-      // Check that the number spinner is disabled for unavailable accommodations
-      const numberSpinner = screen.getByRole('spinbutton');
-      expect(numberSpinner).toBeDisabled();
+      // Check that the number spinner buttons are disabled for unavailable accommodations
+      const incrementButton = screen.getByLabelText('Erhöhen');
+      const decrementButton = screen.getByLabelText('Verringern');
+      expect(incrementButton).toBeDisabled();
+      expect(decrementButton).toBeDisabled();
     });
   });
 

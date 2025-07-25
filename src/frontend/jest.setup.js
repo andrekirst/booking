@@ -16,3 +16,14 @@ beforeAll(() => {
 afterAll(() => {
   console.error = originalError;
 });
+
+// Mock framer-motion für Tests
+jest.mock('framer-motion', () => ({
+  motion: {
+    button: ({ children, whileHover, whileTap, whileFocus, ...props }) => 
+      <button {...props}>{children}</button>,
+    span: ({ children, initial, animate, exit, transition, ...props }) => 
+      <span {...props}>{children}</span>
+  },
+  AnimatePresence: ({ children }) => <>{children}</>,
+}));

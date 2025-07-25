@@ -141,8 +141,8 @@ describe('SleepingAccommodationForm', () => {
     expect(screen.getByLabelText('Erhöhen')).toBeInTheDocument();
     expect(screen.getByLabelText('Verringern')).toBeInTheDocument();
     
-    // Test that capacity value is displayed
-    expect(screen.getByDisplayValue('4')).toBeInTheDocument();
+    // Test that capacity value is displayed (now as text, not input value)
+    expect(screen.getByText('4')).toBeInTheDocument();
     
     // Test increment functionality
     const incrementButton = screen.getByLabelText('Erhöhen');

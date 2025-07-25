@@ -43,6 +43,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:80"
       ConnectionStrings__DefaultConnection: "Host=postgres-agent{AGENT_NUMBER};Port=5432;Database=booking_agent{AGENT_NUMBER};Username=booking_user;Password=booking_password"
+      CorsSettings__AllowedOrigins__0: "http://localhost:{FRONTEND_PORT}"
       JwtSettings__Secret: "development-jwt-secret-key-for-agent{AGENT_NUMBER}-testing-only-256-bits-minimum"
       JwtSettings__Issuer: "BookingApi-Agent{AGENT_NUMBER}"
       JwtSettings__Audience: "BookingApp-Agent{AGENT_NUMBER}"
@@ -65,7 +66,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: booking-frontend-agent{AGENT_NUMBER}
     environment:
-      NEXT_PUBLIC_API_URL: "http://localhost:{BACKEND_PORT}"
+      NEXT_PUBLIC_API_URL: "http://localhost:{BACKEND_PORT}/api"
       PORT: "3000"
     ports:
       - "{FRONTEND_PORT}:3000"  # Agent {AGENT_NUMBER} Frontend Port
