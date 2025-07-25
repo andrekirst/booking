@@ -278,13 +278,13 @@ export class MockApiClient implements ApiClient {
     if (timeRange !== undefined) {
       switch (timeRange) {
         case TimeRange.Future:
-          filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+          filteredBookings = filteredBookings.filter(b => b.startDate >= today);
           break;
         case TimeRange.All:
           // No filter, return all
           break;
         case TimeRange.Past:
-          filteredBookings = filteredBookings.filter(b => b.endDate < today);
+          filteredBookings = filteredBookings.filter(b => b.startDate < today);
           break;
         case TimeRange.Last30Days:
           filteredBookings = filteredBookings.filter(b => b.startDate >= thirtyDaysAgo);
@@ -294,11 +294,11 @@ export class MockApiClient implements ApiClient {
           break;
         default:
           // Default to Future
-          filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+          filteredBookings = filteredBookings.filter(b => b.startDate >= today);
       }
     } else {
       // Default to Future
-      filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+      filteredBookings = filteredBookings.filter(b => b.startDate >= today);
     }
 
     return filteredBookings;

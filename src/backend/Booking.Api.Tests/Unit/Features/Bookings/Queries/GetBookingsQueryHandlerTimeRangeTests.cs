@@ -33,15 +33,15 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_WithTimeRangeFuture_ShouldReturnOnlyFutureBookings()
+    public async Task Handle_WithTimeRangeFuture_ShouldReturnOnlyFutureAndTodayBookings()
     {
         // Arrange
         var today = DateTime.UtcNow.Date;
         var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
-        var currentBooking = CreateBookingReadModel(today.AddDays(-1), today.AddDays(1));
+        var todayBooking = CreateBookingReadModel(today, today.AddDays(2)); // Starts today
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, currentBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(TimeRange: TimeRange.Future);
@@ -51,7 +51,7 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().Contain(b => b.Id == currentBooking.Id);
+        result.Should().Contain(b => b.Id == todayBooking.Id);
         result.Should().Contain(b => b.Id == futureBooking.Id);
         result.Should().NotContain(b => b.Id == pastBooking.Id);
     }
@@ -62,10 +62,10 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         // Arrange
         var today = DateTime.UtcNow.Date;
         var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
-        var currentBooking = CreateBookingReadModel(today.AddDays(-1), today.AddDays(1));
+        var todayBooking = CreateBookingReadModel(today, today.AddDays(2));
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, currentBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(TimeRange: TimeRange.All);
@@ -76,7 +76,7 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         // Assert
         result.Should().HaveCount(3);
         result.Should().Contain(b => b.Id == pastBooking.Id);
-        result.Should().Contain(b => b.Id == currentBooking.Id);
+        result.Should().Contain(b => b.Id == todayBooking.Id);
         result.Should().Contain(b => b.Id == futureBooking.Id);
     }
 
@@ -86,10 +86,10 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         // Arrange
         var today = DateTime.UtcNow.Date;
         var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
-        var currentBooking = CreateBookingReadModel(today.AddDays(-1), today.AddDays(1));
+        var todayBooking = CreateBookingReadModel(today, today.AddDays(2)); // Starts today - should NOT be in past
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, currentBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(TimeRange: TimeRange.Past);
@@ -100,7 +100,7 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         // Assert
         result.Should().HaveCount(1);
         result.Should().Contain(b => b.Id == pastBooking.Id);
-        result.Should().NotContain(b => b.Id == currentBooking.Id);
+        result.Should().NotContain(b => b.Id == todayBooking.Id); // Today is NOT past
         result.Should().NotContain(b => b.Id == futureBooking.Id);
     }
 
@@ -158,9 +158,10 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         // Arrange
         var today = DateTime.UtcNow.Date;
         var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
+        var todayBooking = CreateBookingReadModel(today, today.AddDays(2)); // Should be included in default
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(); // No TimeRange specified
@@ -169,7 +170,8 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(1);
+        result.Should().HaveCount(2);
+        result.Should().Contain(b => b.Id == todayBooking.Id);
         result.Should().Contain(b => b.Id == futureBooking.Id);
         result.Should().NotContain(b => b.Id == pastBooking.Id);
     }

@@ -44,12 +44,12 @@ public class GetBookingsQueryHandler(
         
         query = timeRange switch
         {
-            TimeRange.Future => query.Where(b => b.EndDate >= today),
+            TimeRange.Future => query.Where(b => b.StartDate >= today),
             TimeRange.All => query, // No filter, show all
-            TimeRange.Past => query.Where(b => b.EndDate < today),
+            TimeRange.Past => query.Where(b => b.StartDate < today),
             TimeRange.Last30Days => query.Where(b => b.StartDate >= today.AddDays(-30)),
             TimeRange.LastYear => query.Where(b => b.StartDate >= today.AddYears(-1)),
-            _ => query.Where(b => b.EndDate >= today) // Default to Future
+            _ => query.Where(b => b.StartDate >= today) // Default to Future
         };
 
         var bookings = await query

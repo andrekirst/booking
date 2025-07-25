@@ -136,12 +136,13 @@ public class GetBookingsQueryHandlerCombinedFiltersTests : IDisposable
         // Arrange
         var today = DateTime.UtcNow.Date;
         
+        var todayAcceptedBooking = CreateBookingReadModel(today, today.AddDays(2), BookingStatus.Accepted);
         var futureAcceptedBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3), BookingStatus.Accepted);
         var pastAcceptedBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3), BookingStatus.Accepted);
         var futurePendingBooking = CreateBookingReadModel(today.AddDays(2), today.AddDays(4), BookingStatus.Pending);
 
         await _context.BookingReadModels.AddRangeAsync(
-            futureAcceptedBooking, pastAcceptedBooking, futurePendingBooking);
+            todayAcceptedBooking, futureAcceptedBooking, pastAcceptedBooking, futurePendingBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(Status: BookingStatus.Accepted);
@@ -149,8 +150,9 @@ public class GetBookingsQueryHandlerCombinedFiltersTests : IDisposable
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert - Should apply Status filter AND default TimeRange.Future
-        result.Should().HaveCount(1);
+        // Assert - Should apply Status filter AND default TimeRange.Future (includes today)
+        result.Should().HaveCount(2);
+        result.Should().Contain(b => b.Id == todayAcceptedBooking.Id);
         result.Should().Contain(b => b.Id == futureAcceptedBooking.Id);
         result.Should().NotContain(b => b.Id == pastAcceptedBooking.Id); // Filtered out by default TimeRange.Future
         result.Should().NotContain(b => b.Id == futurePendingBooking.Id); // Filtered out by Status
