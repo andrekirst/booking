@@ -11,7 +11,8 @@ namespace Booking.Api.Features.Bookings.Queries;
 
 public record GetBookingsQuery(
     int? UserId = null,
-    TimeRange? TimeRange = null
+    TimeRange? TimeRange = null,
+    BookingStatus? Status = null
 ) : IRequest<List<BookingDto>>;
 
 public class GetBookingsQueryHandler(
@@ -21,13 +22,20 @@ public class GetBookingsQueryHandler(
 {
     public async Task<List<BookingDto>> Handle(GetBookingsQuery request, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Getting bookings for user {UserId} with time range {TimeRange}", request.UserId, request.TimeRange);
+        logger.LogInformation("Getting bookings for user {UserId} with time range {TimeRange} and status {Status}", 
+            request.UserId, request.TimeRange, request.Status);
 
         var query = context.BookingReadModels.AsQueryable();
 
         if (request.UserId.HasValue)
         {
             query = query.Where(b => b.UserId == request.UserId.Value);
+        }
+
+        // Apply status filter
+        if (request.Status.HasValue)
+        {
+            query = query.Where(b => b.Status == request.Status.Value);
         }
 
         // Apply time range filter
