@@ -2,6 +2,7 @@ import {
   ApproveUserResponse,
   Booking,
   BookingAvailability,
+  BookingStatus,
   CreateBookingRequest,
   EmailSettings,
   EmailSettingsResponse,
@@ -34,7 +35,7 @@ export interface ApiClient {
   logout(): Promise<void>;
 
   // Booking endpoints
-  getBookings(): Promise<Booking[]>;
+  getBookings(status?: BookingStatus): Promise<Booking[]>;
   getBookingById(id: string): Promise<Booking>;
   createBooking(booking: CreateBookingRequest): Promise<Booking>;
   updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking>;
@@ -234,8 +235,13 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  async getBookings(): Promise<Booking[]> {
-    return this.request<Booking[]>("/bookings");
+  async getBookings(status?: BookingStatus): Promise<Booking[]> {
+    const params = new URLSearchParams();
+    if (status !== undefined) {
+      params.append("status", status.toString());
+    }
+    const queryString = params.toString();
+    return this.request<Booking[]>(`/bookings${queryString ? `?${queryString}` : ""}`);
   }
 
   async getBookingById(id: string): Promise<Booking> {
