@@ -24,8 +24,8 @@ RUN dotnet publish Booking.Api/Booking.Api.csproj -c Release -o /app/publish --n
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
-# Install PostgreSQL client for health checks
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install PostgreSQL client and curl for health checks
+RUN apt-get update && apt-get install -y postgresql-client curl && rm -rf /var/lib/apt/lists/*
 
 # Copy published application
 COPY --from=build /app/publish .
