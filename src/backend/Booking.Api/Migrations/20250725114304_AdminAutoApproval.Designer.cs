@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Booking.Api.Migrations
 {
     [DbContext(typeof(BookingDbContext))]
-    [Migration("20250725095549_FixAutoApproveAdministratorsEnumComparison")]
-    partial class FixAutoApproveAdministratorsEnumComparison
+    [Migration("20250725114304_AdminAutoApproval")]
+    partial class AdminAutoApproval
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
