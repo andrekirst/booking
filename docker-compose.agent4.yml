@@ -1,0 +1,92 @@
+# AUTOMATISCH GENERIERT - NICHT MANUELL BEARBEITEN!
+# Generiert von: generate-agent-configs.sh am Fr 25. Jul 20:29:42 CEST 2025
+# Template: docker-compose.agent-template.yml
+# Agent: 4 | Ports: 60401/60402/60403
+
+version: '3.8'
+
+# Multi-Agent Docker Compose Template
+# Dieses Template wird von generate-agent-configs.sh verwendet, um 
+# spezifische Agent-Konfigurationen zu generieren
+#
+# Platzhalter:
+# 4 - wird durch die Agent-Nummer (2-4) ersetzt
+# 60400 - wird durch den Basis-Port (60200, 60300, 60400) ersetzt
+# 60401 - wird durch Frontend-Port (60400+1) ersetzt
+# 60402 - wird durch Backend-Port (60400+2) ersetzt
+# 60403 - wird durch DB-Port (60400+3) ersetzt
+
+services:
+  postgres-agent4:
+    image: postgres:16-alpine
+    container_name: booking-postgres-agent4
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_agent4
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "60403:5432"  # Agent 4 PostgreSQL Port
+    volumes:
+      - postgres_agent4_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_agent4"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - booking-agent4-network
+
+  backend-agent4:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: booking-api-agent4
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:80"
+      ConnectionStrings__DefaultConnection: "Host=postgres-agent4;Port=5432;Database=booking_agent4;Username=booking_user;Password=booking_password"
+      JwtSettings__Secret: "development-jwt-secret-key-for-agent4-testing-only-256-bits-minimum"
+      JwtSettings__Issuer: "BookingApi-Agent4"
+      JwtSettings__Audience: "BookingApp-Agent4"
+      JwtSettings__ExpirationMinutes: "480"
+    ports:
+      - "60402:80"  # Agent 4 Backend Port
+    depends_on:
+      postgres-agent4:
+        condition: service_healthy
+    volumes:
+      # Worktree-spezifisches Volume für Agent 4
+      - ../booking-agent4/src/backend:/app/src:ro
+    networks:
+      - booking-agent4-network
+    restart: unless-stopped
+
+  frontend-agent4:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    container_name: booking-frontend-agent4
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:60402"
+      PORT: "3000"
+    ports:
+      - "60401:3000"  # Agent 4 Frontend Port
+    volumes:
+      # Worktree-spezifisches Volume für Agent 4
+      - ../booking-agent4/src/frontend:/app:cached
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - booking-agent4-network
+    restart: unless-stopped
+
+volumes:
+  postgres_agent4_data:
+
+networks:
+  booking-agent4-network:
+    driver: bridge
+    name: booking-agent4-network
