@@ -66,7 +66,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: booking-frontend-agent{AGENT_NUMBER}
     environment:
-      NEXT_PUBLIC_API_URL: "http://localhost:{BACKEND_PORT}"
+      NEXT_PUBLIC_API_URL: "http://localhost:{BACKEND_PORT}/api"
       PORT: "3000"
     ports:
       - "{FRONTEND_PORT}:3000"  # Agent {AGENT_NUMBER} Frontend Port
