@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import BookingsPage from '../page';
 import { apiClient } from '../../../lib/api/client';
 import { Booking, BookingStatus } from '../../../lib/types/api';
+import { getCurrentUser } from '../../../lib/auth/jwt';
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -336,9 +337,9 @@ describe('BookingsPage', () => {
       const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + btoa(JSON.stringify(payload)) + '.signature';
       (apiClient.getToken as jest.Mock).mockReturnValue(mockToken);
       
-      // Mock getCurrentUser for admin user
-      const { getCurrentUser } = require('../../../lib/auth/jwt');
-      (getCurrentUser as jest.Mock).mockReturnValue({
+      // Mock getCurrentUser for admin user  
+      const getCurrentUserMock = getCurrentUser as jest.Mock;
+      getCurrentUserMock.mockReturnValue({
         name: 'Admin User',
         email: 'admin@example.com', 
         role: 'Administrator',
@@ -377,8 +378,8 @@ describe('BookingsPage', () => {
       (apiClient.getToken as jest.Mock).mockReturnValue(mockToken);
       
       // Reset getCurrentUser for regular user
-      const { getCurrentUser } = require('../../../lib/auth/jwt');
-      (getCurrentUser as jest.Mock).mockReturnValue({
+      const getCurrentUserMock = getCurrentUser as jest.Mock;
+      getCurrentUserMock.mockReturnValue({
         name: 'Test User',
         email: 'test@example.com', 
         role: 'Member',
@@ -402,8 +403,8 @@ describe('BookingsPage', () => {
   describe('Token Handling', () => {
     beforeEach(() => {
       // Reset to regular user for token handling tests
-      const { getCurrentUser } = require('../../../lib/auth/jwt');
-      (getCurrentUser as jest.Mock).mockReturnValue({
+      const getCurrentUserMock = getCurrentUser as jest.Mock;
+      getCurrentUserMock.mockReturnValue({
         name: 'Test User',
         email: 'test@example.com', 
         role: 'Member',
