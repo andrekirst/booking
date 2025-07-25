@@ -25,12 +25,18 @@ const helpTopics = {
   // Authentication
   'login': { url: `${HELP_BASE_URL}/02-erste-schritte.md#anmeldung-und-registrierung`, title: 'Anmeldung' },
   'register': { url: `${HELP_BASE_URL}/02-erste-schritte.md#erstmalige-registrierung`, title: 'Registrierung' },
+  'email-verification': { url: `${HELP_BASE_URL}/02-erste-schritte.md#e-mail-verifizierung`, title: 'E-Mail-Verifizierung' },
+  'admin-approval': { url: `${HELP_BASE_URL}/02-erste-schritte.md#administrator-freigabe`, title: 'Administrator-Freigabe' },
   
   // Bookings
   'booking-create': { url: `${HELP_BASE_URL}/03-buchungen.md#neue-buchung-erstellen`, title: 'Buchung erstellen' },
   'booking-edit': { url: `${HELP_BASE_URL}/03-buchungen.md#buchung-bearbeiten`, title: 'Buchung bearbeiten' },
   'booking-cancel': { url: `${HELP_BASE_URL}/03-buchungen.md#buchung-stornieren`, title: 'Buchung stornieren' },
   'booking-overview': { url: `${HELP_BASE_URL}/03-buchungen.md#buchungsübersicht`, title: 'Buchungsübersicht' },
+  'booking-list-view': { url: `${HELP_BASE_URL}/03-buchungen.md#listenansicht`, title: 'Listenansicht' },
+  'booking-calendar-view': { url: `${HELP_BASE_URL}/03-buchungen.md#kalenderansicht`, title: 'Kalenderansicht' },
+  'view-toggle': { url: `${HELP_BASE_URL}/03-buchungen.md#ansichtsmodi`, title: 'Ansicht wechseln' },
+  'booking-status': { url: `${HELP_BASE_URL}/03-buchungen.md#buchungsstatus-verstehen`, title: 'Buchungsstatus' },
   
   // Rooms  
   'rooms': { url: `${HELP_BASE_URL}/04-raumverwaltung.md`, title: 'Räume und Schlafplätze' },
@@ -39,7 +45,12 @@ const helpTopics = {
   
   // Administration
   'admin': { url: `${HELP_BASE_URL}/05-administration.md`, title: 'Administration' },
+  'admin-dashboard': { url: `${HELP_BASE_URL}/05-administration.md#administrator-bereich`, title: 'Admin-Dashboard' },
   'user-management': { url: `${HELP_BASE_URL}/05-administration.md#benutzerverwaltung`, title: 'Benutzerverwaltung' },
+  'user-approval': { url: `${HELP_BASE_URL}/05-administration.md#neue-benutzer-freischalten`, title: 'Benutzer freischalten' },
+  'email-settings': { url: `${HELP_BASE_URL}/05-administration.md#e-mail-konfiguration`, title: 'E-Mail-Einstellungen' },
+  'smtp-config': { url: `${HELP_BASE_URL}/05-administration.md#smtp-server-einrichten`, title: 'SMTP-Konfiguration' },
+  'booking-management': { url: `${HELP_BASE_URL}/05-administration.md#buchungsmanagement`, title: 'Buchungsmanagement' },
   
   // FAQ and troubleshooting
   'faq': { url: `${HELP_BASE_URL}/06-fehlerbehebung.md#häufig-gestellte-fragen-faq`, title: 'Häufige Fragen' },

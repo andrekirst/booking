@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { RegistrationForm } from '@/app/components/auth/RegistrationForm';
 import { useApi } from '@/contexts/ApiContext';
+import HelpButton from '@/components/ui/HelpButton';
 
 export default function RegisterPage() {
     const { apiClient } = useApi();
@@ -33,9 +34,12 @@ export default function RegisterPage() {
                 <div className="w-full max-w-md">
                     <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-100/20 border border-white/20 p-8">
                         <div className="text-center">
-                            <h2 className="text-3xl font-bold text-gray-900">
-                                Registrierung erfolgreich!
-                            </h2>
+                            <div className="flex items-center justify-center gap-3 mb-4">
+                                <h2 className="text-3xl font-bold text-gray-900">
+                                    Registrierung erfolgreich!
+                                </h2>
+                                <HelpButton topic="email-verification" variant="text" size="sm" />
+                            </div>
                             <div className="mt-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-200">
                                 <div className="flex">
                                     <div className="flex-shrink-0">

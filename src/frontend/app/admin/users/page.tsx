@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useApi } from '@/contexts/ApiContext';
 import { PendingUser } from '@/lib/types/api';
 import { useAlert } from '@/hooks/useAlert';
+import HelpButton from '@/components/ui/HelpButton';
 
 export default function UserManagementPage() {
     const { apiClient } = useApi();
@@ -108,11 +109,14 @@ export default function UserManagementPage() {
     return (
         <div>
             <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Benutzer-Freigabe</h1>
-                    <p className="text-gray-600 mt-2">
-                        Benutzer, die ihre E-Mail-Adresse bestätigt haben und auf Freigabe warten.
-                    </p>
+                <div className="flex items-start gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Benutzer-Freigabe</h1>
+                        <p className="text-gray-600 mt-2">
+                            Benutzer, die ihre E-Mail-Adresse bestätigt haben und auf Freigabe warten.
+                        </p>
+                    </div>
+                    <HelpButton topic="user-approval" variant="text" size="md" />
                 </div>
                 
                 <div className="flex gap-3">

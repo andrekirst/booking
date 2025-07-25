@@ -199,10 +199,13 @@ export default function BookingsPage() {
               <HelpButton topic="booking-overview" variant="text" size="md" className="ml-4" />
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
-              <ViewToggle 
-                currentView={viewMode}
-                onViewChange={setViewMode}
-              />
+              <div className="flex items-center gap-2">
+                <ViewToggle 
+                  currentView={viewMode}
+                  onViewChange={setViewMode}
+                />
+                <HelpButton topic="view-toggle" variant="icon" size="sm" />
+              </div>
               <CreateBookingButton
                 variant="large"
                 onClick={handleCreateBooking}

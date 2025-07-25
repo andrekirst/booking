@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/contexts/ApiContext';
 import { EmailSettings, UpdateEmailSettingsRequest } from '@/lib/types/api';
+import HelpButton from '@/components/ui/HelpButton';
 
 interface DebugEvent {
   eventType: string;
@@ -648,9 +649,12 @@ export default function AdminDashboard() {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Admin Dashboard</h2>
-            <p className="text-sm text-gray-600 mt-1">Systemverwaltung</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Admin Dashboard</h2>
+              <p className="text-sm text-gray-600 mt-1">Systemverwaltung</p>
+            </div>
+            <HelpButton topic="admin-dashboard" variant="icon" size="sm" />
           </div>
           {/* Close button for mobile */}
           <button
