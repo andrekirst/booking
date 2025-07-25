@@ -20,7 +20,7 @@ interface AnimatedNumberProps {
 
 function AnimatedNumber({ value, className = '' }: AnimatedNumberProps) {
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`relative overflow-hidden h-6 ${className}`}>
       <AnimatePresence>
         <motion.span
           key={value}
@@ -33,7 +33,7 @@ function AnimatedNumber({ value, className = '' }: AnimatedNumberProps) {
             damping: 20,
             duration: 0.1
           }}
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center font-medium"
         >
           {value}
         </motion.span>
@@ -95,7 +95,7 @@ export default function NumberSpinner({
         <div className="flex-1 px-2 py-1.5 text-center text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset disabled:bg-gray-50 disabled:text-gray-500 min-h-[1.5rem] flex items-center justify-center">
           <AnimatedNumber 
             value={value}
-            className="text-center font-medium"
+            className="w-full"
           />
         </div>
         
