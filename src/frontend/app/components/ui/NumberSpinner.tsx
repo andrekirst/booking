@@ -75,12 +75,12 @@ export default function NumberSpinner({
           {label}
         </label>
       )}
-      <div className="flex items-center w-32 border border-gray-300 rounded-lg overflow-hidden bg-white">
+      <div className="flex items-center w-32 border border-gray-300 rounded-lg bg-white">
         <motion.button
           type="button"
           onClick={handleDecrement}
           disabled={!canDecrement}
-          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200 rounded-l-lg"
+          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200 rounded-l-md border-r border-gray-200"
           aria-label="Verringern"
           title="Verringern"
           whileHover={!disabled && canDecrement ? { scale: 1.1 } : {}}
@@ -103,7 +103,7 @@ export default function NumberSpinner({
           type="button"
           onClick={handleIncrement}
           disabled={!canIncrement}
-          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200 rounded-r-lg"
+          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200 rounded-r-md border-l border-gray-200"
           aria-label="Erhöhen"
           title="Erhöhen"
           whileHover={!disabled && canIncrement ? { scale: 1.1 } : {}}
