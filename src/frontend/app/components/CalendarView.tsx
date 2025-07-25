@@ -1,8 +1,10 @@
 'use client';
 
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'moment/locale/de';
+import { Calendar, dayjsLocalizer } from 'react-big-calendar';
+import dayjs from 'dayjs';
+import 'dayjs/locale/de';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import localeData from 'dayjs/plugin/localeData';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import { useState, useRef, useEffect } from 'react';
 import BookingTooltip from './BookingTooltip';
@@ -11,9 +13,11 @@ import CalendarLegend from './CalendarLegend';
 import CalendarEvent from './CalendarEvent';
 import './calendar.css';
 
-// Set up moment localization
-moment.locale('de');
-const localizer = momentLocalizer(moment);
+// Set up dayjs localization and plugins
+dayjs.extend(customParseFormat);
+dayjs.extend(localeData);
+dayjs.locale('de');
+const localizer = dayjsLocalizer(dayjs);
 
 interface CalendarViewProps {
   bookings: Booking[];
@@ -183,7 +187,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
           monthHeaderFormat: 'MMMM YYYY',
           dayHeaderFormat: 'dddd DD.MM.YYYY',
           dayRangeHeaderFormat: ({ start, end }) =>
-            `${moment(start).format('DD.MM.')} - ${moment(end).format('DD.MM.YYYY')}`,
+            `${dayjs(start).format('DD.MM.')} - ${dayjs(end).format('DD.MM.YYYY')}`,
         }}
         popup
         step={60}
