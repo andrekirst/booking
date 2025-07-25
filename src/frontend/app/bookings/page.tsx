@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Booking } from '../../lib/types/api';
+import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
@@ -14,6 +14,7 @@ import BookingListView from '../components/BookingListView';
 import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
 import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
 import BookingCardSkeleton from '../components/BookingCardSkeleton';
+import BookingStatusFilter from '../components/BookingStatusFilter';
 
 // Smooth view transition container
 interface ViewTransitionContainerProps {
@@ -70,13 +71,14 @@ export default function BookingsPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
   const fetchBookings = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await apiClient.getBookings();
+      const data = await apiClient.getBookings(statusFilter ?? undefined);
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -98,7 +100,11 @@ export default function BookingsPage() {
     fetchBookings();
     checkUserRole();
     setCurrentUser(getCurrentUser());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleStatusFilterChange = (status: BookingStatus | null) => {
+    setStatusFilter(status);
+  };
 
   const checkUserRole = () => {
     try {
@@ -245,6 +251,12 @@ export default function BookingsPage() {
               </button>
             </div>
           )}
+
+          {/* Status Filter */}
+          <BookingStatusFilter
+            currentStatus={statusFilter}
+            onStatusChange={handleStatusFilterChange}
+          />
 
           {/* Main Content */}
           <div>

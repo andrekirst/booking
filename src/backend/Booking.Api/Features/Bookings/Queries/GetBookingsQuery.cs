@@ -5,11 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using MediatR;
 using System.Text.Json;
 using Booking.Api.Domain.ValueObjects;
+using Booking.Api.Domain.Enums;
 
 namespace Booking.Api.Features.Bookings.Queries;
 
 public record GetBookingsQuery(
-    int? UserId = null
+    int? UserId = null,
+    BookingStatus? Status = null
 ) : IRequest<List<BookingDto>>;
 
 public class GetBookingsQueryHandler(
@@ -19,13 +21,18 @@ public class GetBookingsQueryHandler(
 {
     public async Task<List<BookingDto>> Handle(GetBookingsQuery request, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Getting bookings for user {UserId}", request.UserId);
+        logger.LogInformation("Getting bookings for user {UserId} with status filter {Status}", request.UserId, request.Status);
 
         var query = context.BookingReadModels.AsQueryable();
 
         if (request.UserId.HasValue)
         {
             query = query.Where(b => b.UserId == request.UserId.Value);
+        }
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(b => b.Status == request.Status.Value);
         }
 
         var bookings = await query
