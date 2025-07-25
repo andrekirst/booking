@@ -53,12 +53,14 @@ jobs:
           touch docs/manual/images/app-overview.png
         fi
         
-        # Create other placeholder images  
+        # Create other placeholder images if they don't exist 
         for img in registration-form main-dashboard booking-form room-selection \
                   booking-list cancellation-dialog room-details calendar-view \
-                  admin-dashboard user-approval admin-bookings; do
+                  admin-dashboard user-approval admin-bookings app-overview; do
           if [ ! -f "docs/manual/images/${img}.png" ]; then
-            touch "docs/manual/images/${img}.png"
+            convert -size 800x600 xc:lightgray -pointsize 24 -fill black \
+              -gravity center -annotate +0+0 "$(echo ${img} | tr '-' ' ' | tr '[:lower:]' '[:upper:]')\n(Placeholder Image)" \
+              "docs/manual/images/${img}.png" || touch "docs/manual/images/${img}.png"
           fi
         done
 
@@ -118,14 +120,34 @@ jobs:
       run: |
         cd docs/manual
         
+        # Create output directory if it doesn't exist
+        mkdir -p output
+        
         # First compilation
-        pdflatex -interaction=nonstopmode main.tex || (cat main.log; exit 1)
+        echo "🔄 First LaTeX compilation..."
+        if ! pdflatex -interaction=nonstopmode main.tex; then
+          echo "❌ First compilation failed. LaTeX log:"
+          cat main.log || echo "No log file found"
+          exit 1
+        fi
         
         # Second compilation for references and TOC
-        pdflatex -interaction=nonstopmode main.tex || (cat main.log; exit 1)
+        echo "🔄 Second LaTeX compilation (references)..."
+        if ! pdflatex -interaction=nonstopmode main.tex; then
+          echo "❌ Second compilation failed. LaTeX log:"
+          cat main.log || echo "No log file found"  
+          exit 1
+        fi
         
         # Third compilation to ensure everything is correct
-        pdflatex -interaction=nonstopmode main.tex || (cat main.log; exit 1)
+        echo "🔄 Third LaTeX compilation (final)..."
+        if ! pdflatex -interaction=nonstopmode main.tex; then
+          echo "❌ Third compilation failed. LaTeX log:"
+          cat main.log || echo "No log file found"
+          exit 1
+        fi
+        
+        echo "✅ LaTeX compilation completed successfully"
         
         # Rename output file with version
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
