@@ -21,5 +21,54 @@ services:
       retries: 5
     restart: unless-stopped
 
+  bookstack-db:
+    image: mysql:8.0
+    container_name: bookstack-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: bookstack_root_password
+      MYSQL_DATABASE: bookstack
+      MYSQL_USER: bookstack
+      MYSQL_PASSWORD: bookstack_password
+    volumes:
+      - bookstack_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  bookstack:
+    image: lscr.io/linuxserver/bookstack:latest
+    container_name: bookstack
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - APP_URL=http://localhost:6875
+      - DB_HOST=bookstack-db
+      - DB_PORT=3306
+      - DB_USER=bookstack
+      - DB_PASS=bookstack_password
+      - DB_DATABASE=bookstack
+      - APP_DEFAULT_DARK_MODE=false
+      - APP_THEME=default
+      - APP_LANG=de
+    volumes:
+      - bookstack_app_data:/config
+    ports:
+      - "6875:80"
+    depends_on:
+      bookstack-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  bookstack_db_data:
+  bookstack_app_data:

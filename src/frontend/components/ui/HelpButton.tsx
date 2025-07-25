@@ -16,43 +16,46 @@ interface HelpButtonProps {
   className?: string;
 }
 
+// BookStack URL configuration
+const BOOKSTACK_BASE_URL = 'http://localhost:6875';
+
 const helpTopics = {
   // Landing page
-  'home': { url: '/help', title: 'Benutzerhandbuch' },
+  'home': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch`, title: 'Benutzerhandbuch' },
   
   // Authentication
-  'login': { url: '/help/erste-schritte#anmeldung', title: 'Anmeldung' },
-  'register': { url: '/help/erste-schritte#registrierung', title: 'Registrierung' },
-  'email-verification': { url: '/help/erste-schritte#email-verifizierung', title: 'E-Mail-Verifizierung' },
-  'admin-approval': { url: '/help/erste-schritte#administrator-freigabe', title: 'Administrator-Freigabe' },
+  'login': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/erste-schritte#anmeldung`, title: 'Anmeldung' },
+  'register': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/erste-schritte#registrierung`, title: 'Registrierung' },
+  'email-verification': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/erste-schritte#email-verifizierung`, title: 'E-Mail-Verifizierung' },
+  'admin-approval': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/erste-schritte#administrator-freigabe`, title: 'Administrator-Freigabe' },
   
   // Bookings
-  'booking-create': { url: '/help/buchungen#erstellen', title: 'Buchung erstellen' },
-  'booking-edit': { url: '/help/buchungen#bearbeiten', title: 'Buchung bearbeiten' },
-  'booking-cancel': { url: '/help/buchungen#stornieren', title: 'Buchung stornieren' },
-  'booking-overview': { url: '/help/buchungen#uebersicht', title: 'Buchungsübersicht' },
-  'booking-list-view': { url: '/help/buchungen#listenansicht', title: 'Listenansicht' },
-  'booking-calendar-view': { url: '/help/buchungen#kalenderansicht', title: 'Kalenderansicht' },
-  'view-toggle': { url: '/help/buchungen#ansichtsmodi', title: 'Ansicht wechseln' },
-  'booking-status': { url: '/help/buchungen#status', title: 'Buchungsstatus' },
+  'booking-create': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#erstellen`, title: 'Buchung erstellen' },
+  'booking-edit': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#bearbeiten`, title: 'Buchung bearbeiten' },
+  'booking-cancel': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#stornieren`, title: 'Buchung stornieren' },
+  'booking-overview': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#uebersicht`, title: 'Buchungsübersicht' },
+  'booking-list-view': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#listenansicht`, title: 'Listenansicht' },
+  'booking-calendar-view': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#kalenderansicht`, title: 'Kalenderansicht' },
+  'view-toggle': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#ansichtsmodi`, title: 'Ansicht wechseln' },
+  'booking-status': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/buchungen#status`, title: 'Buchungsstatus' },
   
   // Rooms  
-  'rooms': { url: '/help/raeume', title: 'Räume und Schlafplätze' },
-  'room-selection': { url: '/help/raeume#auswahl', title: 'Raumauswahl' },
-  'availability': { url: '/help/raeume#verfügbarkeit', title: 'Verfügbarkeit prüfen' },
+  'rooms': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/raeume`, title: 'Räume und Schlafplätze' },
+  'room-selection': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/raeume#auswahl`, title: 'Raumauswahl' },
+  'availability': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/raeume#verfügbarkeit`, title: 'Verfügbarkeit prüfen' },
   
   // Administration
-  'admin': { url: '/help/administration', title: 'Administration' },
-  'admin-dashboard': { url: '/help/administration#dashboard', title: 'Admin-Dashboard' },
-  'user-management': { url: '/help/administration#benutzerverwaltung', title: 'Benutzerverwaltung' },
-  'user-approval': { url: '/help/administration#freischaltung', title: 'Benutzer freischalten' },
-  'email-settings': { url: '/help/administration#email-konfiguration', title: 'E-Mail-Einstellungen' },
-  'smtp-config': { url: '/help/administration#smtp-konfiguration', title: 'SMTP-Konfiguration' },
-  'booking-management': { url: '/help/administration#buchungsmanagement', title: 'Buchungsmanagement' },
+  'admin': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration`, title: 'Administration' },
+  'admin-dashboard': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration#dashboard`, title: 'Admin-Dashboard' },
+  'user-management': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration#benutzerverwaltung`, title: 'Benutzerverwaltung' },
+  'user-approval': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration#freischaltung`, title: 'Benutzer freischalten' },
+  'email-settings': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration#email-konfiguration`, title: 'E-Mail-Einstellungen' },
+  'smtp-config': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration#smtp-konfiguration`, title: 'SMTP-Konfiguration' },
+  'booking-management': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/administration#buchungsmanagement`, title: 'Buchungsmanagement' },
   
   // FAQ and troubleshooting
-  'faq': { url: '/help/faq', title: 'Häufige Fragen' },
-  'troubleshooting': { url: '/help/faq', title: 'Fehlerbehebung' },
+  'faq': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/faq`, title: 'Häufige Fragen' },
+  'troubleshooting': { url: `${BOOKSTACK_BASE_URL}/books/benutzerhandbuch/chapter/faq#fehlerbehebung`, title: 'Fehlerbehebung' },
 };
 
 export default function HelpButton({ 
