@@ -1,21 +1,19 @@
-'use client';
-
 import DocumentationLayout from '@/components/docs/DocumentationLayout';
 import Link from 'next/link';
 
 export default function ErsteSchrittePage() {
   return (
     <DocumentationLayout
-      title="🚀 Erste Schritte"
+      title="Erste Schritte"
       breadcrumbs={[{ title: 'Erste Schritte' }]}
       prevPage={{ title: 'Einleitung', href: '/help/einleitung' }}
       nextPage={{ title: 'Buchungen verwalten', href: '/help/buchungen' }}
     >
-      <div className="space-y-8">
+      <div className="space-y-12">
         {/* Anmeldung Section */}
         <section id="anmeldung">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            🔐 Anmeldung und Registrierung
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            Anmeldung und Registrierung
           </h2>
 
           {/* Erstmalige Registrierung */}
