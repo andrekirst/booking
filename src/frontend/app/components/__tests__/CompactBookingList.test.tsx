@@ -6,36 +6,48 @@ import { Booking, BookingStatus } from '../../../lib/types/api';
 const mockBookings: Booking[] = [
   {
     id: '1',
+    userId: 1,
+    userName: 'Test User',
+    userEmail: 'test@example.com',
     startDate: '2024-03-15T00:00:00Z',
     endDate: '2024-03-17T00:00:00Z',
     numberOfNights: 2,
     totalPersons: 4,
     status: BookingStatus.Confirmed,
     bookingItems: [
-      { id: '1', bookingId: '1', sleepingAccommodationId: '1', numberOfPersons: 4 }
-    ]
+      { sleepingAccommodationId: '1', sleepingAccommodationName: 'Room 1', personCount: 4 }
+    ],
+    createdAt: '2024-03-01T00:00:00Z'
   },
   {
     id: '2',
+    userId: 2,
+    userName: 'Test User 2',
+    userEmail: 'test2@example.com',
     startDate: '2024-03-20T00:00:00Z',
     endDate: '2024-03-22T00:00:00Z',
     numberOfNights: 2,
     totalPersons: 2,
     status: BookingStatus.Pending,
     bookingItems: [
-      { id: '2', bookingId: '2', sleepingAccommodationId: '2', numberOfPersons: 2 }
-    ]
+      { sleepingAccommodationId: '2', sleepingAccommodationName: 'Room 2', personCount: 2 }
+    ],
+    createdAt: '2024-03-01T00:00:00Z'
   },
   {
     id: '3',
+    userId: 3,
+    userName: 'Test User 3',
+    userEmail: 'test3@example.com',
     startDate: '2024-03-10T00:00:00Z',
     endDate: '2024-03-12T00:00:00Z',
     numberOfNights: 2,
     totalPersons: 3,
     status: BookingStatus.Rejected,
     bookingItems: [
-      { id: '3', bookingId: '3', sleepingAccommodationId: '3', numberOfPersons: 3 }
-    ]
+      { sleepingAccommodationId: '3', sleepingAccommodationName: 'Room 3', personCount: 3 }
+    ],
+    createdAt: '2024-03-01T00:00:00Z'
   }
 ];
 
@@ -164,14 +176,18 @@ describe('CompactBookingList', () => {
   it('formats dates correctly for single day bookings', () => {
     const singleDayBooking: Booking = {
       id: '4',
+      userId: 4,
+      userName: 'Test User 4',
+      userEmail: 'test4@example.com',
       startDate: '2024-03-15T00:00:00Z',
       endDate: '2024-03-15T00:00:00Z',
       numberOfNights: 1,
       totalPersons: 2,
       status: BookingStatus.Confirmed,
       bookingItems: [
-        { id: '4', bookingId: '4', sleepingAccommodationId: '1', numberOfPersons: 2 }
-      ]
+        { sleepingAccommodationId: '1', sleepingAccommodationName: 'Room 1', personCount: 2 }
+      ],
+      createdAt: '2024-03-01T00:00:00Z'
     };
 
     render(

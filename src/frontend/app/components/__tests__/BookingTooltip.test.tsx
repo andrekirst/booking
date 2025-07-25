@@ -5,15 +5,19 @@ import { Booking, BookingStatus } from '../../../lib/types/api';
 
 const mockBooking: Booking = {
   id: '1',
+  userId: 1,
+  userName: 'Test User',
+  userEmail: 'test@example.com',
   startDate: '2024-03-15T00:00:00Z',
   endDate: '2024-03-17T00:00:00Z',
   numberOfNights: 2,
   totalPersons: 4,
   status: BookingStatus.Confirmed,
   bookingItems: [
-    { id: '1', bookingId: '1', sleepingAccommodationId: '1', numberOfPersons: 2 },
-    { id: '2', bookingId: '1', sleepingAccommodationId: '2', numberOfPersons: 2 }
-  ]
+    { sleepingAccommodationId: '1', sleepingAccommodationName: 'Room 1', personCount: 2 },
+    { sleepingAccommodationId: '2', sleepingAccommodationName: 'Room 2', personCount: 2 }
+  ],
+  createdAt: '2024-03-01T00:00:00Z'
 };
 
 describe('BookingTooltip', () => {
