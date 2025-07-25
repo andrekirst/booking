@@ -80,7 +80,7 @@ export default function NumberSpinner({
           type="button"
           onClick={handleDecrement}
           disabled={!canDecrement}
-          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200"
+          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200 rounded-l-lg"
           aria-label="Verringern"
           title="Verringern"
           whileHover={!disabled && canDecrement ? { scale: 1.1 } : {}}
@@ -103,7 +103,7 @@ export default function NumberSpinner({
           type="button"
           onClick={handleIncrement}
           disabled={!canIncrement}
-          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200"
+          className="flex items-center justify-center w-8 h-8 text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors duration-200 rounded-r-lg"
           aria-label="Erhöhen"
           title="Erhöhen"
           whileHover={!disabled && canIncrement ? { scale: 1.1 } : {}}
