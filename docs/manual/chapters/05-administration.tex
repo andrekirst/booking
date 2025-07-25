@@ -22,24 +22,56 @@
 
 \subsection{Benutzerverwaltung}
 
+\subsubsection{Dashboard-Navigation}
+
+Das Administrator-Dashboard ist in drei Hauptbereiche unterteilt:
+
+\begin{description}
+    \item[Allgemein] System-Übersicht und globale Einstellungen
+    \item[Verwaltung] Benutzer-, Buchungs- und Raumverwaltung
+    \item[Systemeinstellungen] E-Mail-Konfiguration und erweiterte Einstellungen
+\end{description}
+
+Die Navigation erfolgt über die vertikalen Tabs auf der linken Seite des Dashboards.
+
 \subsubsection{Neue Benutzer freischalten}
 
-Neue Registrierungen müssen von Administratoren genehmigt werden:
+Nach der E-Mail-Verifizierung müssen neue Registrierungen von Administratoren genehmigt werden:
 
 \begin{enumerate}
-    \item Navigieren Sie zu \textbf{„Benutzerverwaltung"}
-    \item Ausstehende Registrierungen werden angezeigt
-    \item Überprüfen Sie die Benutzerangaben
+    \item Navigieren Sie zu \textbf{„Verwaltung"} → \textbf{„Benutzer"}
+    \item Neue Registrierungen werden mit Status \textbf{„Ausstehende Genehmigung"} angezeigt
+    \item Der Verifizierungsstatus zeigt, ob die E-Mail-Adresse bestätigt wurde
+    \item Überprüfen Sie die Benutzerangaben:
+        \begin{itemize}
+            \item Name und E-Mail-Adresse
+            \item Registrierungsdatum
+            \item E-Mail-Verifizierungsstatus
+        \end{itemize}
     \item Klicken Sie auf \textbf{„Genehmigen"} oder \textbf{„Ablehnen"}
-    \item Der Benutzer erhält eine entsprechende Benachrichtigung
+    \item Bei Ablehnung können Sie optional einen Grund angeben
+    \item Der Benutzer erhält automatisch eine E-Mail-Benachrichtigung
 \end{enumerate}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{images/user-approval.png}
-    \caption{Freischaltung neuer Benutzerkonten}
+    \caption{Freischaltung neuer Benutzerkonten mit E-Mail-Verifizierungsstatus}
     \label{fig:user-approval}
 \end{figure}
+
+\subsubsection{Benutzerübersicht}
+
+Die Benutzerübersicht zeigt alle registrierten Benutzer mit folgenden Informationen:
+
+\begin{itemize}
+    \item \textbf{Name}: Vor- und Nachname des Benutzers
+    \item \textbf{E-Mail}: E-Mail-Adresse und Verifizierungsstatus
+    \item \textbf{Rolle}: Member, Administrator oder Inactive
+    \item \textbf{Status}: Aktiv, Ausstehend oder Abgelehnt
+    \item \textbf{Registrierung}: Datum der Registrierung
+    \item \textbf{Aktionen}: Bearbeiten, Aktivieren/Deaktivieren
+\end{itemize}
 
 \subsubsection{Benutzerrollen verwalten}
 
@@ -128,15 +160,46 @@ Für Wartungsarbeiten können Räume gesperrt werden:
     \item \textbf{Wartungsmodus}: System für Wartungsarbeiten sperren
 \end{itemize}
 
-\subsubsection{E-Mail-Benachrichtigungen}
+\subsubsection{E-Mail-Einstellungen}
 
-Konfiguration der automatischen E-Mails:
+Konfigurieren Sie die E-Mail-Einstellungen unter \textbf{„Systemeinstellungen"} → \textbf{„E-Mail"}:
+
+\paragraph{SMTP-Server-Konfiguration}
 
 \begin{itemize}
-    \item Buchungsbestätigungen
-    \item Erinnerungen vor Anreise
-    \item Stornierungsbenachrichtigungen
-    \item Admin-Benachrichtigungen bei neuen Buchungen
+    \item \textbf{SMTP-Server}: Adresse Ihres E-Mail-Servers (z.B. smtp.gmail.com)
+    \item \textbf{Port}: SMTP-Port (587 für TLS, 465 für SSL)
+    \item \textbf{Benutzername}: Ihr E-Mail-Konto für den Versand
+    \item \textbf{Passwort}: Das zugehörige Passwort
+    \item \textbf{Verschlüsselung}: TLS oder SSL (empfohlen: TLS)
+    \item \textbf{Absender-Name}: Angezeigter Name (z.B. „Garten-Buchungsplattform")
+    \item \textbf{Absender-E-Mail}: E-Mail-Adresse des Absenders
+\end{itemize}
+
+\paragraph{E-Mail-Test}
+
+Nach der Konfiguration:
+
+\begin{enumerate}
+    \item Geben Sie eine Test-E-Mail-Adresse ein
+    \item Klicken Sie auf \textbf{„Test-E-Mail senden"}
+    \item Überprüfen Sie den Posteingang der Test-Adresse
+    \item Bei Erfolg: Speichern Sie die Einstellungen
+    \item Bei Fehler: Überprüfen Sie die Konfiguration
+\end{enumerate}
+
+\paragraph{E-Mail-Benachrichtigungen}
+
+Folgende automatische E-Mails werden versendet:
+
+\begin{itemize}
+    \item \textbf{Registrierungsbestätigung}: E-Mail-Verifizierung für neue Benutzer
+    \item \textbf{Kontofreischaltung}: Benachrichtigung nach Admin-Genehmigung
+    \item \textbf{Kontoablehnung}: Information bei Ablehnung mit Begründung
+    \item \textbf{Buchungsbestätigungen}: Nach erfolgreicher Buchungserstellung
+    \item \textbf{Buchungsstatus}: Bei Änderungen des Buchungsstatus
+    \item \textbf{Erinnerungen}: Vor der Anreise (optional)
+    \item \textbf{Admin-Benachrichtigungen}: Bei neuen Registrierungen und Buchungen
 \end{itemize}
 
 \subsection{Berichte und Statistiken}
