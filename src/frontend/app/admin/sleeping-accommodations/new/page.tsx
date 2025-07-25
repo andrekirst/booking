@@ -5,10 +5,10 @@ import SleepingAccommodationForm from '@/app/components/admin/SleepingAccommodat
 import { useApi } from '@/contexts/ApiContext';
 
 export default function NewSleepingAccommodationPage() {
-  const api = useApi();
+  const { apiClient } = useApi();
   
   const handleSubmit = async (data: CreateSleepingAccommodationDto) => {
-    await api.createSleepingAccommodation(data);
+    await apiClient.createSleepingAccommodation(data);
   };
 
   return (

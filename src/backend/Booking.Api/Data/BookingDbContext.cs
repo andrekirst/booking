@@ -8,6 +8,7 @@ public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbCo
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<SleepingAccommodation> SleepingAccommodations => Set<SleepingAccommodation>();
+    public DbSet<EmailSettings> EmailSettings => Set<EmailSettings>();
     
     // Event Sourcing Tables
     public DbSet<EventStoreEvent> EventStoreEvents => Set<EventStoreEvent>();

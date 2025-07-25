@@ -31,13 +31,25 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponse>
 
             if (user == null)
             {
-                return new LoginResponse(false, null, "Invalid email or password");
+                return new LoginResponse(false, null, "Ungültige E-Mail-Adresse oder Passwort.");
             }
 
             // Verify password
             if (!_passwordService.VerifyPassword(request.Password, user.PasswordHash))
             {
-                return new LoginResponse(false, null, "Invalid email or password");
+                return new LoginResponse(false, null, "Ungültige E-Mail-Adresse oder Passwort.");
+            }
+
+            // Check if email is verified
+            if (!user.EmailVerified)
+            {
+                return new LoginResponse(false, null, "Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Überprüfen Sie Ihr E-Mail-Postfach oder fordern Sie eine neue Bestätigungs-E-Mail an.");
+            }
+
+            // Check if user is approved for booking by administrator
+            if (!user.IsApprovedForBooking)
+            {
+                return new LoginResponse(false, null, "Ihr Konto wartet noch auf die Freigabe durch einen Administrator. Sie werden per E-Mail benachrichtigt, sobald Ihr Konto freigeschaltet wurde.");
             }
 
             // Update last login

@@ -19,8 +19,11 @@
     "test:smoke": "playwright test --grep 'Smoke Tests - API Abstraction'"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "moment": "^2.30.1",
     "next": "15.3.5",
     "react": "^19.0.0",
+    "react-big-calendar": "^1.19.4",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
@@ -33,6 +36,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
+    "@types/react-big-calendar": "^1.16.2",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",

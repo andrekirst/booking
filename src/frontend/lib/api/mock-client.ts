@@ -1,23 +1,76 @@
 import { ApiClient } from './client';
 import { ApiError } from './errors';
 import { 
+  ApproveUserResponse,
   User, 
   UserRole, 
   Booking,
   BookingAvailability,
   BookingStatus,
   CreateBookingRequest,
+  EmailSettings,
+  EmailSettingsResponse,
   LoginRequest, 
-  LoginResponse, 
+  LoginResponse,
+  PendingUser,
+  RegisterRequest,
+  RegisterResponse,
+  RejectUserResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse,
   SleepingAccommodation,
   AccommodationType,
-  UpdateBookingRequest
+  TestEmailRequest,
+  TestEmailResponse,
+  UpdateBookingRequest,
+  UpdateEmailSettingsRequest,
+  VerifyEmailRequest,
+  VerifyEmailResponse
 } from '../types/api';
 
 export class MockApiClient implements ApiClient {
-  private authenticated = false;
+  private authenticated = true; // Set to true for development/testing
   private currentUser: User | null = null;
-  private token: string | null = null;
+  private token: string | null = 'mock-admin-token';
+
+  constructor() {
+    // Set default admin user for mock client
+    this.currentUser = {
+      id: '1',
+      email: 'admin@booking.com',
+      firstName: 'Admin',
+      lastName: 'User',
+      role: UserRole.Administrator,
+      isActive: true,
+      createdAt: '2025-01-01T00:00:00Z',
+      changedAt: '2025-01-01T00:00:00Z',
+    };
+  }
+  
+  // Mock email settings storage
+  private mockEmailSettings: EmailSettings = {
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUsername: '',
+    smtpPassword: '',
+    fromName: 'Booking System',
+    fromEmail: '',
+    useTls: true,
+    isConfigured: false
+  };
+  
+  // Mock pending users storage
+  private mockPendingUsers: PendingUser[] = [
+    {
+      id: 1,
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      registrationDate: '2025-01-20T10:00:00Z',
+      emailVerifiedAt: '2025-01-20T10:05:00Z',
+      emailVerified: true
+    }
+  ];
 
   // Mock data
   private mockUsers: User[] = [
@@ -126,6 +179,79 @@ export class MockApiClient implements ApiClient {
     return {
       token: `mock-jwt-token-${user.id}`,
       user,
+    };
+  }
+
+  async register(request: RegisterRequest): Promise<RegisterResponse> {
+    // Simulate network delay
+    await this.delay(800);
+
+    // Check if user already exists
+    const existingUser = this.mockUsers.find(u => u.email === request.email);
+    if (existingUser) {
+      throw new ApiError('Email already registered', 400);
+    }
+
+    // Create new user
+    const newUser: User = {
+      id: `mock-user-${Date.now()}`,
+      email: request.email,
+      firstName: request.firstName,
+      lastName: request.lastName,
+      role: UserRole.Member,
+      isActive: false, // Needs admin approval
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add to mock users
+    this.mockUsers.push(newUser);
+
+    return {
+      message: 'Registration successful. Please check your email for verification.',
+      userId: newUser.id,
+    };
+  }
+
+  async verifyEmail(request: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    // Simulate network delay
+    await this.delay(600);
+
+    // Mock token validation (in real app, this would be validated server-side)
+    if (!request.token || request.token.length < 20) {
+      throw new ApiError('Invalid or expired verification token', 400);
+    }
+
+    // Find user by token (simplified mock logic)
+    const user = this.mockUsers.find(u => !u.isActive);
+    if (!user) {
+      throw new ApiError('Verification token not found or already used', 400);
+    }
+
+    // Mark user as email verified (in real app, would set EmailVerified = true)
+    user.isActive = true;
+
+    return {
+      message: 'E-Mail-Adresse erfolgreich bestätigt.',
+      requiresApproval: true // In mock, always requires admin approval
+    };
+  }
+
+  async resendVerification(request: ResendVerificationRequest): Promise<ResendVerificationResponse> {
+    // Simulate network delay
+    await this.delay(800);
+
+    // Check if user exists
+    const user = this.mockUsers.find(u => u.email === request.email);
+    if (!user) {
+      throw new ApiError('No account found with this email address', 404);
+    }
+
+    if (user.isActive) {
+      throw new ApiError('This email address is already verified', 400);
+    }
+
+    return {
+      message: 'Ein neuer Bestätigungslink wurde an Ihre E-Mail-Adresse gesendet.'
     };
   }
 
@@ -491,15 +617,114 @@ export class MockApiClient implements ApiClient {
     };
   }
 
-  async rebuildBookingProjections(): Promise<{ message: string; rebuiltCount: number }> {
+  async rebuildBookingProjections(): Promise<{ message: string }> {
     await this.delay(2000); // Simulate longer operation
     if (!this.authenticated) {
       throw new ApiError('Unauthorized', 401);
     }
 
     return {
-      message: 'Projections successfully rebuilt',
-      rebuiltCount: 15
+      message: 'Projections successfully rebuilt'
+    };
+  }
+
+  // Admin user management
+  async getPendingUsers(): Promise<PendingUser[]> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    return [...this.mockPendingUsers];
+  }
+
+  async approveUser(userId: number): Promise<ApproveUserResponse> {
+    await this.delay(800);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const userIndex = this.mockPendingUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const user = this.mockPendingUsers[userIndex];
+    this.mockPendingUsers.splice(userIndex, 1); // Remove from pending list
+
+    return {
+      message: `Benutzer ${user.firstName} ${user.lastName} wurde erfolgreich freigegeben.`
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async rejectUser(userId: number, reason?: string): Promise<RejectUserResponse> {
+    await this.delay(800);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const userIndex = this.mockPendingUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const user = this.mockPendingUsers[userIndex];
+    this.mockPendingUsers.splice(userIndex, 1);
+    return { message: `Benutzer ${user.firstName} ${user.lastName} wurde abgelehnt.` };
+  }
+
+  // Email Settings
+  async getEmailSettings(): Promise<EmailSettings> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    return { ...this.mockEmailSettings };
+  }
+
+  async updateEmailSettings(settings: UpdateEmailSettingsRequest): Promise<EmailSettingsResponse> {
+    await this.delay(800);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    // Update mock settings
+    this.mockEmailSettings = {
+      ...settings,
+      isConfigured: true
+    };
+
+    return {
+      message: 'E-Mail-Einstellungen wurden erfolgreich gespeichert.',
+      settings: { ...this.mockEmailSettings }
+    };
+  }
+
+  async testEmailSettings(request: TestEmailRequest): Promise<TestEmailResponse> {
+    await this.delay(2000); // Longer delay to simulate email sending
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    // Simulate test based on current settings
+    if (!this.mockEmailSettings.isConfigured) {
+      throw new ApiError('E-Mail-Einstellungen müssen erst konfiguriert werden.', 400);
+    }
+
+    // Mock success/failure based on settings
+    const isValidConfig = this.mockEmailSettings.smtpHost && 
+                         this.mockEmailSettings.smtpUsername && 
+                         this.mockEmailSettings.fromEmail;
+
+    if (!isValidConfig) {
+      throw new ApiError('Ungültige E-Mail-Konfiguration. Bitte überprüfen Sie Ihre Einstellungen.', 400);
+    }
+
+    return {
+      message: `Test-E-Mail wurde erfolgreich an ${request.toEmail} gesendet.`,
+      success: true
     };
   }
 }

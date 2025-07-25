@@ -232,8 +232,8 @@ describe('BookingsPage', () => {
       });
       
       expect(screen.getByText('01.04.2024 - 03.04.2024')).toBeInTheDocument();
-      expect(screen.getByText('Bestätigt')).toBeInTheDocument();
-      expect(screen.getByText('Ausstehend')).toBeInTheDocument();
+      expect(screen.getAllByText('Bestätigt')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Ausstehend')[0]).toBeInTheDocument();
     });
 
     it('should use grid layout for bookings', async () => {

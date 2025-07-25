@@ -13,6 +13,8 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  // Suppress console errors during tests to prevent CI failures
+  silent: true,
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

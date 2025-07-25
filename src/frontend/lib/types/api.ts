@@ -17,6 +17,58 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  userId: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+  requiresApproval: boolean;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  message: string;
+}
+
+// Admin User Management Types
+export interface PendingUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  registrationDate: string;
+  emailVerifiedAt: string | null;
+  emailVerified: boolean;
+}
+
+export interface ApproveUserResponse {
+  message: string;
+}
+
+export interface RejectUserRequest {
+  reason?: string;
+}
+
+export interface RejectUserResponse {
+  message: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -147,4 +199,42 @@ export interface ErrorResponse {
   error: string;
   message?: string;
   validationErrors?: ValidationError[];
+}
+
+// Email Settings Types
+export interface EmailSettings {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUsername: string;
+  smtpPassword: string;
+  fromName: string;
+  fromEmail: string;
+  useTls: boolean;
+  isConfigured: boolean;
+}
+
+export interface UpdateEmailSettingsRequest {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUsername: string;
+  smtpPassword: string;
+  fromName: string;
+  fromEmail: string;
+  useTls: boolean;
+}
+
+export interface EmailSettingsResponse {
+  message: string;
+  settings: EmailSettings;
+}
+
+export interface TestEmailRequest {
+  toEmail: string;
+  subject?: string;
+  body?: string;
+}
+
+export interface TestEmailResponse {
+  message: string;
+  success: boolean;
 }
