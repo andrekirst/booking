@@ -15,7 +15,17 @@ jest.mock('next/link', () => {
     onMouseLeave, 
     title, 
     'aria-label': ariaLabel 
-  }: any) {
+  }: {
+    children: React.ReactNode;
+    href: string;
+    target?: string;
+    rel?: string;
+    className?: string;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+    title?: string;
+    'aria-label'?: string;
+  }) {
     return (
       <a 
         href={href} 

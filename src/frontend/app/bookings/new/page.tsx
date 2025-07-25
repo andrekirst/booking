@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BookingForm from '../../components/booking/BookingForm';
-import HelpButton from '../../components/ui/HelpButton';
+import HelpButton from '../../../components/ui/HelpButton';
 
 export default function NewBookingPage() {
   const router = useRouter();
