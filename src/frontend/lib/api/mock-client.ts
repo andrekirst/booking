@@ -22,6 +22,7 @@ import {
   AccommodationType,
   TestEmailRequest,
   TestEmailResponse,
+  TimeRange,
   UpdateBookingRequest,
   UpdateEmailSettingsRequest,
   VerifyEmailRequest,
@@ -261,14 +262,46 @@ export class MockApiClient implements ApiClient {
     this.currentUser = null;
   }
 
-  async getBookings(): Promise<Booking[]> {
+  async getBookings(timeRange?: TimeRange): Promise<Booking[]> {
     await this.delay(300);
 
     if (!this.authenticated) {
       throw new ApiError('Unauthorized', 401);
     }
 
-    return this.mockBookings;
+    const today = new Date().toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    let filteredBookings = [...this.mockBookings];
+    
+    if (timeRange !== undefined) {
+      switch (timeRange) {
+        case TimeRange.Future:
+          filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+          break;
+        case TimeRange.All:
+          // No filter, return all
+          break;
+        case TimeRange.Past:
+          filteredBookings = filteredBookings.filter(b => b.endDate < today);
+          break;
+        case TimeRange.Last30Days:
+          filteredBookings = filteredBookings.filter(b => b.startDate >= thirtyDaysAgo);
+          break;
+        case TimeRange.LastYear:
+          filteredBookings = filteredBookings.filter(b => b.startDate >= oneYearAgo);
+          break;
+        default:
+          // Default to Future
+          filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+      }
+    } else {
+      // Default to Future
+      filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+    }
+
+    return filteredBookings;
   }
 
   async healthCheck(): Promise<{ status: string }> {

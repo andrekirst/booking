@@ -3,6 +3,7 @@ using Booking.Api.Features.Bookings.DTOs;
 using Booking.Api.Features.Bookings.Queries;
 using Booking.Api.Extensions;
 using Booking.Api.Attributes;
+using Booking.Api.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,13 +18,14 @@ namespace Booking.Api.Controllers;
 public class BookingsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<BookingDto>>> GetBookings()
+    public async Task<ActionResult<List<BookingDto>>> GetBookings([FromQuery] TimeRange? timeRange = null)
     {
         var userId = GetCurrentUserId();
         var isAdmin = User.IsInRole("Administrator");
         
         var query = new GetBookingsQuery(
-            UserId: isAdmin ? null : userId // Admins can see all bookings
+            UserId: isAdmin ? null : userId, // Admins can see all bookings
+            TimeRange: timeRange
         );
         
         var result = await mediator.Send(query);
