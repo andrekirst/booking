@@ -21,19 +21,19 @@ interface AnimatedNumberProps {
 function AnimatedNumber({ value, className = '' }: AnimatedNumberProps) {
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.span
           key={value}
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 15, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
+          exit={{ y: -15, opacity: 0 }}
           transition={{
             type: "spring",
-            stiffness: 600,
-            damping: 25,
-            duration: 0.15
+            stiffness: 800,
+            damping: 20,
+            duration: 0.1
           }}
-          className="block"
+          className="absolute inset-0 flex items-center justify-center"
         >
           {value}
         </motion.span>
