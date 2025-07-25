@@ -38,7 +38,7 @@ jest.mock('../../components/CreateBookingButton', () => {
 });
 
 jest.mock('../../components/ui/UserMenuDropdown', () => ({
-  UserMenuDropdown: ({ userInfo, onLogout }: any) => (
+  UserMenuDropdown: ({ userInfo, onLogout }: { userInfo: { name: string }; onLogout: () => void }) => (
     <div data-testid="user-menu-dropdown">
       <button aria-expanded="false" onClick={onLogout}>
         {userInfo.name}
@@ -337,7 +337,7 @@ describe('BookingsPage', () => {
       (apiClient.getToken as jest.Mock).mockReturnValue(mockToken);
       
       // Mock getCurrentUser for admin user
-      const { getCurrentUser } = require('../../../lib/auth/jwt');
+      const { getCurrentUser } = jest.requireActual('../../../lib/auth/jwt');
       getCurrentUser.mockReturnValue({
         name: 'Admin User',
         email: 'admin@example.com', 
@@ -377,7 +377,7 @@ describe('BookingsPage', () => {
       (apiClient.getToken as jest.Mock).mockReturnValue(mockToken);
       
       // Reset getCurrentUser for regular user
-      const { getCurrentUser } = require('../../../lib/auth/jwt');
+      const { getCurrentUser } = jest.requireActual('../../../lib/auth/jwt');
       getCurrentUser.mockReturnValue({
         name: 'Test User',
         email: 'test@example.com', 
@@ -402,7 +402,7 @@ describe('BookingsPage', () => {
   describe('Token Handling', () => {
     beforeEach(() => {
       // Reset to regular user for token handling tests
-      const { getCurrentUser } = require('../../../lib/auth/jwt');
+      const { getCurrentUser } = jest.requireActual('../../../lib/auth/jwt');
       getCurrentUser.mockReturnValue({
         name: 'Test User',
         email: 'test@example.com', 
