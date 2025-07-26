@@ -22,25 +22,29 @@ describe('CalendarView', () => {
   const mockBookings: Booking[] = [
     {
       id: '1',
-      userId: 'user1',
+      userId: 1,
+      userName: 'Test User 1',
+      userEmail: 'user1@example.com',
       startDate: '2025-07-25',
       endDate: '2025-07-27',
       totalPersons: 2,
+      numberOfNights: 2,
       status: BookingStatus.Confirmed,
       createdAt: '2025-07-25T10:00:00Z',
-      updatedAt: '2025-07-25T10:00:00Z',
-      accommodations: []
+      bookingItems: []
     },
     {
       id: '2',
-      userId: 'user2',
+      userId: 2,
+      userName: 'Test User 2',
+      userEmail: 'user2@example.com',
       startDate: '2025-07-28',
       endDate: '2025-07-30',
       totalPersons: 4,
+      numberOfNights: 2,
       status: BookingStatus.Pending,
       createdAt: '2025-07-25T11:00:00Z',
-      updatedAt: '2025-07-25T11:00:00Z',
-      accommodations: []
+      bookingItems: []
     }
   ];
 
