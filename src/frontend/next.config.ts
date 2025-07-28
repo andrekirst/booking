@@ -8,11 +8,19 @@ const nextConfig: NextConfig = {
       punycode: 'punycode.js'
     };
     
-    // Suppress punycode deprecation warnings
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      punycode: require.resolve('punycode.js')
-    };
+    // Suppress punycode deprecation warnings - with fallback for Docker
+    try {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        punycode: require.resolve('punycode.js')
+      };
+    } catch (e) {
+      // Fallback for Docker environment where punycode.js might not be found
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        punycode: false
+      };
+    }
 
     return config;
   },
