@@ -37,6 +37,7 @@ for AGENT_NUMBER in 2 3 4; do
     FRONTEND_PORT=$((BASE_PORT + 1))
     BACKEND_PORT=$((BASE_PORT + 2))
     DB_PORT=$((BASE_PORT + 3))
+    PGWEB_PORT=$((BASE_PORT + 4))
     
     OUTPUT_FILE="$PROJECT_ROOT/docker-compose.agent$AGENT_NUMBER.yml"
     
@@ -46,6 +47,7 @@ for AGENT_NUMBER in 2 3 4; do
     echo "   Frontend:   $FRONTEND_PORT"
     echo "   Backend:    $BACKEND_PORT"
     echo "   Database:   $DB_PORT"
+    echo "   pgweb:      $PGWEB_PORT"
     
     # Prüfe ob Datei bereits existiert
     if [ -f "$OUTPUT_FILE" ]; then
@@ -65,6 +67,7 @@ for AGENT_NUMBER in 2 3 4; do
         -e "s/{FRONTEND_PORT}/$FRONTEND_PORT/g" \
         -e "s/{BACKEND_PORT}/$BACKEND_PORT/g" \
         -e "s/{DB_PORT}/$DB_PORT/g" \
+        -e "s/{PGWEB_PORT}/$PGWEB_PORT/g" \
         "$PROJECT_ROOT/$TEMPLATE_FILE" > "$TEMP_FILE"
     
     # Füge Generierungs-Header hinzu
@@ -72,7 +75,7 @@ for AGENT_NUMBER in 2 3 4; do
         echo "# AUTOMATISCH GENERIERT - NICHT MANUELL BEARBEITEN!"
         echo "# Generiert von: $(basename "$0") am $(date)"
         echo "# Template: $TEMPLATE_FILE"
-        echo "# Agent: $AGENT_NUMBER | Ports: $FRONTEND_PORT/$BACKEND_PORT/$DB_PORT"
+        echo "# Agent: $AGENT_NUMBER | Ports: $FRONTEND_PORT/$BACKEND_PORT/$DB_PORT/$PGWEB_PORT"
         echo ""
         cat "$TEMP_FILE"
     } > "$OUTPUT_FILE"
