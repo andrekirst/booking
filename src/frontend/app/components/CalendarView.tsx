@@ -46,6 +46,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   });
 
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
@@ -57,21 +58,36 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
     };
   }, []);
 
-  // Transform bookings to calendar events
-  const events: CalendarEvent[] = bookings.map((booking) => {
-    const startDate = new Date(booking.startDate);
-    const endDate = new Date(booking.endDate);
+  // Transform bookings to calendar events when bookings change
+  useEffect(() => {
+    console.log('🔍 DEBUG useEffect: Transforming bookings to events');
     
-    return {
-      id: booking.id,
-      title: `${booking.totalPersons} ${booking.totalPersons === 1 ? 'Person' : 'Personen'}`,
-      start: startDate,
-      end: endDate,
-      resource: booking,
-    };
-  });
-  
-  console.log('🔍 DEBUG CalendarView transformed events:', events.length, events);
+    const events: CalendarEvent[] = bookings.map((booking) => {
+      const startDate = new Date(booking.startDate);
+      const endDate = new Date(booking.endDate);
+      
+      console.log('🔍 DEBUG Booking transform:', {
+        id: booking.id,
+        originalStart: booking.startDate,
+        originalEnd: booking.endDate,
+        transformedStart: startDate,
+        transformedEnd: endDate,
+        isValidStart: !isNaN(startDate.getTime()),
+        isValidEnd: !isNaN(endDate.getTime())
+      });
+      
+      return {
+        id: booking.id,
+        title: `${booking.totalPersons} ${booking.totalPersons === 1 ? 'Person' : 'Personen'}`,
+        start: startDate,
+        end: endDate,
+        resource: booking,
+      };
+    });
+    
+    console.log('🔍 DEBUG Setting calendar events:', events.length, events);
+    setCalendarEvents(events);
+  }, [bookings]);
 
   const getEventStyle = (event: CalendarEvent) => {
     const booking = event.resource;
@@ -159,8 +175,9 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }}
     >
       <Calendar
+        key={`calendar-${calendarEvents.length}-${Date.now()}`}
         localizer={localizer}
-        events={events}
+        events={calendarEvents}
         startAccessor="start"
         endAccessor="end"
         style={{ height: 600 }}
@@ -199,6 +216,8 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         view={currentView}
         onView={(view) => setCurrentView(view as 'month' | 'week' | 'day')}
         views={['month', 'week', 'day']}
+        showAllEvents
+        doShowMoreDrillDown={false}
       />
       
       {/* Legend */}
