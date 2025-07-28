@@ -185,7 +185,7 @@ export default function BookingsPage() {
     
     try {
       await apiClient.acceptBooking(selectedBookingId);
-      await fetchBookings(false); // Refresh bookings to show updated status
+      await fetchBookings(undefined, false); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error accepting booking:', error);
       setError('Fehler beim Annehmen der Buchung');
@@ -200,7 +200,7 @@ export default function BookingsPage() {
     
     try {
       await apiClient.rejectBooking(selectedBookingId);
-      await fetchBookings(false); // Refresh bookings to show updated status
+      await fetchBookings(undefined, false); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error rejecting booking:', error);
       setError('Fehler beim Ablehnen der Buchung');
