@@ -19,6 +19,7 @@ import {
   SleepingAccommodation,
   TestEmailRequest,
   TestEmailResponse,
+  TimeRange,
   UpdateBookingRequest,
   UpdateEmailSettingsRequest,
   VerifyEmailRequest,
@@ -35,7 +36,7 @@ export interface ApiClient {
   logout(): Promise<void>;
 
   // Booking endpoints
-  getBookings(status?: BookingStatus): Promise<Booking[]>;
+  getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]>;
   getBookingById(id: string): Promise<Booking>;
   createBooking(booking: CreateBookingRequest): Promise<Booking>;
   updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking>;
@@ -235,13 +236,17 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  async getBookings(status?: BookingStatus): Promise<Booking[]> {
+  async getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]> {
     const params = new URLSearchParams();
+    if (timeRange !== undefined) {
+      params.append("timeRange", timeRange.toString());
+    }
     if (status !== undefined) {
       params.append("status", status.toString());
     }
     const queryString = params.toString();
-    return this.request<Booking[]>(`/bookings${queryString ? `?${queryString}` : ""}`);
+    const url = `/bookings${queryString ? `?${queryString}` : ""}`;
+    return await this.request<Booking[]>(url);
   }
 
   async getBookingById(id: string): Promise<Booking> {

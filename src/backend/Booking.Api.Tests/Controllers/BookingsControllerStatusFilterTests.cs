@@ -65,7 +65,7 @@ public class BookingsControllerStatusFilterTests
         _mediator.Send(Arg.Any<GetBookingsQuery>()).Returns(expectedBookings);
 
         // Act
-        var result = await _controller.GetBookings(BookingStatus.Pending);
+        var result = await _controller.GetBookings(null, BookingStatus.Pending);
 
         // Assert
         await _mediator.Received(1).Send(Arg.Is<GetBookingsQuery>(q => 
@@ -83,7 +83,7 @@ public class BookingsControllerStatusFilterTests
         _mediator.Send(Arg.Any<GetBookingsQuery>()).Returns(expectedBookings);
 
         // Act
-        var result = await _controller.GetBookings(BookingStatus.Accepted);
+        var result = await _controller.GetBookings(null, BookingStatus.Accepted);
 
         // Assert
         await _mediator.Received(1).Send(Arg.Is<GetBookingsQuery>(q => 
@@ -101,7 +101,7 @@ public class BookingsControllerStatusFilterTests
         _mediator.Send(Arg.Any<GetBookingsQuery>()).Returns(expectedBookings);
 
         // Act
-        var result = await _controller.GetBookings(BookingStatus.Rejected);
+        var result = await _controller.GetBookings(null, BookingStatus.Rejected);
 
         // Assert
         await _mediator.Received(1).Send(Arg.Is<GetBookingsQuery>(q => 
@@ -129,7 +129,7 @@ public class BookingsControllerStatusFilterTests
         _mediator.Send(Arg.Any<GetBookingsQuery>()).Returns(expectedBookings);
 
         // Act
-        var result = await _controller.GetBookings(BookingStatus.Pending);
+        var result = await _controller.GetBookings(null, BookingStatus.Pending);
 
         // Assert - Admin should see all bookings (UserId = null)
         await _mediator.Received(1).Send(Arg.Is<GetBookingsQuery>(q => 
@@ -153,7 +153,7 @@ public class BookingsControllerStatusFilterTests
         _mediator.Send(Arg.Any<GetBookingsQuery>()).Returns(expectedBookings);
 
         // Act
-        var result = await _controller.GetBookings(status);
+        var result = await _controller.GetBookings(null, status);
 
         // Assert
         await _mediator.Received(1).Send(Arg.Is<GetBookingsQuery>(q => 

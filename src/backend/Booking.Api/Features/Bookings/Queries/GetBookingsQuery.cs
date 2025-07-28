@@ -11,6 +11,7 @@ namespace Booking.Api.Features.Bookings.Queries;
 
 public record GetBookingsQuery(
     int? UserId = null,
+    TimeRange? TimeRange = null,
     BookingStatus? Status = null
 ) : IRequest<List<BookingDto>>;
 
@@ -21,7 +22,8 @@ public class GetBookingsQueryHandler(
 {
     public async Task<List<BookingDto>> Handle(GetBookingsQuery request, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Getting bookings for user {UserId} with status filter {Status}", request.UserId, request.Status);
+        logger.LogInformation("Getting bookings for user {UserId} with time range {TimeRange} and status {Status}", 
+            request.UserId, request.TimeRange, request.Status);
 
         var query = context.BookingReadModels.AsQueryable();
 
@@ -30,11 +32,25 @@ public class GetBookingsQueryHandler(
             query = query.Where(b => b.UserId == request.UserId.Value);
         }
 
+        // Apply status filter
         if (request.Status.HasValue)
         {
             query = query.Where(b => b.Status == request.Status.Value);
         }
 
+        // Apply time range filter
+        var today = DateTime.UtcNow.Date;
+        var timeRange = request.TimeRange ?? TimeRange.Future; // Default to Future
+        
+        query = timeRange switch
+        {
+            TimeRange.Future => query.Where(b => b.EndDate >= today), // Include bookings that end today or later
+            TimeRange.All => query, // No filter, show all
+            TimeRange.Past => query.Where(b => b.EndDate < today), // Bookings that ended before today
+            TimeRange.Last30Days => query.Where(b => b.StartDate >= today.AddDays(-30)),
+            TimeRange.LastYear => query.Where(b => b.StartDate >= today.AddYears(-1)),
+            _ => query.Where(b => b.EndDate >= today) // Default to Future
+        };
         var bookings = await query
             .OrderBy(b => b.StartDate)
             .ToListAsync(cancellationToken);

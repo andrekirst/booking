@@ -193,29 +193,47 @@ describe('BookingsPage', () => {
   });
 
   describe('Empty State', () => {
-    it('should show empty state when no bookings exist', async () => {
+    it('should show empty state when no bookings exist in list view', async () => {
       (apiClient.getBookings as jest.Mock).mockResolvedValue([]);
       
       render(<BookingsPage />);
       
+      // Wait for the page to finish loading
       await waitFor(() => {
-        expect(screen.getByText('Noch keine Buchungen')).toBeInTheDocument();
+        expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
       });
       
-      expect(screen.getByText('Sie haben noch keine Buchungen erstellt. Starten Sie mit Ihrer ersten Buchung!')).toBeInTheDocument();
+      // Switch to list view to see empty state
+      const listViewButton = screen.getByRole('button', { name: /liste/i });
+      fireEvent.click(listViewButton);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Keine Buchungen gefunden')).toBeInTheDocument();
+      });
+      
+      expect(screen.getByText('Für die aktuellen Filter wurden keine Buchungen gefunden. Versuchen Sie andere Filtereinstellungen.')).toBeInTheDocument();
       expect(screen.getAllByTestId('create-booking-button')).toHaveLength(2); // One in header, one in empty state
     });
 
-    it('should have proper empty state styling', async () => {
+    it('should have proper empty state styling in list view', async () => {
       (apiClient.getBookings as jest.Mock).mockResolvedValue([]);
       
       render(<BookingsPage />);
       
+      // Wait for the page to finish loading
       await waitFor(() => {
-        expect(screen.getByText('Noch keine Buchungen')).toBeInTheDocument();
+        expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
       });
       
-      const emptyStateContainer = screen.getByText('Noch keine Buchungen').closest('div');
+      // Switch to list view to see empty state
+      const listViewButton = screen.getByRole('button', { name: /liste/i });
+      fireEvent.click(listViewButton);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Keine Buchungen gefunden')).toBeInTheDocument();
+      });
+      
+      const emptyStateContainer = screen.getByText('Keine Buchungen gefunden').closest('div');
       expect(emptyStateContainer).toHaveClass('bg-white', 'rounded-2xl', 'shadow-xl', 'p-12', 'text-center');
     });
   });

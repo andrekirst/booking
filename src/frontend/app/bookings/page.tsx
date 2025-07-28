@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Booking, BookingStatus } from '../../lib/types/api';
+import { Booking, TimeRange, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import { UserMenuDropdown } from '../components/ui/UserMenuDropdown';
 import { getCurrentUser } from '../../lib/auth/jwt';
-import ViewToggle, { useViewMode } from '../components/ViewToggle';
+import ViewToggle, { useViewMode, ViewMode } from '../components/ViewToggle';
 import BookingCalendarView from '../components/BookingCalendarView';
 import BookingListView from '../components/BookingListView';
 import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
 import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
 import BookingCardSkeleton from '../components/BookingCardSkeleton';
-import BookingStatusFilter from '../components/BookingStatusFilter';
+import FilterPanel from '../components/FilterPanel';
 
 // Smooth view transition container
 interface ViewTransitionContainerProps {
@@ -62,7 +62,17 @@ function ViewTransitionContainer({ children, viewKey }: ViewTransitionContainerP
 
 export default function BookingsPage() {
   const router = useRouter();
-  const [viewMode, setViewMode] = useViewMode();
+  const [viewMode, setViewModeBase] = useViewMode();
+  
+  const handleViewModeChange = (newViewMode: ViewMode) => {
+    setViewModeBase(newViewMode);
+    
+    // Beim Wechsel zur Kalenderansicht automatisch alle Buchungen laden
+    if (newViewMode === 'calendar' && selectedTimeRange !== TimeRange.All) {
+      setSelectedTimeRange(TimeRange.All);
+      fetchBookings(TimeRange.All, false);
+    }
+  };
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
@@ -72,9 +82,10 @@ export default function BookingsPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>(TimeRange.Future);
   const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
-  const fetchBookings = async (isInitialLoad = false) => {
+  const fetchBookings = useCallback(async (timeRange?: TimeRange, isInitialLoad = false) => {
     if (isInitialLoad) {
       setIsLoading(true);
     } else {
@@ -83,7 +94,10 @@ export default function BookingsPage() {
     setError(null);
 
     try {
-      const data = await apiClient.getBookings(statusFilter ?? undefined);
+      const data = await apiClient.getBookings(
+        timeRange ?? selectedTimeRange,
+        statusFilter ?? undefined
+      );
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -103,24 +117,28 @@ export default function BookingsPage() {
         setIsFilterLoading(false);
       }
     }
-  };
+  }, [selectedTimeRange, statusFilter, router]);
 
   // Initial load - only once
   useEffect(() => {
     checkUserRole();
     setCurrentUser(getCurrentUser());
-    fetchBookings(true);
-  }, []);
+    fetchBookings(undefined, true);
+  }, [fetchBookings]);
 
-  // Status filter changes - only fetch bookings
-  useEffect(() => {
-    if (statusFilter !== null || bookings.length > 0) {
-      fetchBookings(false);
-    }
-  }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Note: Filter changes are handled directly in handler functions
+  // This useEffect is TEMPORARILY DISABLED for debugging
+  // useEffect(() => {
+  //   // Only trigger if not initial state and has some context
+  //   if ((selectedTimeRange !== TimeRange.Future || statusFilter !== null) && bookings.length > 0) {
+  //     console.log('🔍 DEBUG: useEffect would trigger fetchBookings');
+  //     fetchBookings(selectedTimeRange, false);
+  //   }
+  // }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusFilterChange = (status: BookingStatus | null) => {
     setStatusFilter(status);
+    fetchBookings(selectedTimeRange, false);
   };
 
   const checkUserRole = () => {
@@ -180,7 +198,7 @@ export default function BookingsPage() {
     
     try {
       await apiClient.acceptBooking(selectedBookingId);
-      await fetchBookings(false); // Refresh bookings to show updated status
+      await fetchBookings(undefined, false); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error accepting booking:', error);
       setError('Fehler beim Annehmen der Buchung');
@@ -195,7 +213,7 @@ export default function BookingsPage() {
     
     try {
       await apiClient.rejectBooking(selectedBookingId);
-      await fetchBookings(false); // Refresh bookings to show updated status
+      await fetchBookings(undefined, false); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error rejecting booking:', error);
       setError('Fehler beim Ablehnen der Buchung');
@@ -203,6 +221,11 @@ export default function BookingsPage() {
       setShowRejectModal(false);
       setSelectedBookingId(null);
     }
+  };
+
+  const handleTimeRangeChange = (timeRange: TimeRange) => {
+    setSelectedTimeRange(timeRange);
+    fetchBookings(timeRange, false);
   };
 
   if (isLoading) {
@@ -233,7 +256,7 @@ export default function BookingsPage() {
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
               <ViewToggle 
                 currentView={viewMode}
-                onViewChange={setViewMode}
+                onViewChange={handleViewModeChange}
               />
               <CreateBookingButton
                 variant="large"
@@ -269,69 +292,67 @@ export default function BookingsPage() {
             </div>
           )}
 
-          {/* Status Filter */}
-          <div className="relative">
-            <BookingStatusFilter
-              currentStatus={statusFilter}
-              onStatusChange={handleStatusFilterChange}
-            />
-            {isFilterLoading && (
-              <div className="absolute top-0 right-0 mt-4 mr-4">
-                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-              </div>
-            )}
-          </div>
+          {/* Filter Panel */}
+          <FilterPanel
+            selectedTimeRange={selectedTimeRange}
+            statusFilter={statusFilter}
+            isFilterLoading={isFilterLoading}
+            onTimeRangeChange={handleTimeRangeChange}
+            onStatusChange={handleStatusFilterChange}
+            hideTimeRange={viewMode === 'calendar'}
+          />
 
           {/* Main Content */}
           <div>
-            {bookings.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
-                </svg>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Noch keine Buchungen
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Sie haben noch keine Buchungen erstellt. Starten Sie mit Ihrer ersten Buchung!
-                </p>
-                <CreateBookingButton
-                  variant="large"
-                  onClick={handleCreateBooking}
-                />
-              </div>
+            {isLoading ? (
+              // Loading Skeletons
+              <>
+                {/* Calendar skeleton view */}
+                <div className={`${
+                  viewMode === 'calendar' ? 'block' : 'hidden'
+                }`}>
+                  <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
+                    <div className="xl:col-span-2 order-2 xl:order-1">
+                      <CalendarViewSkeleton />
+                    </div>
+                    <div className="xl:col-span-1 order-1 xl:order-2">
+                      <CompactBookingListSkeleton />
+                    </div>
+                  </div>
+                </div>
+
+                {/* List skeleton view */}
+                <div className={`${
+                  viewMode === 'list' ? 'block' : 'hidden'
+                }`}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <BookingCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              </>
             ) : (
               <>
-                {isLoading ? (
-                  // Loading Skeletons
-                  <>
-                    {/* Calendar skeleton view */}
-                    <div className={`${
-                      viewMode === 'calendar' ? 'block' : 'hidden'
-                    }`}>
-                      <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
-                        <div className="xl:col-span-2 order-2 xl:order-1">
-                          <CalendarViewSkeleton />
-                        </div>
-                        <div className="xl:col-span-1 order-1 xl:order-2">
-                          <CompactBookingListSkeleton />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* List skeleton view */}
-                    <div className={`${
-                      viewMode === 'list' ? 'block' : 'hidden'
-                    }`}>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <BookingCardSkeleton key={i} />
-                        ))}
-                      </div>
-                    </div>
-                  </>
+                {/* Show empty state only for list view when no bookings */}
+                {viewMode === 'list' && bookings.length === 0 ? (
+                  <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0v1a2 2 0 002 2h4a2 2 0 002-2V7m-6 0H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-4" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      Keine Buchungen gefunden
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Für die aktuellen Filter wurden keine Buchungen gefunden. Versuchen Sie andere Filtereinstellungen.
+                    </p>
+                    <CreateBookingButton
+                      variant="large"
+                      onClick={handleCreateBooking}
+                    />
+                  </div>
                 ) : (
-                  // Smooth animated content transition
+                  // Always show content (calendar will handle empty bookings gracefully)
                   <ViewTransitionContainer viewKey={viewMode}>
                     {viewMode === 'calendar' ? (
                       <BookingCalendarView
