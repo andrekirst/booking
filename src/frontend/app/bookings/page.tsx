@@ -130,17 +130,24 @@ export default function BookingsPage() {
     console.log('🔥 statusFilter:', statusFilter);
     console.log('🔥 bookings.length:', bookings.length);
     
-    // Skip fetching during initial load (handled by initial useEffect)
-    if (selectedTimeRange !== TimeRange.Future || statusFilter !== null || bookings.length > 0) {
+    // ALWAYS fetch bookings when filters change (except during initial load)
+    // Initial load is handled by separate useEffect above
+    const isNotInitialState = selectedTimeRange !== TimeRange.Future || statusFilter !== null;
+    const hasBookings = bookings.length > 0;
+    
+    if (isNotInitialState || hasBookings) {
       console.log('🔥 Calling fetchBookings with selectedTimeRange:', selectedTimeRange);
       fetchBookings(selectedTimeRange, false);
     } else {
-      console.log('🔥 Skipping fetchBookings - initial state');
+      console.log('🔥 Skipping fetchBookings - waiting for initial load');
     }
   }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusFilterChange = (status: BookingStatus | null) => {
+    console.log('🔥 handleStatusFilterChange called with:', status);
     setStatusFilter(status);
+    // Direkter fetchBookings Call - useEffect ist manchmal unreliable
+    fetchBookings(selectedTimeRange, false);
   };
 
   const checkUserRole = () => {
@@ -229,7 +236,8 @@ export default function BookingsPage() {
     console.log('🔥 handleTimeRangeChange called with:', timeRange);
     console.log('🔥 Previous selectedTimeRange:', selectedTimeRange);
     setSelectedTimeRange(timeRange);
-    // fetchBookings wird vom useEffect aufgerufen
+    // Direkter fetchBookings Call - useEffect ist manchmal unreliable 
+    fetchBookings(timeRange, false);
   };
 
   if (isLoading) {
