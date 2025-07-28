@@ -637,318 +637,154 @@ A: Jede Session hat eigenen Timeout. Bei Bedarf in jeweiligem Terminal neu start
 # Alle arbeiten GLEICHZEITIG ohne Konflikte!
 ```
 
-### 13.10 Docker-basierte Multi-Agent-Entwicklungsumgebungen
+## 14. pgweb PostgreSQL Web-Interface Integration
 
-#### Übersicht
-**Ziel**: Automatisierte, isolierte Docker-Umgebungen für jeden Agenten mit eigenem Port-Bereich und sofort verfügbarer Entwicklungsumgebung. Diese Lösung eliminiert das manuelle Starten von `npm run dev` und IDE-Setup für jeden Agenten.
+### 14.1 Übersicht
+**pgweb** ist in das Multi-Agent Docker-Setup integriert und bietet für jeden Agenten ein separates Web-Interface zur PostgreSQL-Datenbankadministration.
 
-#### Port-Schema (60000er Bereich)
-**WICHTIG**: Verwendet 60000er Bereich zur Vermeidung von Standard-Port-Konflikten:
+### 14.2 Port-Schema für pgweb
+```
+Agent | PostgreSQL | pgweb Interface
+------|------------|----------------
+  2   |   60203    |     60204
+  3   |   60303    |     60304  
+  4   |   60403    |     60404
+```
 
-| Agent | Port-Bereich | Frontend | Backend | PostgreSQL | Redis | Weitere Services |
-|-------|--------------|----------|---------|------------|-------|------------------|
-| Agent 1 | 60100-60199 | 60101 | 60102 | 60103 | 60104 | 60105-60199 |
-| Agent 2 | 60200-60299 | 60201 | 60202 | 60203 | 60204 | 60205-60299 |
-| Agent 3 | 60300-60399 | 60301 | 60302 | 60303 | 60304 | 60305-60399 |
-| Agent 4 | 60400-60499 | 60401 | 60402 | 60403 | 60404 | 60405-60499 |
+### 14.3 Zugriff auf pgweb
+#### Pro Agent URLs
+- **Agent 2**: http://localhost:60204
+- **Agent 3**: http://localhost:60304  
+- **Agent 4**: http://localhost:60404
 
-**Vorteile des 60000er Bereichs:**
-- ✅ **Keine Konflikte** mit Standard-Ports (80, 443, 3000, 5000, etc.)
-- ✅ **Klare Struktur**: 100er Blöcke pro Agent
-- ✅ **Erweiterbar**: Platz für zusätzliche Services pro Agent
-- ✅ **Hohe Ports**: Keine Admin-Rechte erforderlich
+#### Authentifizierung
+- **Benutzername**: `admin`
+- **Passwort**: `admin`
+- **Environment**: Nur in Development verfügbar (Production = deaktiviert)
 
-#### Docker-Setup pro Agent
-Jeder Agent erhält isolierte Docker-Services:
-- **PostgreSQL**: Eigene Datenbank-Instanz
-- **Backend**: .NET API mit agentenspezifischer Konfiguration
-- **Frontend**: Next.js mit Hot-Reload
-- **Networking**: Isolierte Docker-Netzwerke
+### 14.4 Features
+✅ **Datenbank-Browsing**: Tabellen, Views, Funktionen anzeigen  
+✅ **SQL-Queries**: Direkte SQL-Ausführung mit Syntax-Highlighting  
+✅ **Daten-Export**: CSV, JSON, XML Export  
+✅ **Schema-Browsing**: Vollständige Datenbankstruktur  
+✅ **Query-History**: Ausgeführte Queries nachvollziehen  
+✅ **Multi-Agent-Isolation**: Jeder Agent hat eigene DB und pgweb-Instanz  
 
-#### Automatisierungs-Scripts
+### 14.5 Sicherheit
+🔒 **Basic Auth**: HTTP-Authentifizierung aktiviert  
+🔒 **Netzwerk-Isolation**: pgweb läuft im Agent-spezifischen Docker-Netzwerk  
+🔒 **Entwicklungsumgebung**: Nur für Development, nicht Production  
+🔒 **Datenbankzugriff**: Vollzugriff auf Agent-spezifische Datenbank  
 
-##### Agent-Verwaltung
+### 14.6 Verwendung im Development-Workflow
 ```bash
-# Neuen Agenten starten (erstellt Worktree + Docker-Umgebung)
-./scripts/start-agent.sh 2 feat/49-user-manual
+# 1. Agent starten (pgweb wird automatisch mitgestartet)
+./scripts/start-agent.sh 2 feat/my-feature
 
-# Agent stoppen
+# 2. pgweb Web-Interface öffnen (nur Development)
+open http://localhost:60204
+# Login: admin / admin
+
+# 3. Datenbank-Operationen durchführen
+# - Tabellen browsen
+# - SQL-Queries ausführen
+# - Daten exportieren
+# - Schema analysieren
+
+# 4. Agent stoppen (pgweb wird automatisch mitgestoppt)
 ./scripts/stop-agent.sh 2
-
-# Status aller Agenten
-./scripts/status-agents.sh
-
-# Alle Agenten stoppen
-./scripts/stop-all-agents.sh
 ```
 
-##### Konfiguration generieren
+### 14.7 SQL-Query Beispiele
+```sql
+-- Alle Buchungen anzeigen
+SELECT * FROM booking_read_models ORDER BY created_at DESC;
+
+-- Benutzer und ihre Buchungen
+SELECT u.first_name, u.last_name, COUNT(b.id) as booking_count
+FROM users u 
+LEFT JOIN booking_read_models b ON u.id = b.user_id
+GROUP BY u.id, u.first_name, u.last_name;
+
+-- Schlafplätze und Auslastung
+SELECT sa.name, sa.capacity, COUNT(bi.id) as current_bookings
+FROM sleeping_accommodations sa
+LEFT JOIN booking_items bi ON sa.id = bi.sleeping_accommodation_id
+GROUP BY sa.id, sa.name, sa.capacity;
+```
+
+### 14.8 Troubleshooting
+#### pgweb lädt nicht
 ```bash
-# Regeneriert alle Docker Compose Files aus Template
-./scripts/generate-agent-configs.sh
+# Container Status prüfen
+docker-compose -f docker-compose.agent2.yml ps
+
+# pgweb Logs anzeigen
+docker logs booking-pgweb-agent2
+
+# pgweb Container neustarten
+docker-compose -f docker-compose.agent2.yml restart pgweb-agent2
 ```
 
-#### Template-System
-- **Template**: `docker-compose.agent-template.yml`
-- **Generierte Files**: `docker-compose.agent{2-4}.yml`
-- **Platzhalter**: `{AGENT_NUMBER}`, `{FRONTEND_PORT}`, etc.
-- **Automatische Validation** der generierten Konfigurationen
+#### Authentifizierung fehlgeschlagen
+- Benutzername: `admin`
+- Passwort: `admin`
+- Stelle sicher, dass Development-Profile aktiviert ist
+- Bei Problemen Container-Logs prüfen
 
-#### Features
-
-##### Automatisches Setup
-- Git Worktree wird automatisch erstellt oder aktualisiert
-- Dependencies werden im Container installiert
-- Datenbank-Migrationen laufen automatisch
-- Hot-Reload funktioniert out-of-the-box
-
-##### Isolation
-- Jeder Agent hat eigene Datenbank-Instanz
-- Keine Port-Konflikte zwischen Agenten
-- Unabhängige Node_modules und Build-Caches
-- Eigene Environment-Variablen pro Agent
-
-##### Monitoring
-- Docker Dashboard zeigt alle laufenden Agenten
-- Logs zentral über `docker-compose logs`
-- Health-Checks für alle Services
-- Restart-Policy für Stabilität
-
-#### Workflow-Integration
-
-##### Typischer Multi-Agent-Workflow
+#### Datenbankverbindung nicht möglich
 ```bash
-# 1. Starte mehrere Agenten parallel
-./scripts/start-agent.sh 2 feat/65-user-management
-./scripts/start-agent.sh 3 feat/66-api-enhancement
-./scripts/start-agent.sh 4 feat/67-testing
+# PostgreSQL Container Status prüfen
+docker logs booking-postgres-agent2
 
-# 2. Prüfe Status aller Agenten
-./scripts/status-agents.sh
-
-# 3. Arbeite in separaten Claude Sessions
-# Terminal 1: cd ../booking-agent2 && claude
-# Terminal 2: cd ../booking-agent3 && claude
-# Terminal 3: cd ../booking-agent4 && claude
-
-# 4. URLs für sofortige Review:
-# Agent 2: http://localhost:60201
-# Agent 3: http://localhost:60301  
-# Agent 4: http://localhost:60401
+# Netzwerk-Konnektivität testen
+docker exec booking-pgweb-agent2 ping postgres-agent2
 ```
 
-##### Hot-Reload Testing
+### 14.9 Konfiguration
+Die pgweb-Konfiguration erfolgt über Umgebungsvariablen im `docker-compose.agent-template.yml`:
+```yaml
+# pgweb Database Web Interface (Development Only)
+pgweb-agent{AGENT_NUMBER}:
+  image: sosedoff/pgweb:latest
+  environment:
+    PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent{AGENT_NUMBER}:5432/booking_agent{AGENT_NUMBER}?sslmode=disable"
+    PGWEB_AUTH_USER: "admin"
+    PGWEB_AUTH_PASS: "admin"
+    PGWEB_LISTEN_ADDR: "0.0.0.0"
+    PGWEB_LISTEN_PORT: "8081"
+  ports:
+    - "{PGWEB_PORT}:8081"
+  profiles:
+    - development  # Only available in development environment
+```
+
+### 14.10 Development vs. Production
+**WICHTIG**: pgweb ist nur in der Development-Umgebung verfügbar:
+
+#### Development (pgweb verfügbar)
 ```bash
-# Änderungen in Agent-Worktrees werden automatisch live-reloaded
-echo "🐳 Docker Agent 2" > ../booking-agent2/src/frontend/app/test.txt
-# Änderung ist sofort in http://localhost:60201 sichtbar
+# Mit Development-Profile starten
+docker-compose -f docker-compose.agent2.yml --profile development up -d
+
+# pgweb ist verfügbar unter:
+http://localhost:60204 (Login: admin/admin)
 ```
 
-#### Vorteile
-- ✅ **Zero-Setup**: Ein Befehl startet komplette Umgebung
-- ✅ **Parallel Review**: Alle Agenten gleichzeitig reviewbar
-- ✅ **Keine Konflikte**: Isolierte Ports und Datenbanken
-- ✅ **Persistent**: Container überleben IDE-Neustart
-- ✅ **Performance**: Docker-Cache beschleunigt Builds
-- ✅ **Saubere Ports**: 60000er Bereich ohne Standard-Port-Konflikte
+#### Production (pgweb deaktiviert)
+```bash
+# Ohne Profile starten (Standard)
+docker-compose -f docker-compose.agent2.yml up -d
 
-#### Technische Anforderungen
-- Docker Desktop oder Docker Engine
-- Docker Compose v2.0+
-- Ausreichend RAM (min. 8GB für 4 Agenten)
-- Port-Bereiche 60100-60499 frei
+# pgweb wird NICHT gestartet (Sicherheit)
+# Nur PostgreSQL, Backend und Frontend laufen
+```
 
-#### Best Practices
-- **Ein Agent = Ein Issue**: Klare Trennung der Entwicklungsarbeiten
-- **Status prüfen**: Regelmäßig `./scripts/status-agents.sh` verwenden
-- **Aufräumen**: Gestoppte Container und Volumes regelmäßig löschen
-- **Resource Management**: Nicht benötigte Agenten stoppen
-- **Monitoring**: Docker Dashboard zur Überwachung nutzen
-
-#### Troubleshooting
-- **Port-Konflikte**: 60000er Bereich prüfen mit `netstat -tuln | grep 60`
-- **Container-Probleme**: Logs mit `docker-compose -f docker-compose.agent{N}.yml logs`
-- **Health-Checks**: Services können trotz "unhealthy" Status funktionieren
-- **Performance**: Bei >3 Agenten RAM-Überwachung empfohlen
-
-## 14. Kommunikation
+## 15. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
 - Commit-Nachrichten können auf Englisch oder Deutsch sein
-
-## 15. Docker Multi-Agent Workflow - OBLIGATORISCHE ANWEISUNGEN
-
-### 15.1 Issue-Start-Protokoll (IMMER AUSFÜHREN)
-
-**WICHTIG**: Wenn der User sagt "Arbeite an Issue #XX" oder ein neues Issue zuweist, führe AUTOMATISCH diese Schritte aus:
-
-```bash
-# SCHRITT 1: Status prüfen
-./scripts/status-agents.sh
-
-# SCHRITT 2: Freien Agent wählen (2, 3 oder 4)
-AGENT=<erster_freier_agent>
-BRANCH="feat/XX-kurze-beschreibung"
-
-# SCHRITT 3: Agent starten
-./scripts/start-agent.sh $AGENT $BRANCH
-
-# SCHRITT 4: Zum Worktree wechseln
-cd ../booking-agent$AGENT
-
-# SCHRITT 5: User informieren
-"✅ Agent $AGENT gestartet für Issue #XX
-🌐 Test-URLs:
-- Frontend: http://localhost:60${AGENT}01
-- Backend:  http://localhost:60${AGENT}02
-- Worktree: ../booking-agent$AGENT"
-```
-
-### 15.2 Entwicklungs-Protokoll (WÄHREND DER ARBEIT)
-
-#### Bei JEDER Code-Änderung:
-1. Speichere die Datei
-2. Warte 2-3 Sekunden (Hot-Reload)
-3. Informiere User: "✅ Änderung live unter http://localhost:60${AGENT}01"
-
-#### User-Feedback-Integration:
-- **User sagt "Das funktioniert nicht"**: 
-  - Frage nach Details
-  - Zeige Logs wenn nötig
-  - Korrigiere und informiere über neue Test-URL
-  
-- **User sagt "Ich habe was geändert"**:
-  ```bash
-  git status  # Prüfe Änderungen
-  git diff    # Verstehe Änderungen  
-  git add -p  # Übernehme Änderungen
-  "✅ Deine Änderungen integriert"
-  ```
-
-### 15.3 Test- und Commit-Protokoll
-
-#### VOR JEDEM COMMIT ausführen:
-```bash
-# Frontend Tests
-cd src/frontend && npm test
-
-# Backend Tests  
-cd src/backend && dotnet test
-
-# Bei Erfolg: Commit mit Test-URLs
-git commit -m "feat: implement XYZ
-
-Test-Umgebung:
-- Frontend: http://localhost:60${AGENT}01
-- Backend:  http://localhost:60${AGENT}02
-- Feature:  http://localhost:60${AGENT}01/feature-path
-
-Fixes #XX"
-```
-
-### 15.4 PR-Erstellungs-Protokoll
-
-**IMMER in PR-Body angeben**:
-```markdown
-## Test-Umgebung für Review
-
-Reviewer können sofort testen:
-\`\`\`bash
-./scripts/start-agent.sh 3 $BRANCH_NAME
-\`\`\`
-
-URLs:
-- Frontend: http://localhost:60301
-- Backend:  http://localhost:60302
-- Feature:  http://localhost:60301/feature-path
-```
-
-### 15.5 Post-Merge Cleanup-Protokoll (OBLIGATORISCH)
-
-**Nach JEDEM PR-Merge AUTOMATISCH ausführen**:
-
-```bash
-# SCHRITT 1: Zum Hauptrepository
-cd ~/git/github/andrekirst/booking
-
-# SCHRITT 2: Main branch updaten
-git checkout main && git pull origin main
-
-# SCHRITT 3: Cleanup durchführen
-./scripts/cleanup-after-merge.sh $AGENT $BRANCH
-
-# SCHRITT 4: Status zeigen
-./scripts/status-agents.sh
-
-# SCHRITT 5: User informieren
-"✅ Issue #XX abgeschlossen und aufgeräumt
-- Agent $AGENT wieder verfügbar
-- Branch $BRANCH gelöscht
-- Docker Container entfernt"
-```
-
-### 15.6 Fehlerbehandlung
-
-#### Container-Probleme:
-```bash
-# Logs prüfen
-docker-compose -f docker-compose.agent$AGENT.yml logs
-
-# Neustart versuchen
-docker-compose -f docker-compose.agent$AGENT.yml restart
-
-# Bei anhaltenden Problemen
-./scripts/stop-agent.sh $AGENT
-./scripts/start-agent.sh $AGENT $BRANCH
-```
-
-#### Port-Konflikte:
-```bash
-# Blockierenden Prozess finden
-lsof -i :60${AGENT}01
-
-# Alternativen Agent verwenden
-"⚠️ Port belegt - verwende Agent $NEXT_AGENT"
-```
-
-### 15.7 Proaktive Kommunikation
-
-**IMMER proaktiv informieren über**:
-- URLs nach Änderungen: "✅ Teste unter http://localhost:60${AGENT}01"
-- Status-Updates: "🔄 Backend wird neu gestartet..."
-- Hilfsangebote: "Soll ich die Logs zeigen?"
-- Cleanup-Erinnerung: "PR gemerged? Führe Cleanup durch..."
-
-### 15.8 Checkliste für JEDEN Issue
-
-- [ ] **Start**: Agent automatisch starten mit `start-agent.sh`
-- [ ] **URLs**: User über Test-URLs informieren
-- [ ] **Entwicklung**: Code mit Hot-Reload entwickeln
-- [ ] **Tests**: Vor Commits IMMER Tests ausführen
-- [ ] **Commit**: Test-URLs in Commit-Message angeben
-- [ ] **PR**: Test-Anleitung im PR-Body
-- [ ] **Cleanup**: Nach Merge IMMER `cleanup-after-merge.sh`
-- [ ] **Status**: Finalen Status mit `status-agents.sh` zeigen
-
-### 15.9 Quick-Reference für Docker-Befehle
-
-```bash
-# Logs anzeigen
-docker-compose -f docker-compose.agent$AGENT.yml logs -f
-
-# Service neustarten
-docker-compose -f docker-compose.agent$AGENT.yml restart backend-agent$AGENT
-
-# In Container einloggen
-docker-compose -f docker-compose.agent$AGENT.yml exec backend-agent$AGENT bash
-
-# Datenbank-Zugriff
-docker-compose -f docker-compose.agent$AGENT.yml exec postgres-agent$AGENT \
-  psql -U booking_user -d booking_agent$AGENT
-```
-
-**WICHTIG**: Diese Workflow-Schritte sind NICHT optional. Sie müssen bei JEDER Issue-Bearbeitung durchgeführt werden, um konsistente Entwicklungsumgebungen und saubere Aufräumvorgänge zu gewährleisten.
 
 ---
 

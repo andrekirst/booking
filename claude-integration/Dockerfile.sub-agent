@@ -1,0 +1,62 @@
+# Claude Code Sub-Agent Integration Container
+FROM node:20-alpine
+
+# Build arguments
+ARG AGENT_ROLE
+ARG SUB_AGENT_ID
+
+# Set environment variables
+ENV CLAUDE_AGENT_ROLE=${AGENT_ROLE}
+ENV CLAUDE_SUB_AGENT_ID=${SUB_AGENT_ID}
+ENV NODE_ENV=development
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    bash \
+    jq \
+    openssh-client \
+    && rm -rf /var/cache/apk/*
+
+# Install Claude Code CLI (simulated - in real implementation this would be the actual CLI)
+# For this demo, we create a wrapper that simulates Claude Code integration
+RUN mkdir -p /usr/local/bin
+
+# Create Claude Code simulation wrapper
+COPY claude-wrapper.sh /usr/local/bin/claude
+RUN chmod +x /usr/local/bin/claude
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Install development dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --only=development
+
+# Copy sub-agent specific configurations
+COPY config/ ./config/
+COPY scripts/ ./scripts/
+
+# Create health check endpoint
+COPY health-server.js ./
+RUN chmod +x health-server.js
+
+# Expose Claude integration port
+EXPOSE 3000
+
+# Create entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set up Git configuration for container
+RUN git config --global user.name "Claude Sub-Agent ${SUB_AGENT_ID}" && \
+    git config --global user.email "claude-sub-agent${SUB_AGENT_ID}@booking.local" && \
+    git config --global init.defaultBranch main
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["claude", "--interactive"]

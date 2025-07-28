@@ -79,6 +79,27 @@ services:
       - booking-agent{AGENT_NUMBER}-network
     restart: unless-stopped
 
+  # pgweb Database Web Interface (Development Only)
+  pgweb-agent{AGENT_NUMBER}:
+    image: sosedoff/pgweb:latest
+    container_name: booking-pgweb-agent{AGENT_NUMBER}
+    environment:
+      PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent{AGENT_NUMBER}:5432/booking_agent{AGENT_NUMBER}?sslmode=disable"
+      PGWEB_AUTH_USER: "admin"
+      PGWEB_AUTH_PASS: "admin"
+      PGWEB_LISTEN_ADDR: "0.0.0.0"
+      PGWEB_LISTEN_PORT: "8081"
+    ports:
+      - "{PGWEB_PORT}:8081"  # Agent {AGENT_NUMBER} pgweb Port
+    depends_on:
+      postgres-agent{AGENT_NUMBER}:
+        condition: service_healthy
+    networks:
+      - booking-agent{AGENT_NUMBER}-network
+    restart: unless-stopped
+    profiles:
+      - development  # Only available in development environment
+
 volumes:
   postgres_agent{AGENT_NUMBER}_data:
 

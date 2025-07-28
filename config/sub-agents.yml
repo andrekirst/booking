@@ -1,0 +1,305 @@
+# Claude Code Sub-Agents Configuration
+# Definiert alle verfügbaren Sub-Agents mit ihren Eigenschaften und Konfigurationen
+
+sub_agents:
+  S1:
+    name: "Senior Developer"
+    role: "senior-developer"
+    description: "Architekturentscheidungen, Code-Reviews, komplexe Problemlösungen"
+    port_range: "60500-60599"
+    base_port: 60500
+    specializations:
+      - "architecture"
+      - "performance"
+      - "code-review"
+      - "mentoring"
+      - "complex-problem-solving"
+    primary_skills:
+      - "Code Architecture"
+      - "Performance Optimization"
+      - "Technical Leadership"
+      - "Design Patterns"
+    tools:
+      - "Clean Architecture"
+      - "SOLID Principles"
+      - "Design Patterns"
+      - "Performance Profiling"
+    focus_areas:
+      - "System Design"
+      - "Code Quality"
+      - "Performance"
+      - "Best Practices"
+    docker_config:
+      cpu_limit: "2.0"
+      memory_limit: "4G"
+      environment:
+        CLAUDE_AGENT_PRIORITY: "high"
+        CLAUDE_REVIEW_MODE: "enabled"
+
+  S2:
+    name: "UI Developer"
+    role: "ui-developer"
+    description: "Frontend-Komponenten, Styling, User Interface Implementation"
+    port_range: "60600-60699"
+    base_port: 60600
+    specializations:
+      - "react"
+      - "nextjs"
+      - "tailwind"
+      - "responsive-design"
+      - "component-libraries"
+    primary_skills:
+      - "React/Next.js"
+      - "Tailwind CSS"
+      - "Component Development"
+      - "Responsive Design"
+    tools:
+      - "React Dev Tools"
+      - "Tailwind CSS"
+      - "Storybook"
+      - "Design Systems"
+    focus_areas:
+      - "User Interface"
+      - "Frontend Performance"
+      - "Component Architecture"
+      - "Design Implementation"
+    docker_config:
+      cpu_limit: "1.5"
+      memory_limit: "3G"
+      environment:
+        CLAUDE_UI_MODE: "enabled"
+        CLAUDE_DESIGN_SYSTEM: "tailwind"
+
+  S3:
+    name: "UX Expert"
+    role: "ux-expert"
+    description: "User Experience Design, Usability-Optimierungen, Accessibility"
+    port_range: "60700-60799"
+    base_port: 60700
+    specializations:
+      - "ux-design"
+      - "accessibility"
+      - "usability-testing"
+      - "user-journey"
+      - "interaction-design"
+    primary_skills:
+      - "User Experience Design"
+      - "Accessibility"
+      - "Usability Testing"
+      - "Information Architecture"
+    tools:
+      - "WCAG Guidelines"
+      - "Screen Readers"
+      - "Accessibility Testing"
+      - "User Journey Mapping"
+    focus_areas:
+      - "User Experience"
+      - "Accessibility Compliance"
+      - "Inclusive Design"
+      - "Usability"
+    docker_config:
+      cpu_limit: "1.0"
+      memory_limit: "2G"
+      environment:
+        CLAUDE_UX_MODE: "enabled"
+        CLAUDE_ACCESSIBILITY_CHECK: "strict"
+
+  S4:
+    name: "Test Expert"
+    role: "test-expert"
+    description: "Test-Strategien, Unit/Integration/E2E Tests, Test-Automatisierung"
+    port_range: "60800-60899"
+    base_port: 60800
+    specializations:
+      - "unit-testing"
+      - "integration-testing"
+      - "e2e-testing"
+      - "test-automation"
+      - "quality-assurance"
+    primary_skills:
+      - "Test Strategy"
+      - "Test Automation"
+      - "Quality Assurance"
+      - "CI/CD Integration"
+    tools:
+      - "Jest"
+      - "Playwright"
+      - "xUnit"
+      - "GitHub Actions"
+    focus_areas:
+      - "Test Coverage"
+      - "Quality Gates"
+      - "Test Automation"
+      - "Performance Testing"
+    docker_config:
+      cpu_limit: "1.5"
+      memory_limit: "3G"
+      environment:
+        CLAUDE_TEST_MODE: "enabled"
+        CLAUDE_COVERAGE_TARGET: "80"
+
+  S5:
+    name: "Architecture Expert"
+    role: "architecture-expert"
+    description: "System-Design, Performance-Optimierungen, Skalierbarkeit"
+    port_range: "60900-60999"
+    base_port: 60900
+    specializations:
+      - "system-architecture"
+      - "database-design"
+      - "scalability"
+      - "event-sourcing"
+      - "microservices"
+    primary_skills:
+      - "System Architecture"
+      - "Database Design"
+      - "Scalability Patterns"
+      - "Event-Driven Architecture"
+    tools:
+      - "Event Sourcing"
+      - "CQRS"
+      - "Domain-Driven Design"
+      - "Database Optimization"
+    focus_areas:
+      - "System Design"
+      - "Data Architecture"
+      - "Performance"
+      - "Scalability"
+    docker_config:
+      cpu_limit: "2.0"
+      memory_limit: "4G"
+      environment:
+        CLAUDE_ARCHITECTURE_MODE: "enabled"
+        CLAUDE_PATTERN_ANALYSIS: "advanced"
+
+  S6:
+    name: "DevOps Expert"
+    role: "devops-expert"
+    description: "CI/CD-Pipelines, Deployment-Automatisierung, Infrastructure as Code"
+    port_range: "61000-61099"
+    base_port: 61000
+    specializations:
+      - "ci-cd"
+      - "docker"
+      - "infrastructure"
+      - "monitoring"
+      - "deployment"
+    primary_skills:
+      - "CI/CD Pipeline Design"
+      - "Container Orchestration"
+      - "Infrastructure as Code"
+      - "Monitoring & Observability"
+    tools:
+      - "GitHub Actions"
+      - "Docker"
+      - "Infrastructure Tools"
+      - "Monitoring Solutions"
+    focus_areas:
+      - "Automation"
+      - "Infrastructure"
+      - "Deployment"
+      - "Observability"
+    docker_config:
+      cpu_limit: "1.5"
+      memory_limit: "3G"
+      environment:
+        CLAUDE_DEVOPS_MODE: "enabled"
+        CLAUDE_AUTOMATION_LEVEL: "high"
+
+# Global Sub-Agent Settings
+global_settings:
+  network_prefix: "booking-sub-agent"
+  volume_prefix: "booking_sub_agent"
+  image_base: "claude-sub-agent"
+  health_check_interval: "30s"
+  health_check_timeout: "10s"
+  health_check_retries: 3
+  restart_policy: "unless-stopped"
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+# Issue Assignment Rules
+assignment_rules:
+  frontend:
+    primary_agent: "S2"  # UI Developer
+    secondary_agents: ["S3"]  # UX Expert for review
+  backend:
+    primary_agent: "S1"  # Senior Developer
+    secondary_agents: ["S5"]  # Architecture Expert for review
+  testing:
+    primary_agent: "S4"  # Test Expert
+    secondary_agents: ["S1"]  # Senior Developer for review
+  architecture:
+    primary_agent: "S5"  # Architecture Expert
+    secondary_agents: ["S1"]  # Senior Developer for validation
+  devops:
+    primary_agent: "S6"  # DevOps Expert
+    secondary_agents: ["S1"]  # Senior Developer for review
+  ux:
+    primary_agent: "S3"  # UX Expert
+    secondary_agents: ["S2"]  # UI Developer for implementation
+  performance:
+    primary_agent: "S5"  # Architecture Expert
+    secondary_agents: ["S1", "S6"]  # Senior Dev + DevOps
+  security:
+    primary_agent: "S1"  # Senior Developer
+    secondary_agents: ["S6"]  # DevOps Expert
+
+# Collaboration Patterns
+collaboration_patterns:
+  full_stack_feature:
+    description: "Komplexes Feature mit Frontend, Backend, Tests und Deployment"
+    agents: ["S1", "S2", "S3", "S4", "S6"]
+    coordination_agent: "S1"
+    phases:
+      - name: "Architecture Planning"
+        agents: ["S1", "S5"]
+        duration: "1-2 hours"
+      - name: "UI/UX Design"
+        agents: ["S2", "S3"]
+        duration: "2-3 hours"
+      - name: "Backend Implementation"
+        agents: ["S1", "S5"]
+        duration: "4-6 hours"
+      - name: "Frontend Implementation"
+        agents: ["S2"]
+        duration: "3-4 hours"
+      - name: "Testing & QA"
+        agents: ["S4"]
+        duration: "2-3 hours"
+      - name: "Deployment & Monitoring"
+        agents: ["S6"]
+        duration: "1-2 hours"
+
+  bug_fix:
+    description: "Kritischer Bug-Fix mit vollständiger Validierung"
+    agents: ["S1", "S4"]
+    coordination_agent: "S1"
+    phases:
+      - name: "Bug Analysis"
+        agents: ["S1"]
+        duration: "30 minutes"
+      - name: "Fix Implementation"
+        agents: ["S1"]
+        duration: "1-2 hours"
+      - name: "Testing & Validation"
+        agents: ["S4"]
+        duration: "1 hour"
+
+  performance_optimization:
+    description: "System-Performance-Optimierung"
+    agents: ["S5", "S1", "S6"]
+    coordination_agent: "S5"
+    phases:
+      - name: "Performance Analysis"
+        agents: ["S5"]
+        duration: "1 hour"
+      - name: "Code Optimization"
+        agents: ["S1"]
+        duration: "2-4 hours"
+      - name: "Infrastructure Optimization"
+        agents: ["S6"]
+        duration: "1-2 hours"
