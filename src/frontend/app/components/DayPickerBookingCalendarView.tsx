@@ -1,27 +1,28 @@
 'use client';
 
 import { Booking } from '../../lib/types/api';
-import CalendarView from './CalendarView';
+import DayPickerCalendarView from './DayPickerCalendarView';
 import CompactBookingList from './CompactBookingList';
 
-interface BookingCalendarViewProps {
+interface DayPickerBookingCalendarViewProps {
   bookings: Booking[];
   onSelectBooking: (booking: Booking) => void;
   onSelectBookingById: (bookingId: string) => void;
   selectedBookingId?: string | null;
 }
 
-export default function BookingCalendarView({ 
+export default function DayPickerBookingCalendarView({ 
   bookings, 
   onSelectBooking, 
   onSelectBookingById, 
   selectedBookingId 
-}: BookingCalendarViewProps) {
+}: DayPickerBookingCalendarViewProps) {
+  console.log('🔍 DEBUG DayPickerBookingCalendarView received bookings:', bookings.length, bookings);
   
   return (
     <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-3 xl:gap-6">
       <div className="xl:col-span-2">
-        <CalendarView
+        <DayPickerCalendarView
           bookings={bookings}
           onSelectBooking={onSelectBooking}
         />

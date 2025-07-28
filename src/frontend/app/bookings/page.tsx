@@ -8,8 +8,8 @@ import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import { UserMenuDropdown } from '../components/ui/UserMenuDropdown';
 import { getCurrentUser } from '../../lib/auth/jwt';
-import ViewToggle, { useViewMode } from '../components/ViewToggle';
-import BookingFullCalendarView from '../components/BookingFullCalendarView';
+import ViewToggle, { useViewMode, ViewMode } from '../components/ViewToggle';
+import BookingCalendarView from '../components/BookingCalendarView';
 import BookingListView from '../components/BookingListView';
 import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
 import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
@@ -62,7 +62,17 @@ function ViewTransitionContainer({ children, viewKey }: ViewTransitionContainerP
 
 export default function BookingsPage() {
   const router = useRouter();
-  const [viewMode, setViewMode] = useViewMode();
+  const [viewMode, setViewModeBase] = useViewMode();
+  
+  const handleViewModeChange = (newViewMode: ViewMode) => {
+    setViewModeBase(newViewMode);
+    
+    // Beim Wechsel zur Kalenderansicht automatisch alle Buchungen laden
+    if (newViewMode === 'calendar' && selectedTimeRange !== TimeRange.All) {
+      setSelectedTimeRange(TimeRange.All);
+      fetchBookings(TimeRange.All, false);
+    }
+  };
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
@@ -246,7 +256,7 @@ export default function BookingsPage() {
             <div className="mt-4 sm:mt-0 flex items-center space-x-4">
               <ViewToggle 
                 currentView={viewMode}
-                onViewChange={setViewMode}
+                onViewChange={handleViewModeChange}
               />
               <CreateBookingButton
                 variant="large"
@@ -289,6 +299,7 @@ export default function BookingsPage() {
             isFilterLoading={isFilterLoading}
             onTimeRangeChange={handleTimeRangeChange}
             onStatusChange={handleStatusFilterChange}
+            hideTimeRange={viewMode === 'calendar'}
           />
 
           {/* Main Content */}
@@ -344,7 +355,7 @@ export default function BookingsPage() {
                   // Always show content (calendar will handle empty bookings gracefully)
                   <ViewTransitionContainer viewKey={viewMode}>
                     {viewMode === 'calendar' ? (
-                      <BookingFullCalendarView
+                      <BookingCalendarView
                         bookings={bookings}
                         onSelectBooking={handleSelectBooking}
                         onSelectBookingById={handleSelectBookingById}

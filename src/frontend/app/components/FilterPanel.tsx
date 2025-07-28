@@ -9,6 +9,7 @@ interface FilterPanelProps {
   isFilterLoading: boolean;
   onTimeRangeChange: (timeRange: TimeRange) => void;
   onStatusChange: (status: BookingStatus | null) => void;
+  hideTimeRange?: boolean;
 }
 
 const timeRangeOptions = [
@@ -35,6 +36,7 @@ export default function FilterPanel({
   isFilterLoading,
   onTimeRangeChange,
   onStatusChange,
+  hideTimeRange = false,
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -73,7 +75,7 @@ export default function FilterPanel({
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Filter</h3>
               <p className="text-xs text-gray-500">
-                {getTimeRangeLabel()} • {getStatusLabel()}
+                {hideTimeRange ? getStatusLabel() : `${getTimeRangeLabel()} • ${getStatusLabel()}`}
               </p>
             </div>
           </div>
@@ -103,27 +105,29 @@ export default function FilterPanel({
         isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="px-6 py-5 space-y-6">
-          {/* Time Range Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Zeitraum
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {timeRangeOptions.map((option) => (
-                <button
-                  key={`timerange-${option.value}`}
-                  onClick={() => onTimeRangeChange(option.value)}
-                  className={`px-3 py-2 text-sm rounded-lg border transition-all duration-150 ${
-                    selectedTimeRange === option.value
-                      ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+          {/* Time Range Filter - nur anzeigen wenn nicht versteckt */}
+          {!hideTimeRange && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Zeitraum
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {timeRangeOptions.map((option) => (
+                  <button
+                    key={`timerange-${option.value}`}
+                    onClick={() => onTimeRangeChange(option.value)}
+                    className={`px-3 py-2 text-sm rounded-lg border transition-all duration-150 ${
+                      selectedTimeRange === option.value
+                        ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Status Filter */}
           <div>
@@ -151,7 +155,9 @@ export default function FilterPanel({
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <button
               onClick={() => {
-                onTimeRangeChange(TimeRange.Future);
+                if (!hideTimeRange) {
+                  onTimeRangeChange(TimeRange.Future);
+                }
                 onStatusChange(null);
               }}
               className="text-sm text-gray-500 hover:text-gray-700 transition-colors"

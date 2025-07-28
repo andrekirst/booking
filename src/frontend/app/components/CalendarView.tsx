@@ -33,7 +33,6 @@ interface CalendarEvent {
 }
 
 export default function CalendarView({ bookings, onSelectBooking }: CalendarViewProps) {
-  console.log('🔍 DEBUG CalendarView received bookings:', bookings.length, bookings);
   
   const [tooltip, setTooltip] = useState<{
     booking: Booking;
@@ -46,11 +45,10 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   });
 
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
-  const [calendarInstance, setCalendarInstance] = useState(0);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Create a completely new calendar key based on bookings
-  const calendarKey = `calendar-instance-${calendarInstance}-${bookings.length}-${JSON.stringify(bookings.map(b => b.id))}`;
+  // Simple key based directly on bookings data to force complete re-render
+  const calendarKey = `calendar-${bookings.length}-${bookings.map(b => b.id).join('-')}`;
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -60,27 +58,11 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }
     };
   }, []);
-
-  // Force completely new calendar instance when bookings change  
-  useEffect(() => {
-    console.log('🔍 DEBUG Creating new calendar instance for bookings:', bookings.length);
-    setCalendarInstance(prev => prev + 1);
-  }, [bookings]);
   
-  // Transform bookings to calendar events - always fresh calculation
+  // Transform bookings to calendar events
   const events: CalendarEvent[] = bookings.map((booking) => {
     const startDate = new Date(booking.startDate);
     const endDate = new Date(booking.endDate);
-    
-    console.log('🔍 DEBUG Booking transform:', {
-      id: booking.id,
-      originalStart: booking.startDate,
-      originalEnd: booking.endDate,
-      transformedStart: startDate,
-      transformedEnd: endDate,
-      isValidStart: !isNaN(startDate.getTime()),
-      isValidEnd: !isNaN(endDate.getTime())
-    });
     
     return {
       id: booking.id,
@@ -90,8 +72,6 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       resource: booking,
     };
   });
-  
-  console.log('🔍 DEBUG Fresh events for calendar instance', calendarInstance, ':', events.length, events);
 
   const getEventStyle = (event: CalendarEvent) => {
     const booking = event.resource;

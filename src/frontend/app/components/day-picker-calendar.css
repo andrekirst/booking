@@ -1,0 +1,166 @@
+/* Custom styles for DayPicker calendar to ensure proper display */
+
+/* Ensure the calendar has proper structure */
+.rdp {
+  margin: 0;
+  font-family: inherit;
+}
+
+.rdp-month {
+  width: 100%;
+}
+
+.rdp-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.rdp-head_row,
+.rdp-row {
+  display: table-row;
+}
+
+.rdp-head_cell,
+.rdp-cell {
+  display: table-cell;
+  width: 14.28%; /* 100% / 7 days */
+  text-align: center;
+  vertical-align: middle;
+  padding: 0;
+}
+
+.rdp-head_cell {
+  font-weight: 600;
+  color: #374151;
+  padding: 8px;
+  font-size: 0.875rem;
+}
+
+.rdp-cell {
+  position: relative;
+  height: 48px;
+  border: 1px solid #f3f4f6;
+}
+
+.rdp-button {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #111827;
+  transition: all 0.2s ease;
+}
+
+.rdp-button:hover {
+  background-color: #f9fafb;
+}
+
+.rdp-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* Today styling */
+.rdp-day_today .rdp-button {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 700;
+}
+
+/* Selected day styling */  
+.rdp-day_selected .rdp-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.rdp-day_selected .rdp-button:hover {
+  background-color: #2563eb;
+}
+
+/* Outside month days */
+.rdp-day_outside .rdp-button {
+  color: #9ca3af;
+}
+
+/* Days with bookings - custom modifier */
+.rdp-day_has-bookings .rdp-button {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+
+.rdp-day_has-bookings .rdp-button:hover {
+  background-color: #bfdbfe !important;
+}
+
+/* Navigation buttons */
+.rdp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.rdp-nav_button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  transition: background-color 0.2s ease;
+}
+
+.rdp-nav_button:hover {
+  background-color: #f3f4f6;
+}
+
+.rdp-nav_button_previous {
+  position: absolute;
+  left: 0;
+}
+
+.rdp-nav_button_next {
+  position: absolute;
+  right: 0;
+}
+
+/* Month caption */
+.rdp-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+  position: relative;
+}
+
+.rdp-caption_label {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Disabled days */
+.rdp-day_disabled .rdp-button {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.rdp-day_disabled .rdp-button:hover {
+  background-color: transparent;
+}
+
+/* Hidden days */
+.rdp-day_hidden {
+  visibility: hidden;
+}
