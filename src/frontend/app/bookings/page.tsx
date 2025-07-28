@@ -116,12 +116,13 @@ export default function BookingsPage() {
     fetchBookings(undefined, true);
   }, []);
 
-  // Status filter changes - only fetch bookings
+  // Filter changes - fetch bookings when any filter changes
   useEffect(() => {
-    if (statusFilter !== null || bookings.length > 0) {
-      fetchBookings(undefined, false);
+    // Skip fetching during initial load (handled by initial useEffect)
+    if (selectedTimeRange !== TimeRange.Future || statusFilter !== null || bookings.length > 0) {
+      fetchBookings(selectedTimeRange, false);
     }
-  }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusFilterChange = (status: BookingStatus | null) => {
     setStatusFilter(status);
@@ -211,7 +212,7 @@ export default function BookingsPage() {
 
   const handleTimeRangeChange = (timeRange: TimeRange) => {
     setSelectedTimeRange(timeRange);
-    fetchBookings(timeRange, false);
+    // fetchBookings wird vom useEffect aufgerufen
   };
 
   if (isLoading) {
