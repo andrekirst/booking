@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { EventClickArg, EventInput, EventHoveringArg } from '@fullcalendar/core';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { EventClickArg, EventInput, EventHoveringArg, PluginDef } from '@fullcalendar/core';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import BookingTooltip from './BookingTooltip';
 import CalendarLegend from './CalendarLegend';
 import './fullcalendar.css';
+
+// Dynamic import for FullCalendar to avoid SSR issues
+const FullCalendar = dynamic(() => import('@fullcalendar/react'), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-gray-100 h-96 rounded-lg"></div>
+});
 
 interface FullCalendarViewProps {
   bookings: Booking[];
@@ -17,6 +20,28 @@ interface FullCalendarViewProps {
 }
 
 export default function FullCalendarView({ bookings, onSelectBooking }: FullCalendarViewProps) {
+  const [plugins, setPlugins] = useState<PluginDef[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPlugins = async () => {
+      try {
+        const [dayGridPlugin, timeGridPlugin, interactionPlugin] = await Promise.all([
+          import('@fullcalendar/daygrid'),
+          import('@fullcalendar/timegrid'),
+          import('@fullcalendar/interaction')
+        ]);
+        
+        setPlugins([dayGridPlugin.default, timeGridPlugin.default, interactionPlugin.default]);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading FullCalendar plugins:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadPlugins();
+  }, []);
   
   const [tooltip, setTooltip] = useState<{
     booking: Booking;
@@ -28,7 +53,7 @@ export default function FullCalendarView({ bookings, onSelectBooking }: FullCale
     visible: false,
   });
 
-  const calendarRef = useRef<FullCalendar>(null);
+  // const calendarRef = useRef<HTMLDivElement>(null);
 
   // Transform bookings to FullCalendar events
   const events: EventInput[] = bookings.map((booking) => ({
@@ -81,14 +106,24 @@ export default function FullCalendarView({ bookings, onSelectBooking }: FullCale
     setTooltip(prev => ({ ...prev, visible: false }));
   };
 
+  if (isLoading || plugins.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden">
+        <div className="animate-pulse bg-gray-100 h-96 rounded-lg flex items-center justify-center">
+          <div className="text-gray-500">Kalender wird geladen...</div>
+        </div>
+        <CalendarLegend />
+      </div>
+    );
+  }
+
   return (
     <div 
       className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden"
       style={{ height: 'fit-content' }}
     >
       <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        plugins={plugins}
         initialView="dayGridMonth"
         headerToolbar={{
           left: 'prev,next today',
