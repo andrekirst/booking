@@ -1,16 +1,5 @@
 version: '3.8'
 
-# Multi-Agent Docker Compose Template
-# Dieses Template wird von generate-agent-configs.sh verwendet, um 
-# spezifische Agent-Konfigurationen zu generieren
-#
-# Platzhalter:
-# 2 - wird durch die Agent-Nummer (2-4) ersetzt
-# 60200 - wird durch den Basis-Port (60200, 60300, 60400) ersetzt
-# 60201 - wird durch Frontend-Port (60200+1) ersetzt
-# 60202 - wird durch Backend-Port (60200+2) ersetzt
-# 60203 - wird durch DB-Port (60200+3) ersetzt
-
 services:
   postgres-agent2:
     image: postgres:16-alpine
@@ -21,10 +10,9 @@ services:
       POSTGRES_DB: booking_agent2
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
-      - "60203:5432"  # Agent 2 PostgreSQL Port
+      - "60203:5432"
     volumes:
       - postgres_agent2_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_agent2"]
       interval: 10s
@@ -49,13 +37,12 @@ services:
       JwtSettings__Audience: "BookingApp-Agent2"
       JwtSettings__ExpirationMinutes: "480"
     ports:
-      - "60202:80"  # Agent 2 Backend Port
+      - "60202:80"
     depends_on:
       postgres-agent2:
         condition: service_healthy
     volumes:
-      # Worktree-spezifisches Volume für Agent 2
-      - ../booking-agent2/src/backend:/app/src:ro
+      - ./src/backend:/app/src:ro
     networks:
       - booking-agent2-network
     restart: unless-stopped
@@ -69,36 +56,14 @@ services:
       NEXT_PUBLIC_API_URL: "http://localhost:60202/api"
       PORT: "3000"
     ports:
-      - "60201:3000"  # Agent 2 Frontend Port
+      - "60201:3000"
     volumes:
-      # Worktree-spezifisches Volume für Agent 2
-      - ../booking-agent2/src/frontend:/app:cached
+      - ./src/frontend:/app:cached
       - /app/node_modules
       - /app/.next
     networks:
       - booking-agent2-network
     restart: unless-stopped
-
-  # pgweb Database Web Interface (Development Only)
-  pgweb-agent2:
-    image: sosedoff/pgweb:latest
-    container_name: booking-pgweb-agent2
-    environment:
-      PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent2:5432/booking_agent2?sslmode=disable"
-      PGWEB_AUTH_USER: "admin"
-      PGWEB_AUTH_PASS: "admin"
-      PGWEB_LISTEN_ADDR: "0.0.0.0"
-      PGWEB_LISTEN_PORT: "8081"
-    ports:
-      - "60204:8081"  # Agent 2 pgweb Port
-    depends_on:
-      postgres-agent2:
-        condition: service_healthy
-    networks:
-      - booking-agent2-network
-    restart: unless-stopped
-    profiles:
-      - development  # Only available in development environment
 
 volumes:
   postgres_agent2_data:

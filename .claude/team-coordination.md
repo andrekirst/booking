@@ -1,15 +1,15 @@
 # Team Coordination
 
 ## Current Session
-- Role: default
-- Changed: Mo 28. Jul 12:22:39 CEST 2025
-- Worktree: booking-agent4
-- Branch: feat/70-claude-sub-agents
+- Role: ui-developer
+- Changed: Mo 28. Jul 16:13:18 CEST 2025
+- Worktree: booking-agent2
+- Branch: feat/41-theme-system
 
 ## Role Details
-🤖 Standard Multi-Agent - Allgemeine Entwicklungsaufgaben
+🎨 UI Developer - Frontend-Komponenten, Styling, User Interface
 
-Specializations: Full-Stack Development, General Programming, Feature Implementation
+Specializations: React/Next.js, Tailwind CSS, Component Libraries, Responsive Design
 
 ## Collaboration
 - Work in same codebase with clear role separation

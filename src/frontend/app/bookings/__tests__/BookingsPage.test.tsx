@@ -4,6 +4,43 @@ import BookingsPage from '../page';
 import { apiClient } from '../../../lib/api/client';
 import { Booking, BookingStatus } from '../../../lib/types/api';
 import { getCurrentUser } from '../../../lib/auth/jwt';
+import { ThemeProvider } from '../../../contexts/ThemeContext';
+
+// Mock localStorage for theme context
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: jest.fn((key: string) => store[key] || null),
+    setItem: jest.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: jest.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+
+// Mock matchMedia for theme context
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -102,9 +139,19 @@ const mockBookings: Booking[] = [
   },
 ];
 
+// Test wrapper with ThemeProvider
+const renderWithTheme = (ui: React.ReactElement) => {
+  return render(
+    <ThemeProvider defaultTheme="system">
+      {ui}
+    </ThemeProvider>
+  );
+};
+
 describe('BookingsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorageMock.clear();
     
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
     
@@ -123,7 +170,7 @@ describe('BookingsPage', () => {
     it('should show loading spinner while fetching bookings', () => {
       (apiClient.getBookings as jest.Mock).mockImplementation(() => new Promise(() => {}));
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       expect(screen.getByText('Buchungen werden geladen...')).toBeInTheDocument();
       expect(document.querySelector('.animate-spin')).toBeInTheDocument();
@@ -132,7 +179,7 @@ describe('BookingsPage', () => {
     it('should have proper loading spinner styling', () => {
       (apiClient.getBookings as jest.Mock).mockImplementation(() => new Promise(() => {}));
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       const spinner = document.querySelector('.animate-spin');
       expect(spinner).toHaveClass('w-8', 'h-8', 'border-4', 'border-blue-500/30', 'border-t-blue-500', 'rounded-full');
@@ -144,7 +191,7 @@ describe('BookingsPage', () => {
       const errorMessage = 'Fehler beim Laden der Buchungen';
       (apiClient.getBookings as jest.Mock).mockRejectedValue(new Error(errorMessage));
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -156,7 +203,7 @@ describe('BookingsPage', () => {
     it('should show generic error message for unknown errors', async () => {
       (apiClient.getBookings as jest.Mock).mockRejectedValue('Unknown error');
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Fehler beim Laden der Buchungen')).toBeInTheDocument();
@@ -169,7 +216,7 @@ describe('BookingsPage', () => {
         message: 'Unauthorized'
       });
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith('/login');
@@ -180,7 +227,7 @@ describe('BookingsPage', () => {
       const errorMessage = 'Network error';
       (apiClient.getBookings as jest.Mock).mockRejectedValue(new Error(errorMessage));
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /neu laden/i })).toBeInTheDocument();
@@ -196,7 +243,7 @@ describe('BookingsPage', () => {
     it('should show empty state when no bookings exist', async () => {
       (apiClient.getBookings as jest.Mock).mockResolvedValue([]);
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Noch keine Buchungen')).toBeInTheDocument();
@@ -209,7 +256,7 @@ describe('BookingsPage', () => {
     it('should have proper empty state styling', async () => {
       (apiClient.getBookings as jest.Mock).mockResolvedValue([]);
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Noch keine Buchungen')).toBeInTheDocument();
@@ -222,7 +269,7 @@ describe('BookingsPage', () => {
 
   describe('Successful Loading', () => {
     it('should display page header correctly', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -234,7 +281,7 @@ describe('BookingsPage', () => {
     it('should display bookings in the order returned by API', async () => {
       // Note: Sorting should be handled by the backend API, not client-side
       // This test verifies that bookings are displayed as returned from the API
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument(); // First booking from mockBookings
@@ -246,7 +293,7 @@ describe('BookingsPage', () => {
     });
 
     it('should display booking cards', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument();
@@ -258,7 +305,7 @@ describe('BookingsPage', () => {
     });
 
     it('should use grid layout for bookings', async () => {
-      const { container } = render(<BookingsPage />);
+      const { container } = renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument();
@@ -269,7 +316,7 @@ describe('BookingsPage', () => {
     });
 
     it('should navigate to booking detail when card is clicked', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument();
@@ -285,7 +332,7 @@ describe('BookingsPage', () => {
 
   describe('Navigation', () => {
     it('should show create booking button in header', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getAllByTestId('create-booking-button').length).toBeGreaterThanOrEqual(1);
@@ -293,7 +340,7 @@ describe('BookingsPage', () => {
     });
 
     it('should navigate to new booking page when create button is clicked', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getAllByTestId('create-booking-button').length).toBeGreaterThanOrEqual(1);
@@ -306,7 +353,7 @@ describe('BookingsPage', () => {
     });
 
     it('should show user menu dropdown', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
@@ -314,7 +361,7 @@ describe('BookingsPage', () => {
     });
 
     it('should logout and redirect when logout button is clicked', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
@@ -349,7 +396,7 @@ describe('BookingsPage', () => {
     });
 
     it('should show user menu for administrators', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
@@ -357,7 +404,7 @@ describe('BookingsPage', () => {
     });
 
     it('should show admin user name in dropdown', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByTestId('user-menu-dropdown')).toBeInTheDocument();
@@ -389,7 +436,7 @@ describe('BookingsPage', () => {
     });
 
     it('should show user menu for regular users', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -416,7 +463,7 @@ describe('BookingsPage', () => {
     it('should handle missing token gracefully', async () => {
       (apiClient.getToken as jest.Mock).mockReturnValue(null);
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -430,7 +477,7 @@ describe('BookingsPage', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       (apiClient.getToken as jest.Mock).mockReturnValue('invalid.token.parts');
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -444,7 +491,7 @@ describe('BookingsPage', () => {
 
   describe('Responsive Design', () => {
     it('should have responsive header layout', async () => {
-      const { container } = render(<BookingsPage />);
+      const { container } = renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -455,7 +502,7 @@ describe('BookingsPage', () => {
     });
 
     it('should have responsive grid layout', async () => {
-      const { container } = render(<BookingsPage />);
+      const { container } = renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('15.03.2024 - 17.03.2024')).toBeInTheDocument();
@@ -468,7 +515,7 @@ describe('BookingsPage', () => {
 
   describe('Visual Design', () => {
     it('should have gradient background', async () => {
-      const { container } = render(<BookingsPage />);
+      const { container } = renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -479,7 +526,7 @@ describe('BookingsPage', () => {
     });
 
     it('should have proper container max-width', async () => {
-      const { container } = render(<BookingsPage />);
+      const { container } = renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Meine Buchungen')).toBeInTheDocument();
@@ -492,7 +539,7 @@ describe('BookingsPage', () => {
 
   describe('Accessibility', () => {
     it('should have proper page heading', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         const heading = screen.getByRole('heading', { name: 'Meine Buchungen' });
@@ -502,7 +549,7 @@ describe('BookingsPage', () => {
     });
 
     it('should have proper button labels', async () => {
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         // Check that user menu dropdown is present (not the old separate logout button)
@@ -518,7 +565,7 @@ describe('BookingsPage', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       (apiClient.getBookings as jest.Mock).mockRejectedValue(new Error('Network error'));
       
-      render(<BookingsPage />);
+      renderWithTheme(<BookingsPage />);
       
       await waitFor(() => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
