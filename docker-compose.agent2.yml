@@ -79,13 +79,14 @@ services:
       - booking-agent2-network
     restart: unless-stopped
 
+  # pgweb Database Web Interface (Development Only)
   pgweb-agent2:
     image: sosedoff/pgweb:latest
     container_name: booking-pgweb-agent2
     environment:
       PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent2:5432/booking_agent2?sslmode=disable"
       PGWEB_AUTH_USER: "admin"
-      PGWEB_AUTH_PASS: "booking_admin_agent2"
+      PGWEB_AUTH_PASS: "admin"
       PGWEB_LISTEN_ADDR: "0.0.0.0"
       PGWEB_LISTEN_PORT: "8081"
     ports:
@@ -96,6 +97,8 @@ services:
     networks:
       - booking-agent2-network
     restart: unless-stopped
+    profiles:
+      - development  # Only available in development environment
 
 volumes:
   postgres_agent2_data:

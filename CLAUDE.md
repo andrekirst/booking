@@ -659,7 +659,8 @@ Agent | PostgreSQL | pgweb Interface
 
 #### Authentifizierung
 - **Benutzername**: `admin`
-- **Passwort**: `booking_admin_agent{N}` (z.B. `booking_admin_agent2`)
+- **Passwort**: `admin`
+- **Environment**: Nur in Development verfügbar (Production = deaktiviert)
 
 ### 14.4 Features
 ✅ **Datenbank-Browsing**: Tabellen, Views, Funktionen anzeigen  
@@ -680,9 +681,9 @@ Agent | PostgreSQL | pgweb Interface
 # 1. Agent starten (pgweb wird automatisch mitgestartet)
 ./scripts/start-agent.sh 2 feat/my-feature
 
-# 2. pgweb Web-Interface öffnen
+# 2. pgweb Web-Interface öffnen (nur Development)
 open http://localhost:60204
-# Login: admin / booking_admin_agent2
+# Login: admin / admin
 
 # 3. Datenbank-Operationen durchführen
 # - Tabellen browsen
@@ -727,7 +728,8 @@ docker-compose -f docker-compose.agent2.yml restart pgweb-agent2
 
 #### Authentifizierung fehlgeschlagen
 - Benutzername: `admin`
-- Passwort: `booking_admin_agent{AGENT_NUMBER}`
+- Passwort: `admin`
+- Stelle sicher, dass Development-Profile aktiviert ist
 - Bei Problemen Container-Logs prüfen
 
 #### Datenbankverbindung nicht möglich
@@ -742,16 +744,40 @@ docker exec booking-pgweb-agent2 ping postgres-agent2
 ### 14.9 Konfiguration
 Die pgweb-Konfiguration erfolgt über Umgebungsvariablen im `docker-compose.agent-template.yml`:
 ```yaml
+# pgweb Database Web Interface (Development Only)
 pgweb-agent{AGENT_NUMBER}:
   image: sosedoff/pgweb:latest
   environment:
     PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent{AGENT_NUMBER}:5432/booking_agent{AGENT_NUMBER}?sslmode=disable"
     PGWEB_AUTH_USER: "admin"
-    PGWEB_AUTH_PASS: "booking_admin_agent{AGENT_NUMBER}"
+    PGWEB_AUTH_PASS: "admin"
     PGWEB_LISTEN_ADDR: "0.0.0.0"
     PGWEB_LISTEN_PORT: "8081"
   ports:
     - "{PGWEB_PORT}:8081"
+  profiles:
+    - development  # Only available in development environment
+```
+
+### 14.10 Development vs. Production
+**WICHTIG**: pgweb ist nur in der Development-Umgebung verfügbar:
+
+#### Development (pgweb verfügbar)
+```bash
+# Mit Development-Profile starten
+docker-compose -f docker-compose.agent2.yml --profile development up -d
+
+# pgweb ist verfügbar unter:
+http://localhost:60204 (Login: admin/admin)
+```
+
+#### Production (pgweb deaktiviert)
+```bash
+# Ohne Profile starten (Standard)
+docker-compose -f docker-compose.agent2.yml up -d
+
+# pgweb wird NICHT gestartet (Sicherheit)
+# Nur PostgreSQL, Backend und Frontend laufen
 ```
 
 ## 15. Kommunikation
