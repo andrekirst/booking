@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Booking } from '../../lib/types/api';
+import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
 import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
@@ -14,6 +14,7 @@ import BookingListView from '../components/BookingListView';
 import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
 import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
 import BookingCardSkeleton from '../components/BookingCardSkeleton';
+import BookingStatusFilter from '../components/BookingStatusFilter';
 
 // Smooth view transition container
 interface ViewTransitionContainerProps {
@@ -64,19 +65,25 @@ export default function BookingsPage() {
   const [viewMode, setViewMode] = useViewMode();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
-  const fetchBookings = async () => {
-    setIsLoading(true);
+  const fetchBookings = async (isInitialLoad = false) => {
+    if (isInitialLoad) {
+      setIsLoading(true);
+    } else {
+      setIsFilterLoading(true);
+    }
     setError(null);
 
     try {
-      const data = await apiClient.getBookings();
+      const data = await apiClient.getBookings(statusFilter ?? undefined);
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -90,15 +97,31 @@ export default function BookingsPage() {
         router.push('/login');
       }
     } finally {
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      } else {
+        setIsFilterLoading(false);
+      }
     }
   };
 
+  // Initial load - only once
   useEffect(() => {
-    fetchBookings();
     checkUserRole();
     setCurrentUser(getCurrentUser());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchBookings(true);
+  }, []);
+
+  // Status filter changes - only fetch bookings
+  useEffect(() => {
+    if (statusFilter !== null || bookings.length > 0) {
+      fetchBookings(false);
+    }
+  }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleStatusFilterChange = (status: BookingStatus | null) => {
+    setStatusFilter(status);
+  };
 
   const checkUserRole = () => {
     try {
@@ -157,7 +180,7 @@ export default function BookingsPage() {
     
     try {
       await apiClient.acceptBooking(selectedBookingId);
-      await fetchBookings(); // Refresh bookings to show updated status
+      await fetchBookings(false); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error accepting booking:', error);
       setError('Fehler beim Annehmen der Buchung');
@@ -172,7 +195,7 @@ export default function BookingsPage() {
     
     try {
       await apiClient.rejectBooking(selectedBookingId);
-      await fetchBookings(); // Refresh bookings to show updated status
+      await fetchBookings(false); // Refresh bookings to show updated status
     } catch (error) {
       console.error('Error rejecting booking:', error);
       setError('Fehler beim Ablehnen der Buchung');
@@ -245,6 +268,19 @@ export default function BookingsPage() {
               </button>
             </div>
           )}
+
+          {/* Status Filter */}
+          <div className="relative">
+            <BookingStatusFilter
+              currentStatus={statusFilter}
+              onStatusChange={handleStatusFilterChange}
+            />
+            {isFilterLoading && (
+              <div className="absolute top-0 right-0 mt-4 mr-4">
+                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
 
           {/* Main Content */}
           <div>

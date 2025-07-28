@@ -17,13 +17,14 @@ namespace Booking.Api.Controllers;
 public class BookingsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<BookingDto>>> GetBookings()
+    public async Task<ActionResult<List<BookingDto>>> GetBookings([FromQuery] Domain.Enums.BookingStatus? status = null)
     {
         var userId = GetCurrentUserId();
         var isAdmin = User.IsInRole("Administrator");
         
         var query = new GetBookingsQuery(
-            UserId: isAdmin ? null : userId // Admins can see all bookings
+            UserId: isAdmin ? null : userId, // Admins can see all bookings
+            Status: status
         );
         
         var result = await mediator.Send(query);
