@@ -9,7 +9,7 @@ import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import { UserMenuDropdown } from '../components/ui/UserMenuDropdown';
 import { getCurrentUser } from '../../lib/auth/jwt';
 import ViewToggle, { useViewMode } from '../components/ViewToggle';
-import BookingCalendarView from '../components/BookingCalendarView';
+import BookingFullCalendarView from '../components/BookingFullCalendarView';
 import BookingListView from '../components/BookingListView';
 import CalendarViewSkeleton from '../components/CalendarViewSkeleton';
 import CompactBookingListSkeleton from '../components/CompactBookingListSkeleton';
@@ -88,7 +88,6 @@ export default function BookingsPage() {
         timeRange ?? selectedTimeRange,
         statusFilter ?? undefined
       );
-      console.log('🔍 DEBUG: Setting bookings in state:', data);
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -215,7 +214,6 @@ export default function BookingsPage() {
   };
 
   const handleTimeRangeChange = (timeRange: TimeRange) => {
-    console.log('🔍 DEBUG: TimeRange change from', selectedTimeRange, 'to', timeRange);
     setSelectedTimeRange(timeRange);
     fetchBookings(timeRange, false);
   };
@@ -346,7 +344,7 @@ export default function BookingsPage() {
                   // Always show content (calendar will handle empty bookings gracefully)
                   <ViewTransitionContainer viewKey={viewMode}>
                     {viewMode === 'calendar' ? (
-                      <BookingCalendarView
+                      <BookingFullCalendarView
                         bookings={bookings}
                         onSelectBooking={handleSelectBooking}
                         onSelectBookingById={handleSelectBookingById}
