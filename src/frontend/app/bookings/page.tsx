@@ -347,7 +347,6 @@ export default function BookingsPage() {
                   <ViewTransitionContainer viewKey={viewMode}>
                     {viewMode === 'calendar' ? (
                       <BookingCalendarView
-                        key={`calendar-${selectedTimeRange}-${statusFilter}-${bookings.length}`}
                         bookings={bookings}
                         onSelectBooking={handleSelectBooking}
                         onSelectBookingById={handleSelectBookingById}
