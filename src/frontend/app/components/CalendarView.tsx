@@ -48,6 +48,8 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(true);
+  const calendarRef = useRef<any>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
@@ -88,20 +90,16 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
     
     console.log('🔍 DEBUG Setting calendar events:', events.length, events);
     
-    // First clear events, then set new ones (helps with react-big-calendar)
-    setCalendarEvents([]);
+    // NUCLEAR OPTION: Completely unmount and remount the calendar
+    console.log('🔍 DEBUG Unmounting calendar for refresh');
+    setShowCalendar(false);
     
-    // Set events in next tick
     setTimeout(() => {
+      console.log('🔍 DEBUG Remounting calendar with new events');
       setCalendarEvents(events);
-      console.log('🔍 DEBUG Events set in calendar');
-    }, 10);
-    
-    // Force additional re-render for stubborn cases
-    setTimeout(() => {
-      console.log('🔍 DEBUG Force updating calendar');
+      setShowCalendar(true);
       setForceUpdate(prev => prev + 1);
-    }, 150);
+    }, 50);
   }, [bookings]);
 
   const getEventStyle = (event: CalendarEvent) => {
@@ -189,10 +187,12 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         setTooltip(prev => ({ ...prev, visible: false }));
       }}
     >
-      <Calendar
-        key={`calendar-${calendarEvents.length}-${forceUpdate}`}
-        localizer={localizer}
-        events={calendarEvents}
+      {showCalendar ? (
+        <Calendar
+          ref={calendarRef}
+          key={`calendar-${calendarEvents.length}-${forceUpdate}`}
+          localizer={localizer}
+          events={calendarEvents}
         startAccessor="start"
         endAccessor="end"
         style={{ height: 600 }}
@@ -233,7 +233,12 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         views={['month', 'week', 'day']}
         showAllEvents
         doShowMoreDrillDown={false}
-      />
+        />
+      ) : (
+        <div style={{ height: 600 }} className="flex items-center justify-center">
+          <div className="text-gray-500">Kalender wird aktualisiert...</div>
+        </div>
+      )}
       
       {/* Legend */}
       <CalendarLegend />
