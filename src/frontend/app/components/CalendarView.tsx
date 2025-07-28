@@ -33,6 +33,8 @@ interface CalendarEvent {
 }
 
 export default function CalendarView({ bookings, onSelectBooking }: CalendarViewProps) {
+  console.log('🔍 DEBUG CalendarView received bookings:', bookings.length, bookings);
+  
   const [tooltip, setTooltip] = useState<{
     booking: Booking;
     position: { x: number; y: number };
@@ -68,6 +70,8 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       resource: booking,
     };
   });
+  
+  console.log('🔍 DEBUG CalendarView transformed events:', events.length, events);
 
   const getEventStyle = (event: CalendarEvent) => {
     const booking = event.resource;
