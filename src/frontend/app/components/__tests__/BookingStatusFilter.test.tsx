@@ -37,7 +37,8 @@ describe('BookingStatusFilter', () => {
 
     const pendingButton = screen.getByText('Ausstehend').closest('button');
     expect(pendingButton).toHaveClass('ring-2');
-    expect(pendingButton).toHaveClass('scale-105');
+    expect(pendingButton).toHaveClass('shadow-md');
+    expect(pendingButton).not.toHaveClass('opacity-70');
   });
 
   it('calls onStatusChange when filter option is clicked', () => {
@@ -75,7 +76,7 @@ describe('BookingStatusFilter', () => {
     expect(screen.getByText('Filter zurücksetzen')).toBeInTheDocument();
   });
 
-  it('does not show reset filter button when no filter is active', () => {
+  it('hides reset filter button when no filter is active', () => {
     render(
       <BookingStatusFilter
         currentStatus={null}
@@ -83,7 +84,9 @@ describe('BookingStatusFilter', () => {
       />
     );
 
-    expect(screen.queryByText('Filter zurücksetzen')).not.toBeInTheDocument();
+    const resetButton = screen.getByText('Filter zurücksetzen').closest('button');
+    expect(resetButton).toHaveClass('text-transparent');
+    expect(resetButton).toHaveClass('pointer-events-none');
   });
 
   it('calls onStatusChange with null when reset filter is clicked', () => {
@@ -108,7 +111,9 @@ describe('BookingStatusFilter', () => {
 
     // All filter buttons should have opacity-70 when not selected
     const allButton = screen.getByText('Alle Buchungen').closest('button');
-    expect(allButton).toHaveClass('opacity-70');
+    expect(allButton).toHaveClass('ring-2');
+    expect(allButton).toHaveClass('shadow-md');
+    expect(allButton).not.toHaveClass('opacity-70');
 
     // Rerender with Pending selected
     rerender(
@@ -120,8 +125,12 @@ describe('BookingStatusFilter', () => {
 
     const pendingButton = screen.getByText('Ausstehend').closest('button');
     expect(pendingButton).toHaveClass('ring-2');
-    expect(pendingButton).toHaveClass('scale-105');
+    expect(pendingButton).toHaveClass('shadow-md');
     expect(pendingButton).not.toHaveClass('opacity-70');
+
+    // Non-selected buttons should have opacity-70
+    const acceptedButton = screen.getByText('Angenommen').closest('button');
+    expect(acceptedButton).toHaveClass('opacity-70');
   });
 
   it('renders correct icons for each filter option', () => {
@@ -158,7 +167,9 @@ describe('BookingStatusFilter', () => {
       );
 
       // Should show reset button for any selected status
-      expect(screen.getByText('Filter zurücksetzen')).toBeInTheDocument();
+      const resetButton = screen.getByText('Filter zurücksetzen').closest('button');
+      expect(resetButton).not.toHaveClass('text-transparent');
+      expect(resetButton).not.toHaveClass('pointer-events-none');
 
       // Clean up for next iteration
       rerender(<div />);
