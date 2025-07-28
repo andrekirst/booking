@@ -76,6 +76,15 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
   const fetchBookings = async (timeRange?: TimeRange, isInitialLoad = false) => {
+    const finalTimeRange = timeRange ?? selectedTimeRange;
+    const finalStatusFilter = statusFilter ?? undefined;
+    
+    console.log('📡 fetchBookings called');
+    console.log('📡 timeRange param:', timeRange);
+    console.log('📡 finalTimeRange:', finalTimeRange);
+    console.log('📡 finalStatusFilter:', finalStatusFilter);
+    console.log('📡 isInitialLoad:', isInitialLoad);
+    
     if (isInitialLoad) {
       setIsLoading(true);
     } else {
@@ -84,10 +93,8 @@ export default function BookingsPage() {
     setError(null);
 
     try {
-      const data = await apiClient.getBookings(
-        timeRange ?? selectedTimeRange,
-        statusFilter ?? undefined
-      );
+      const data = await apiClient.getBookings(finalTimeRange, finalStatusFilter);
+      console.log('📡 API Response received:', data.length, 'bookings');
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -118,9 +125,17 @@ export default function BookingsPage() {
 
   // Filter changes - fetch bookings when any filter changes
   useEffect(() => {
+    console.log('🔥 Filter useEffect triggered');
+    console.log('🔥 selectedTimeRange:', selectedTimeRange);
+    console.log('🔥 statusFilter:', statusFilter);
+    console.log('🔥 bookings.length:', bookings.length);
+    
     // Skip fetching during initial load (handled by initial useEffect)
     if (selectedTimeRange !== TimeRange.Future || statusFilter !== null || bookings.length > 0) {
+      console.log('🔥 Calling fetchBookings with selectedTimeRange:', selectedTimeRange);
       fetchBookings(selectedTimeRange, false);
+    } else {
+      console.log('🔥 Skipping fetchBookings - initial state');
     }
   }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -211,6 +226,8 @@ export default function BookingsPage() {
   };
 
   const handleTimeRangeChange = (timeRange: TimeRange) => {
+    console.log('🔥 handleTimeRangeChange called with:', timeRange);
+    console.log('🔥 Previous selectedTimeRange:', selectedTimeRange);
     setSelectedTimeRange(timeRange);
     // fetchBookings wird vom useEffect aufgerufen
   };
