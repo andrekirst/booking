@@ -40,9 +40,10 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
     {
         // Arrange
         var userId = fixture.Create<int>();
-        var olderBooking = CreateBookingReadModel(userId, startDate: new DateTime(2024, 1, 15));
-        var newerBooking = CreateBookingReadModel(userId, startDate: new DateTime(2024, 3, 20));
-        var newestBooking = CreateBookingReadModel(userId, startDate: new DateTime(2024, 4, 10));
+        var today = DateTime.UtcNow.Date;
+        var olderBooking = CreateBookingReadModel(userId, startDate: today.AddDays(1), endDate: today.AddDays(3));
+        var newerBooking = CreateBookingReadModel(userId, startDate: today.AddDays(5), endDate: today.AddDays(7));
+        var newestBooking = CreateBookingReadModel(userId, startDate: today.AddDays(10), endDate: today.AddDays(12));
 
         context.BookingReadModels.AddRange(olderBooking, newerBooking, newestBooking);
         await context.SaveChangesAsync();
@@ -66,8 +67,9 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
         var targetUserId = fixture.Create<int>();
         var otherUserId = fixture.Create<int>();
 
-        var targetUserBooking = CreateBookingReadModel(targetUserId, startDate: new DateTime(2024, 2, 15));
-        var otherUserBooking = CreateBookingReadModel(otherUserId, startDate: new DateTime(2024, 2, 20));
+        var today = DateTime.UtcNow.Date;
+        var targetUserBooking = CreateBookingReadModel(targetUserId, startDate: today.AddDays(1), endDate: today.AddDays(3));
+        var otherUserBooking = CreateBookingReadModel(otherUserId, startDate: today.AddDays(2), endDate: today.AddDays(4));
 
         context.BookingReadModels.AddRange(targetUserBooking, otherUserBooking);
         await context.SaveChangesAsync();
@@ -90,8 +92,9 @@ public sealed class GetBookingsQueryHandlerTests : IDisposable
         var user1Id = fixture.Create<int>();
         var user2Id = fixture.Create<int>();
 
-        var user1Booking = CreateBookingReadModel(user1Id, startDate: new DateTime(2024, 2, 15));
-        var user2Booking = CreateBookingReadModel(user2Id, startDate: new DateTime(2024, 2, 20));
+        var today = DateTime.UtcNow.Date;
+        var user1Booking = CreateBookingReadModel(user1Id, startDate: today.AddDays(1), endDate: today.AddDays(3));
+        var user2Booking = CreateBookingReadModel(user2Id, startDate: today.AddDays(2), endDate: today.AddDays(4));
 
         context.BookingReadModels.AddRange(user1Booking, user2Booking);
         await context.SaveChangesAsync();
