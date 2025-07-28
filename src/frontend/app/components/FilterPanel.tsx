@@ -111,7 +111,7 @@ export default function FilterPanel({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {timeRangeOptions.map((option) => (
                 <button
-                  key={option.value}
+                  key={`timerange-${option.value}`}
                   onClick={() => onTimeRangeChange(option.value)}
                   className={`px-3 py-2 text-sm rounded-lg border transition-all duration-150 ${
                     selectedTimeRange === option.value
@@ -133,7 +133,7 @@ export default function FilterPanel({
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {statusOptions.map((option) => (
                 <button
-                  key={option.value || 'all'}
+                  key={option.value !== null ? option.value.toString() : 'status-all'}
                   onClick={() => onStatusChange(option.value)}
                   className={`px-3 py-2 text-sm rounded-lg border transition-all duration-150 ${
                     statusFilter === option.value

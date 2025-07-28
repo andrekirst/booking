@@ -76,15 +76,6 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
   const fetchBookings = async (timeRange?: TimeRange, isInitialLoad = false) => {
-    const finalTimeRange = timeRange ?? selectedTimeRange;
-    const finalStatusFilter = statusFilter ?? undefined;
-    
-    console.log('📡 fetchBookings called');
-    console.log('📡 timeRange param:', timeRange);
-    console.log('📡 finalTimeRange:', finalTimeRange);
-    console.log('📡 finalStatusFilter:', finalStatusFilter);
-    console.log('📡 isInitialLoad:', isInitialLoad);
-    
     if (isInitialLoad) {
       setIsLoading(true);
     } else {
@@ -93,8 +84,10 @@ export default function BookingsPage() {
     setError(null);
 
     try {
-      const data = await apiClient.getBookings(finalTimeRange, finalStatusFilter);
-      console.log('📡 API Response received:', data.length, 'bookings');
+      const data = await apiClient.getBookings(
+        timeRange ?? selectedTimeRange,
+        statusFilter ?? undefined
+      );
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -123,30 +116,17 @@ export default function BookingsPage() {
     fetchBookings(undefined, true);
   }, []);
 
-  // Filter changes - fetch bookings when any filter changes
+  // Note: Filter changes are handled directly in handler functions
+  // This useEffect is kept for any edge cases where state changes without handler calls
   useEffect(() => {
-    console.log('🔥 Filter useEffect triggered');
-    console.log('🔥 selectedTimeRange:', selectedTimeRange);
-    console.log('🔥 statusFilter:', statusFilter);
-    console.log('🔥 bookings.length:', bookings.length);
-    
-    // ALWAYS fetch bookings when filters change (except during initial load)
-    // Initial load is handled by separate useEffect above
-    const isNotInitialState = selectedTimeRange !== TimeRange.Future || statusFilter !== null;
-    const hasBookings = bookings.length > 0;
-    
-    if (isNotInitialState || hasBookings) {
-      console.log('🔥 Calling fetchBookings with selectedTimeRange:', selectedTimeRange);
+    // Only trigger if not initial state and has some context
+    if ((selectedTimeRange !== TimeRange.Future || statusFilter !== null) && bookings.length > 0) {
       fetchBookings(selectedTimeRange, false);
-    } else {
-      console.log('🔥 Skipping fetchBookings - waiting for initial load');
     }
   }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusFilterChange = (status: BookingStatus | null) => {
-    console.log('🔥 handleStatusFilterChange called with:', status);
     setStatusFilter(status);
-    // Direkter fetchBookings Call - useEffect ist manchmal unreliable
     fetchBookings(selectedTimeRange, false);
   };
 
@@ -233,10 +213,7 @@ export default function BookingsPage() {
   };
 
   const handleTimeRangeChange = (timeRange: TimeRange) => {
-    console.log('🔥 handleTimeRangeChange called with:', timeRange);
-    console.log('🔥 Previous selectedTimeRange:', selectedTimeRange);
     setSelectedTimeRange(timeRange);
-    // Direkter fetchBookings Call - useEffect ist manchmal unreliable 
     fetchBookings(timeRange, false);
   };
 

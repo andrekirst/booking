@@ -237,10 +237,6 @@ export class HttpApiClient implements ApiClient {
   }
 
   async getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]> {
-    console.log('🌐 API Client getBookings called');
-    console.log('🌐 timeRange:', timeRange);
-    console.log('🌐 status:', status);
-    
     const params = new URLSearchParams();
     if (timeRange !== undefined) {
       params.append("timeRange", timeRange.toString());
@@ -249,12 +245,7 @@ export class HttpApiClient implements ApiClient {
       params.append("status", status.toString());
     }
     const queryString = params.toString();
-    const finalUrl = `/bookings${queryString ? `?${queryString}` : ""}`;
-    
-    console.log('🌐 Final URL:', finalUrl);
-    console.log('🌐 Query string:', queryString);
-    
-    return this.request<Booking[]>(finalUrl);
+    return this.request<Booking[]>(`/bookings${queryString ? `?${queryString}` : ""}`);
   }
 
   async getBookingById(id: string): Promise<Booking> {
