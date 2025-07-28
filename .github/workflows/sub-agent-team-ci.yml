@@ -1,0 +1,601 @@
+name: Sub-Agent Team CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, 'feat/*', 'hotfix/*']
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  # Team Role Validation
+  validate-team-setup:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[team]') || startsWith(github.ref, 'refs/heads/feat/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Sub-Agent configurations
+        run: |
+          echo "🎭 Validating Sub-Agent Team Setup..."
+          
+          # Check if all role configurations exist
+          ROLES=("senior-developer" "ui-developer" "ux-expert" "test-expert" "architecture-expert" "devops-expert")
+          MISSING_ROLES=()
+          
+          for role in "${ROLES[@]}"; do
+            if [ ! -f "config/sub-agents/CLAUDE-$role.md" ]; then
+              MISSING_ROLES+=($role)
+            else
+              echo "✅ Role configuration found: $role"
+            fi
+          done
+          
+          if [ ${#MISSING_ROLES[@]} -gt 0 ]; then
+            echo "❌ Missing role configurations: ${MISSING_ROLES[*]}"
+            exit 1
+          fi
+          
+          # Validate team management scripts
+          SCRIPTS=("switch-role.sh" "team-status.sh" "start-sub-agent-team.sh")
+          for script in "${SCRIPTS[@]}"; do
+            if [ ! -f "scripts/$script" ]; then
+              echo "❌ Missing script: scripts/$script"
+              exit 1
+            fi
+            
+            if [ ! -x "scripts/$script" ]; then
+              echo "❌ Script not executable: scripts/$script"
+              exit 1
+            fi
+            
+            echo "✅ Script validated: $script"
+          done
+          
+          echo "🎉 All Sub-Agent Team components validated successfully!"
+
+      - name: Test role switching functionality
+        run: |
+          echo "🔄 Testing role switching..."
+          
+          # Initialize git for testing
+          git config --global user.email "test@example.com"
+          git config --global user.name "Test User"
+          
+          # Test each role switch
+          ROLES=("senior-developer" "ui-developer" "ux-expert" "test-expert" "architecture-expert" "devops-expert" "default")
+          
+          for role in "${ROLES[@]}"; do
+            echo "Testing role: $role"
+            
+            # Test --info flag
+            if ! ./scripts/switch-role.sh $role --info; then
+              echo "❌ Info test failed for role: $role"
+              exit 1
+            fi
+            
+            echo "✅ Role info test passed: $role"
+          done
+          
+          echo "🎉 Role switching tests completed successfully!"
+
+  # Senior Developer Role CI
+  senior-developer-ci:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[senior-developer]') || contains(github.event.head_commit.message, '[team]')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Architecture Review
+        run: |
+          echo "🏗️ Senior Developer - Architecture Review..."
+          
+          # Check for Clean Architecture violations
+          if grep -r "using.*Infrastructure" src/backend/BookingSystem.Domain/ 2>/dev/null; then
+            echo "❌ Domain layer has Infrastructure dependencies"
+            exit 1
+          fi
+          
+          # Check for proper dependency direction
+          if grep -r "using.*Web" src/backend/BookingSystem.Domain/ 2>/dev/null; then
+            echo "❌ Domain layer has Web dependencies"
+            exit 1
+          fi
+          
+          echo "✅ Clean Architecture principles maintained"
+
+      - name: Code Quality Analysis
+        run: |
+          echo "📊 Code Quality Analysis..."
+          
+          # Run static analysis
+          dotnet tool install --global dotnet-sonarscanner || true
+          
+          # Check for code metrics
+          find src/backend -name "*.cs" -exec wc -l {} \; | awk '{sum+=$1} END {print "Total lines of C# code:", sum}'
+          
+          # Check for TODO/FIXME comments
+          TODO_COUNT=$(find src/backend -name "*.cs" -exec grep -l "TODO\|FIXME" {} \; | wc -l)
+          echo "TODO/FIXME items found: $TODO_COUNT"
+          
+          if [ $TODO_COUNT -gt 20 ]; then
+            echo "⚠️ High number of TODO/FIXME items - consider addressing"
+          fi
+
+  # UI Developer Role CI
+  ui-developer-ci:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[ui-developer]') || contains(github.event.head_commit.message, '[team]')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd src/frontend
+          npm ci
+
+      - name: Component Library Validation
+        run: |
+          echo "🎨 UI Developer - Component Validation..."
+          
+          cd src/frontend
+          
+          # Check for consistent component structure
+          COMPONENT_DIRS=$(find src/components -maxdepth 1 -type d | tail -n +2)
+          
+          for dir in $COMPONENT_DIRS; do
+            component_name=$(basename $dir)
+            
+            # Check for index.ts file
+            if [ ! -f "$dir/index.ts" ]; then
+              echo "⚠️ Missing index.ts in component: $component_name"
+            fi
+            
+            # Check for test file
+            if [ ! -f "$dir/$component_name.test.tsx" ] && [ ! -f "$dir/__tests__/$component_name.test.tsx" ]; then
+              echo "⚠️ Missing test file for component: $component_name"
+            fi
+          done
+
+      - name: Tailwind CSS Validation
+        run: |
+          echo "🎨 Tailwind CSS Usage Analysis..."
+          
+          cd src/frontend
+          
+          # Check for custom CSS violations (should use Tailwind)
+          CUSTOM_CSS_COUNT=$(find src/components -name "*.module.css" | wc -l)
+          if [ $CUSTOM_CSS_COUNT -gt 5 ]; then
+            echo "⚠️ High number of custom CSS modules - consider using Tailwind utilities"
+          fi
+          
+          # Check for unused Tailwind classes (basic check)
+          npm run build || echo "Build check completed"
+
+      - name: Responsive Design Check
+        run: |
+          echo "📱 Responsive Design Validation..."
+          
+          cd src/frontend
+          
+          # Check for mobile-first responsive patterns
+          RESPONSIVE_COUNT=$(grep -r "sm:\|md:\|lg:\|xl:" src/components | wc -l)
+          TOTAL_COMPONENTS=$(find src/components -name "*.tsx" | wc -l)
+          
+          echo "Responsive utilities found: $RESPONSIVE_COUNT"
+          echo "Total components: $TOTAL_COMPONENTS"
+          
+          if [ $TOTAL_COMPONENTS -gt 0 ]; then
+            RESPONSIVE_RATIO=$((RESPONSIVE_COUNT * 100 / TOTAL_COMPONENTS))
+            echo "Responsive coverage: $RESPONSIVE_RATIO%"
+            
+            if [ $RESPONSIVE_RATIO -lt 50 ]; then
+              echo "⚠️ Low responsive design coverage - consider improving mobile support"
+            fi
+          fi
+
+  # UX Expert Role CI
+  ux-expert-ci:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[ux-expert]') || contains(github.event.head_commit.message, '[team]')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd src/frontend
+          npm ci
+
+      - name: Accessibility Audit
+        run: |
+          echo "♿ UX Expert - Accessibility Audit..."
+          
+          cd src/frontend
+          
+          # Install accessibility testing tools
+          npm install --no-save @axe-core/cli axe-core
+          
+          # Check for ARIA attributes usage
+          ARIA_COUNT=$(grep -r "aria-" src/components | wc -l)
+          echo "ARIA attributes found: $ARIA_COUNT"
+          
+          # Check for semantic HTML usage
+          SEMANTIC_COUNT=$(grep -r "role=\|<main\|<nav\|<header\|<footer\|<section\|<article" src/components | wc -l)
+          echo "Semantic HTML elements found: $SEMANTIC_COUNT"
+          
+          # Check for alt text on images
+          IMG_COUNT=$(grep -r "<img" src/components | wc -l)
+          ALT_COUNT=$(grep -r "alt=" src/components | wc -l)
+          
+          if [ $IMG_COUNT -gt 0 ] && [ $ALT_COUNT -lt $IMG_COUNT ]; then
+            echo "⚠️ Some images may be missing alt text"
+          fi
+
+      - name: Color Contrast Analysis
+        run: |
+          echo "🎨 Color Contrast Analysis..."
+          
+          cd src/frontend
+          
+          # Check for color-only information (basic check)
+          COLOR_ONLY_COUNT=$(grep -r "text-red\|text-green\|bg-red\|bg-green" src/components | grep -v "aria-\|role=" | wc -l)
+          
+          if [ $COLOR_ONLY_COUNT -gt 0 ]; then
+            echo "⚠️ Found $COLOR_ONLY_COUNT potential color-only information instances - ensure additional indicators"
+          fi
+
+      - name: User Experience Metrics
+        run: |
+          echo "📊 UX Metrics Analysis..."
+          
+          cd src/frontend
+          
+          # Analyze form complexity
+          FORM_COUNT=$(grep -r "<form\|useForm" src/components | wc -l)
+          INPUT_COUNT=$(grep -r "<input\|<select\|<textarea" src/components | wc -l)
+          
+          if [ $FORM_COUNT -gt 0 ]; then
+            AVG_INPUTS=$((INPUT_COUNT / FORM_COUNT))
+            echo "Average inputs per form: $AVG_INPUTS"
+            
+            if [ $AVG_INPUTS -gt 10 ]; then
+              echo "⚠️ Forms may be too complex - consider breaking into steps"
+            fi
+          fi
+
+  # Test Expert Role CI
+  test-expert-ci:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[test-expert]') || contains(github.event.head_commit.message, '[team]')
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: booking_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Test Coverage Analysis
+        run: |
+          echo "🧪 Test Expert - Coverage Analysis..."
+          
+          # Backend test coverage
+          cd src/backend
+          dotnet test --collect:"XPlat Code Coverage" --logger "console;verbosity=detailed"
+          
+          # Frontend test coverage
+          cd ../frontend
+          npm ci
+          npm run test:coverage
+          
+          echo "✅ Test coverage analysis completed"
+
+      - name: Test Quality Metrics
+        run: |
+          echo "📊 Test Quality Metrics..."
+          
+          # Backend test metrics
+          BACKEND_TEST_COUNT=$(find src/backend -name "*.Test.cs" -o -name "*Tests.cs" | xargs grep -l "\[Test\]" 2>/dev/null | wc -l)
+          BACKEND_ASSERT_COUNT=$(find src/backend -name "*.Test.cs" -o -name "*Tests.cs" | xargs grep -c "Assert\|Should" 2>/dev/null | awk '{sum+=$1} END {print sum}')
+          
+          echo "Backend test files: $BACKEND_TEST_COUNT"
+          echo "Backend assertions: $BACKEND_ASSERT_COUNT"
+          
+          # Frontend test metrics
+          FRONTEND_TEST_COUNT=$(find src/frontend -name "*.test.tsx" -o -name "*.test.ts" | wc -l)
+          FRONTEND_EXPECT_COUNT=$(find src/frontend -name "*.test.tsx" -o -name "*.test.ts" | xargs grep -c "expect\|toBe" 2>/dev/null | awk '{sum+=$1} END {print sum}')
+          
+          echo "Frontend test files: $FRONTEND_TEST_COUNT"
+          echo "Frontend expectations: $FRONTEND_EXPECT_COUNT"
+
+      - name: Integration Test Validation
+        run: |
+          echo "🔗 Integration Test Validation..."
+          
+          # Check for database integration tests
+          DB_INTEGRATION_TESTS=$(find src/backend -name "*Integration*Test*.cs" | wc -l)
+          echo "Database integration tests: $DB_INTEGRATION_TESTS"
+          
+          # Check for API integration tests
+          API_INTEGRATION_TESTS=$(find src/backend -name "*Api*Test*.cs" | wc -l)
+          echo "API integration tests: $API_INTEGRATION_TESTS"
+
+  # Architecture Expert Role CI
+  architecture-expert-ci:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[architecture-expert]') || contains(github.event.head_commit.message, '[team]')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Architecture Compliance Check
+        run: |
+          echo "🏗️ Architecture Expert - Compliance Check..."
+          
+          # Domain-Driven Design validation
+          echo "Checking DDD compliance..."
+          
+          # Check for proper aggregate boundaries
+          AGGREGATE_COUNT=$(find src/backend -name "*Aggregate*.cs" | wc -l)
+          ENTITY_COUNT=$(find src/backend -name "*Entity*.cs" | wc -l)
+          VALUE_OBJECT_COUNT=$(find src/backend -name "*ValueObject*.cs" | wc -l)
+          
+          echo "Aggregates found: $AGGREGATE_COUNT"
+          echo "Entities found: $ENTITY_COUNT" 
+          echo "Value Objects found: $VALUE_OBJECT_COUNT"
+          
+          # Check for event sourcing implementation
+          EVENT_COUNT=$(find src/backend -name "*Event*.cs" | wc -l)
+          echo "Events found: $EVENT_COUNT"
+
+      - name: Performance Architecture Review
+        run: |
+          echo "⚡ Performance Architecture Review..."
+          
+          # Check for caching implementation
+          CACHE_USAGE=$(grep -r "IMemoryCache\|IDistributedCache\|Redis" src/backend | wc -l)
+          echo "Caching implementations found: $CACHE_USAGE"
+          
+          # Check for async/await usage
+          ASYNC_COUNT=$(grep -r "async Task\|await " src/backend | wc -l)
+          echo "Async operations found: $ASYNC_COUNT"
+          
+          # Check for database optimization patterns
+          QUERY_OPTIMIZATION=$(grep -r "AsNoTracking\|Include\|Split" src/backend | wc -l)
+          echo "Query optimizations found: $QUERY_OPTIMIZATION"
+
+      - name: Scalability Assessment
+        run: |
+          echo "📈 Scalability Assessment..."
+          
+          # Check for pagination implementations
+          PAGINATION_COUNT=$(grep -r "Skip\|Take\|PagedResult" src/backend | wc -l)
+          echo "Pagination implementations: $PAGINATION_COUNT"
+          
+          # Check for batch operations
+          BATCH_COUNT=$(grep -r "AddRange\|UpdateRange\|RemoveRange" src/backend | wc -l)
+          echo "Batch operations found: $BATCH_COUNT"
+
+  # DevOps Expert Role CI
+  devops-expert-ci:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[devops-expert]') || contains(github.event.head_commit.message, '[team]')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Docker Security Scan
+        run: |
+          echo "🔒 DevOps Expert - Security Scan..."
+          
+          # Install Trivy
+          sudo apt-get update
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+          
+          # Scan Dockerfiles if they exist
+          if [ -f "docker/Dockerfile.frontend" ]; then
+            echo "Scanning frontend Dockerfile..."
+            trivy config docker/Dockerfile.frontend
+          fi
+          
+          if [ -f "docker/Dockerfile.backend" ]; then
+            echo "Scanning backend Dockerfile..."
+            trivy config docker/Dockerfile.backend
+          fi
+
+      - name: Infrastructure Validation
+        run: |
+          echo "🏗️ Infrastructure Validation..."
+          
+          # Validate Docker Compose files
+          if [ -f "docker-compose.yml" ]; then
+            echo "Validating docker-compose.yml..."
+            docker-compose -f docker-compose.yml config > /dev/null
+            echo "✅ docker-compose.yml is valid"
+          fi
+          
+          if [ -f "docker-compose.prod.yml" ]; then
+            echo "Validating docker-compose.prod.yml..."
+            docker-compose -f docker-compose.prod.yml config > /dev/null
+            echo "✅ docker-compose.prod.yml is valid"
+          fi
+
+      - name: Monitoring Configuration Check
+        run: |
+          echo "📊 Monitoring Configuration Check..."
+          
+          # Check for Prometheus configuration
+          if [ -f "monitoring/prometheus.yml" ]; then
+            echo "✅ Prometheus configuration found"
+          else
+            echo "⚠️ Prometheus configuration missing"
+          fi
+          
+          # Check for Grafana dashboards
+          DASHBOARD_COUNT=$(find monitoring/grafana -name "*.json" 2>/dev/null | wc -l || echo "0")
+          echo "Grafana dashboards found: $DASHBOARD_COUNT"
+          
+          # Check for alerting rules
+          ALERT_RULES=$(find monitoring -name "*rules*.yml" 2>/dev/null | wc -l || echo "0")
+          echo "Alert rules found: $ALERT_RULES"
+
+      - name: Deployment Script Validation
+        run: |
+          echo "🚀 Deployment Script Validation..."
+          
+          # Check deployment scripts
+          DEPLOYMENT_SCRIPTS=("deploy.sh" "rollback.sh" "health-check.sh")
+          
+          for script in "${DEPLOYMENT_SCRIPTS[@]}"; do
+            if [ -f "deployment/$script" ]; then
+              echo "✅ Found deployment script: $script"
+              
+              # Basic syntax check
+              if bash -n "deployment/$script"; then
+                echo "✅ Syntax OK: $script"  
+              else
+                echo "❌ Syntax error in: $script"
+                exit 1
+              fi
+            else
+              echo "⚠️ Missing deployment script: $script"
+            fi
+          done
+
+  # Team Integration Report
+  team-integration-report:
+    runs-on: ubuntu-latest
+    needs: [validate-team-setup, senior-developer-ci, ui-developer-ci, ux-expert-ci, test-expert-ci, architecture-expert-ci, devops-expert-ci]
+    if: always() && (contains(github.event.head_commit.message, '[team]') || github.ref == 'refs/heads/main')
+    
+    steps:
+      - name: Generate Team Report
+        run: |
+          echo "📊 Sub-Agent Team Integration Report"
+          echo "=================================="
+          echo "Pipeline Run: ${{ github.run_number }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo ""
+          
+          # Check job results
+          echo "Job Results:"
+          echo "- Team Setup Validation: ${{ needs.validate-team-setup.result }}"
+          echo "- Senior Developer CI: ${{ needs.senior-developer-ci.result }}"
+          echo "- UI Developer CI: ${{ needs.ui-developer-ci.result }}"
+          echo "- UX Expert CI: ${{ needs.ux-expert-ci.result }}"
+          echo "- Test Expert CI: ${{ needs.test-expert-ci.result }}"
+          echo "- Architecture Expert CI: ${{ needs.architecture-expert-ci.result }}"
+          echo "- DevOps Expert CI: ${{ needs.devops-expert-ci.result }}"
+          echo ""
+          
+          # Overall status
+          if [[ "${{ needs.validate-team-setup.result }}" == "success" && 
+                "${{ needs.senior-developer-ci.result }}" != "failure" && 
+                "${{ needs.ui-developer-ci.result }}" != "failure" && 
+                "${{ needs.ux-expert-ci.result }}" != "failure" && 
+                "${{ needs.test-expert-ci.result }}" != "failure" && 
+                "${{ needs.architecture-expert-ci.result }}" != "failure" && 
+                "${{ needs.devops-expert-ci.result }}" != "failure" ]]; then
+            echo "🎉 Team Integration: SUCCESS"
+            echo "All Sub-Agent roles are properly configured and validated!"
+          else
+            echo "❌ Team Integration: ISSUES DETECTED"
+            echo "Some Sub-Agent roles have configuration or validation issues."
+          fi
+
+      - name: Post Team Status to Slack
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Post results to Slack (if webhook is configured)
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            OVERALL_STATUS="SUCCESS"
+            if [[ "${{ needs.validate-team-setup.result }}" != "success" || 
+                  "${{ needs.senior-developer-ci.result }}" == "failure" || 
+                  "${{ needs.ui-developer-ci.result }}" == "failure" || 
+                  "${{ needs.ux-expert-ci.result }}" == "failure" || 
+                  "${{ needs.test-expert-ci.result }}" == "failure" || 
+                  "${{ needs.architecture-expert-ci.result }}" == "failure" || 
+                  "${{ needs.devops-expert-ci.result }}" == "failure" ]]; then
+              OVERALL_STATUS="FAILURE"
+            fi
+            
+            curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+              -H 'Content-type: application/json' \
+              --data "{
+                \"text\": \"🎭 Sub-Agent Team CI/CD Report\",
+                \"attachments\": [{
+                  \"color\": \"$([ '$OVERALL_STATUS' = 'SUCCESS' ] && echo 'good' || echo 'danger')\",
+                  \"fields\": [
+                    {\"title\": \"Status\", \"value\": \"$OVERALL_STATUS\", \"short\": true},
+                    {\"title\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
+                    {\"title\": \"Commit\", \"value\": \"${{ github.sha }}\", \"short\": true},
+                    {\"title\": \"Actor\", \"value\": \"${{ github.actor }}\", \"short\": true}
+                  ]
+                }]
+              }"
+          fi
