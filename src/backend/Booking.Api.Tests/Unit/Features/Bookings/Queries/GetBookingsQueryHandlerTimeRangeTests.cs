@@ -33,15 +33,15 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_WithTimeRangeFuture_ShouldReturnOnlyFutureAndTodayBookings()
+    public async Task Handle_WithTimeRangeFuture_ShouldReturnOnlyCurrentAndFutureBookings()
     {
         // Arrange
         var today = DateTime.UtcNow.Date;
-        var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
-        var todayBooking = CreateBookingReadModel(today, today.AddDays(2)); // Starts today
+        var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3)); // Ended 3 days ago
+        var endingTodayBooking = CreateBookingReadModel(today.AddDays(-2), today); // Ends today - should be included
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, endingTodayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(TimeRange: TimeRange.Future);
@@ -51,9 +51,9 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().Contain(b => b.Id == todayBooking.Id);
+        result.Should().Contain(b => b.Id == endingTodayBooking.Id); // Ends today - should be included
         result.Should().Contain(b => b.Id == futureBooking.Id);
-        result.Should().NotContain(b => b.Id == pastBooking.Id);
+        result.Should().NotContain(b => b.Id == pastBooking.Id); // Already ended - should be excluded
     }
 
     [Fact]
@@ -85,11 +85,11 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
     {
         // Arrange
         var today = DateTime.UtcNow.Date;
-        var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
-        var todayBooking = CreateBookingReadModel(today, today.AddDays(2)); // Starts today - should NOT be in past
+        var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3)); // Ended 3 days ago
+        var endingTodayBooking = CreateBookingReadModel(today.AddDays(-2), today); // Ends today - should NOT be in past
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, endingTodayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(TimeRange: TimeRange.Past);
@@ -99,8 +99,8 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
 
         // Assert
         result.Should().HaveCount(1);
-        result.Should().Contain(b => b.Id == pastBooking.Id);
-        result.Should().NotContain(b => b.Id == todayBooking.Id); // Today is NOT past
+        result.Should().Contain(b => b.Id == pastBooking.Id); // Already ended - should be in past
+        result.Should().NotContain(b => b.Id == endingTodayBooking.Id); // Ends today - should NOT be in past
         result.Should().NotContain(b => b.Id == futureBooking.Id);
     }
 
@@ -157,11 +157,11 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
     {
         // Arrange
         var today = DateTime.UtcNow.Date;
-        var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3));
-        var todayBooking = CreateBookingReadModel(today, today.AddDays(2)); // Should be included in default
+        var pastBooking = CreateBookingReadModel(today.AddDays(-5), today.AddDays(-3)); // Ended 3 days ago
+        var endingTodayBooking = CreateBookingReadModel(today.AddDays(-2), today); // Ends today - should be included in default
         var futureBooking = CreateBookingReadModel(today.AddDays(1), today.AddDays(3));
 
-        await _context.BookingReadModels.AddRangeAsync(pastBooking, todayBooking, futureBooking);
+        await _context.BookingReadModels.AddRangeAsync(pastBooking, endingTodayBooking, futureBooking);
         await _context.SaveChangesAsync();
 
         var query = new GetBookingsQuery(); // No TimeRange specified
@@ -171,9 +171,9 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
 
         // Assert
         result.Should().HaveCount(2);
-        result.Should().Contain(b => b.Id == todayBooking.Id);
+        result.Should().Contain(b => b.Id == endingTodayBooking.Id); // Ends today - should be included
         result.Should().Contain(b => b.Id == futureBooking.Id);
-        result.Should().NotContain(b => b.Id == pastBooking.Id);
+        result.Should().NotContain(b => b.Id == pastBooking.Id); // Already ended - should be excluded
     }
 
     [Fact]
@@ -198,6 +198,28 @@ public class GetBookingsQueryHandlerTimeRangeTests : IDisposable
         result.Should().Contain(b => b.Id == user1FutureBooking.Id);
         result.Should().NotContain(b => b.Id == user1PastBooking.Id);
         result.Should().NotContain(b => b.Id == user2FutureBooking.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WithTimeRangeFuture_BookingThatEndedYesterday_ShouldNotBeIncluded()
+    {
+        // Arrange - reproduziert das User-Problem: Buchung die gestern endete sollte nicht angezeigt werden
+        var today = DateTime.UtcNow.Date;
+        var problemBooking = CreateBookingReadModel(today.AddDays(-3), today.AddDays(-2)); // Ended yesterday
+        var currentBooking = CreateBookingReadModel(today, today.AddDays(2)); // Ends in 2 days
+
+        await _context.BookingReadModels.AddRangeAsync(problemBooking, currentBooking);
+        await _context.SaveChangesAsync();
+
+        var query = new GetBookingsQuery(TimeRange: TimeRange.Future);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().HaveCount(1, "only current/future bookings should be included");
+        result.Should().Contain(b => b.Id == currentBooking.Id, "booking ending in future should be included");
+        result.Should().NotContain(b => b.Id == problemBooking.Id, "booking that ended yesterday should NOT be included");
     }
 
     private BookingReadModel CreateBookingReadModel(DateTime startDate, DateTime endDate, int userId = 1)
