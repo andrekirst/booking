@@ -94,17 +94,32 @@ export default function BookingStatusFilter({ currentStatus, onStatusChange }: B
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
-      <h3 className="text-sm font-medium text-gray-900 mb-3">Nach Status filtern</h3>
+      <div className="flex items-center gap-3 mb-3">
+        <h3 className="text-sm font-medium text-gray-900">Nach Status filtern</h3>
+        <button
+          onClick={() => onStatusChange(null)}
+          className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${
+            currentStatus !== null 
+              ? 'text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900' 
+              : 'text-transparent bg-transparent pointer-events-none'
+          }`}
+        >
+          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Filter zurücksetzen
+        </button>
+      </div>
       <div className="flex flex-wrap gap-2">
         {statusOptions.map((option) => (
           <button
             key={option.value ?? 'all'}
             onClick={() => onStatusChange(option.value)}
             className={`
-              inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+              inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200
               ${isSelected(option.value) 
-                ? `${getStatusColor(option.value)} ring-2 ring-offset-1 ring-current scale-105 shadow-md` 
-                : `${getStatusColor(option.value)} opacity-70 hover:opacity-100 hover:scale-105`
+                ? `${getStatusColor(option.value)} ring-2 ring-offset-1 ring-current shadow-md` 
+                : `${getStatusColor(option.value)} opacity-70 hover:opacity-100`
               }
             `}
           >
@@ -113,20 +128,6 @@ export default function BookingStatusFilter({ currentStatus, onStatusChange }: B
           </button>
         ))}
       </div>
-      
-      {currentStatus !== null && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <button
-            onClick={() => onStatusChange(null)}
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Filter zurücksetzen
-          </button>
-        </div>
-      )}
     </div>
   );
 }
