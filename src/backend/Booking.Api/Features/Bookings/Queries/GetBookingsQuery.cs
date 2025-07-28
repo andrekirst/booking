@@ -51,7 +51,6 @@ public class GetBookingsQueryHandler(
             TimeRange.LastYear => query.Where(b => b.StartDate >= today.AddYears(-1)),
             _ => query.Where(b => b.EndDate >= today) // Default to Future
         };
-
         var bookings = await query
             .OrderBy(b => b.StartDate)
             .ToListAsync(cancellationToken);

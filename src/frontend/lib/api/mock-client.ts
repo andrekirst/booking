@@ -150,6 +150,48 @@ export class MockApiClient implements ApiClient {
       createdAt: '2025-01-08T15:30:00Z',
       changedAt: '2025-01-08T15:30:00Z',
     },
+    {
+      id: 'aaa11111-2222-3333-4444-555555555555',
+      userId: 3,
+      userName: 'Member User',
+      userEmail: 'member@booking.com',
+      startDate: '2025-01-25',
+      endDate: '2025-01-27',
+      status: BookingStatus.Accepted,
+      notes: 'Accepted booking',
+      bookingItems: [
+        {
+          sleepingAccommodationId: 'room-1',
+          sleepingAccommodationName: 'Main Bedroom',
+          personCount: 2,
+        }
+      ],
+      totalPersons: 2,
+      numberOfNights: 2,
+      createdAt: '2025-01-07T12:00:00Z',
+      changedAt: '2025-01-07T14:00:00Z',
+    },
+    {
+      id: 'bbb22222-3333-4444-5555-666666666666',
+      userId: 4,
+      userName: 'Another User',
+      userEmail: 'another@example.com',
+      startDate: '2025-01-30',
+      endDate: '2025-02-01',
+      status: BookingStatus.Rejected,
+      notes: 'Unfortunately rejected',
+      bookingItems: [
+        {
+          sleepingAccommodationId: 'room-3',
+          sleepingAccommodationName: 'Small Room',
+          personCount: 1,
+        }
+      ],
+      totalPersons: 1,
+      numberOfNights: 2,
+      createdAt: '2025-01-06T09:00:00Z',
+      changedAt: '2025-01-06T16:00:00Z',
+    },
   ];
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
@@ -262,7 +304,7 @@ export class MockApiClient implements ApiClient {
     this.currentUser = null;
   }
 
-  async getBookings(timeRange?: TimeRange): Promise<Booking[]> {
+  async getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]> {
     await this.delay(300);
 
     if (!this.authenticated) {
@@ -275,30 +317,32 @@ export class MockApiClient implements ApiClient {
 
     let filteredBookings = [...this.mockBookings];
     
-    if (timeRange !== undefined) {
-      switch (timeRange) {
-        case TimeRange.Future:
-          filteredBookings = filteredBookings.filter(b => b.startDate >= today);
-          break;
-        case TimeRange.All:
-          // No filter, return all
-          break;
-        case TimeRange.Past:
-          filteredBookings = filteredBookings.filter(b => b.startDate < today);
-          break;
-        case TimeRange.Last30Days:
-          filteredBookings = filteredBookings.filter(b => b.startDate >= thirtyDaysAgo);
-          break;
-        case TimeRange.LastYear:
-          filteredBookings = filteredBookings.filter(b => b.startDate >= oneYearAgo);
-          break;
-        default:
-          // Default to Future
-          filteredBookings = filteredBookings.filter(b => b.startDate >= today);
-      }
-    } else {
-      // Default to Future
-      filteredBookings = filteredBookings.filter(b => b.startDate >= today);
+    // Apply status filter first
+    if (status !== undefined) {
+      filteredBookings = filteredBookings.filter(booking => booking.status === status);
+    }
+    
+    // Apply time range filter (use endDate for Future/Past like in backend)
+    const timeRangeToUse = timeRange ?? TimeRange.Future; // Default to Future
+    switch (timeRangeToUse) {
+      case TimeRange.Future:
+        filteredBookings = filteredBookings.filter(b => b.endDate >= today);
+        break;
+      case TimeRange.All:
+        // No filter, keep all
+        break;
+      case TimeRange.Past:
+        filteredBookings = filteredBookings.filter(b => b.endDate < today);
+        break;
+      case TimeRange.Last30Days:
+        filteredBookings = filteredBookings.filter(b => b.startDate >= thirtyDaysAgo);
+        break;
+      case TimeRange.LastYear:
+        filteredBookings = filteredBookings.filter(b => b.startDate >= oneYearAgo);
+        break;
+      default:
+        // Default to Future
+        filteredBookings = filteredBookings.filter(b => b.endDate >= today);
     }
 
     return filteredBookings;
