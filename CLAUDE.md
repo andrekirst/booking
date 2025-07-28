@@ -637,7 +637,124 @@ A: Jede Session hat eigenen Timeout. Bei Bedarf in jeweiligem Terminal neu start
 # Alle arbeiten GLEICHZEITIG ohne Konflikte!
 ```
 
-## 14. Kommunikation
+## 14. pgweb PostgreSQL Web-Interface Integration
+
+### 14.1 Übersicht
+**pgweb** ist in das Multi-Agent Docker-Setup integriert und bietet für jeden Agenten ein separates Web-Interface zur PostgreSQL-Datenbankadministration.
+
+### 14.2 Port-Schema für pgweb
+```
+Agent | PostgreSQL | pgweb Interface
+------|------------|----------------
+  2   |   60203    |     60204
+  3   |   60303    |     60304  
+  4   |   60403    |     60404
+```
+
+### 14.3 Zugriff auf pgweb
+#### Pro Agent URLs
+- **Agent 2**: http://localhost:60204
+- **Agent 3**: http://localhost:60304  
+- **Agent 4**: http://localhost:60404
+
+#### Authentifizierung
+- **Benutzername**: `admin`
+- **Passwort**: `booking_admin_agent{N}` (z.B. `booking_admin_agent2`)
+
+### 14.4 Features
+✅ **Datenbank-Browsing**: Tabellen, Views, Funktionen anzeigen  
+✅ **SQL-Queries**: Direkte SQL-Ausführung mit Syntax-Highlighting  
+✅ **Daten-Export**: CSV, JSON, XML Export  
+✅ **Schema-Browsing**: Vollständige Datenbankstruktur  
+✅ **Query-History**: Ausgeführte Queries nachvollziehen  
+✅ **Multi-Agent-Isolation**: Jeder Agent hat eigene DB und pgweb-Instanz  
+
+### 14.5 Sicherheit
+🔒 **Basic Auth**: HTTP-Authentifizierung aktiviert  
+🔒 **Netzwerk-Isolation**: pgweb läuft im Agent-spezifischen Docker-Netzwerk  
+🔒 **Entwicklungsumgebung**: Nur für Development, nicht Production  
+🔒 **Datenbankzugriff**: Vollzugriff auf Agent-spezifische Datenbank  
+
+### 14.6 Verwendung im Development-Workflow
+```bash
+# 1. Agent starten (pgweb wird automatisch mitgestartet)
+./scripts/start-agent.sh 2 feat/my-feature
+
+# 2. pgweb Web-Interface öffnen
+open http://localhost:60204
+# Login: admin / booking_admin_agent2
+
+# 3. Datenbank-Operationen durchführen
+# - Tabellen browsen
+# - SQL-Queries ausführen
+# - Daten exportieren
+# - Schema analysieren
+
+# 4. Agent stoppen (pgweb wird automatisch mitgestoppt)
+./scripts/stop-agent.sh 2
+```
+
+### 14.7 SQL-Query Beispiele
+```sql
+-- Alle Buchungen anzeigen
+SELECT * FROM booking_read_models ORDER BY created_at DESC;
+
+-- Benutzer und ihre Buchungen
+SELECT u.first_name, u.last_name, COUNT(b.id) as booking_count
+FROM users u 
+LEFT JOIN booking_read_models b ON u.id = b.user_id
+GROUP BY u.id, u.first_name, u.last_name;
+
+-- Schlafplätze und Auslastung
+SELECT sa.name, sa.capacity, COUNT(bi.id) as current_bookings
+FROM sleeping_accommodations sa
+LEFT JOIN booking_items bi ON sa.id = bi.sleeping_accommodation_id
+GROUP BY sa.id, sa.name, sa.capacity;
+```
+
+### 14.8 Troubleshooting
+#### pgweb lädt nicht
+```bash
+# Container Status prüfen
+docker-compose -f docker-compose.agent2.yml ps
+
+# pgweb Logs anzeigen
+docker logs booking-pgweb-agent2
+
+# pgweb Container neustarten
+docker-compose -f docker-compose.agent2.yml restart pgweb-agent2
+```
+
+#### Authentifizierung fehlgeschlagen
+- Benutzername: `admin`
+- Passwort: `booking_admin_agent{AGENT_NUMBER}`
+- Bei Problemen Container-Logs prüfen
+
+#### Datenbankverbindung nicht möglich
+```bash
+# PostgreSQL Container Status prüfen
+docker logs booking-postgres-agent2
+
+# Netzwerk-Konnektivität testen
+docker exec booking-pgweb-agent2 ping postgres-agent2
+```
+
+### 14.9 Konfiguration
+Die pgweb-Konfiguration erfolgt über Umgebungsvariablen im `docker-compose.agent-template.yml`:
+```yaml
+pgweb-agent{AGENT_NUMBER}:
+  image: sosedoff/pgweb:latest
+  environment:
+    PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent{AGENT_NUMBER}:5432/booking_agent{AGENT_NUMBER}?sslmode=disable"
+    PGWEB_AUTH_USER: "admin"
+    PGWEB_AUTH_PASS: "booking_admin_agent{AGENT_NUMBER}"
+    PGWEB_LISTEN_ADDR: "0.0.0.0"
+    PGWEB_LISTEN_PORT: "8081"
+  ports:
+    - "{PGWEB_PORT}:8081"
+```
+
+## 15. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)
