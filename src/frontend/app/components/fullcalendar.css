@@ -1,10 +1,5 @@
 /* FullCalendar Custom Styles */
 
-/* Import FullCalendar core styles */
-@import '@fullcalendar/core/main.css';
-@import '@fullcalendar/daygrid/main.css';
-@import '@fullcalendar/timegrid/main.css';
-
 /* Custom styles for our booking calendar */
 .fc {
   font-family: inherit;

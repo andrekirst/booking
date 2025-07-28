@@ -5,10 +5,11 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { EventClickArg, EventInput } from '@fullcalendar/core';
+import { EventClickArg, EventInput, EventHoveringArg } from '@fullcalendar/core';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import BookingTooltip from './BookingTooltip';
 import CalendarLegend from './CalendarLegend';
+import './fullcalendar.css';
 
 interface FullCalendarViewProps {
   bookings: Booking[];
@@ -65,7 +66,7 @@ export default function FullCalendarView({ bookings, onSelectBooking }: FullCale
     onSelectBooking(booking);
   };
 
-  const handleEventMouseEnter = (mouseEnterInfo: any) => {
+  const handleEventMouseEnter = (mouseEnterInfo: EventHoveringArg) => {
     const booking = mouseEnterInfo.event.extendedProps.booking as Booking;
     const rect = mouseEnterInfo.el.getBoundingClientRect();
     

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Booking, TimeRange, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
@@ -75,7 +75,7 @@ export default function BookingsPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>(TimeRange.Future);
   const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
-  const fetchBookings = async (timeRange?: TimeRange, isInitialLoad = false) => {
+  const fetchBookings = useCallback(async (timeRange?: TimeRange, isInitialLoad = false) => {
     if (isInitialLoad) {
       setIsLoading(true);
     } else {
@@ -107,14 +107,14 @@ export default function BookingsPage() {
         setIsFilterLoading(false);
       }
     }
-  };
+  }, [selectedTimeRange, statusFilter, router]);
 
   // Initial load - only once
   useEffect(() => {
     checkUserRole();
     setCurrentUser(getCurrentUser());
     fetchBookings(undefined, true);
-  }, []);
+  }, [fetchBookings]);
 
   // Note: Filter changes are handled directly in handler functions
   // This useEffect is TEMPORARILY DISABLED for debugging
