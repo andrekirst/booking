@@ -1,6 +1,9 @@
+import { SimpleThemeToggle } from '@/app/components/ui/SimpleThemeToggle';
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <SimpleThemeToggle />
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-8">
           Willkommen

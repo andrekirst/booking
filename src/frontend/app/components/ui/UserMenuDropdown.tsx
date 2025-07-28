@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { UserMenuDropdownProps, UserMenuItem } from '@/lib/types/auth';
 import { UserAvatar } from './UserAvatar';
+import { ThemeButtonGroup } from './ThemeButtonGroup';
 
 /**
  * User menu dropdown component with profile, admin, and logout options
@@ -168,6 +169,11 @@ export function UserMenuDropdown({
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Theme Selection */}
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <ThemeButtonGroup />
           </div>
 
           {/* Menu Items */}

@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { ConditionalHeader } from "@/app/components/layout/ConditionalHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +31,6 @@ export default function RootLayout({
       >
         <ThemeProvider defaultTheme="system">
           <ApiProvider>
-            <ConditionalHeader />
             {children}
           </ApiProvider>
         </ThemeProvider>

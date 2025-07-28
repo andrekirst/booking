@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiClient } from "@/lib/api/client";
+import { SimpleThemeToggle } from "@/app/components/ui/SimpleThemeToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,10 +44,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-12 transition-colors duration-300">
+      <SimpleThemeToggle />
       <div className="w-full max-w-md">
         {/* Login Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-100/20 border border-white/20 p-8">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-100/20 dark:shadow-gray-900/50 border border-white/20 dark:border-gray-700/20 p-8">
           {/* Back to Home Button */}
           <div className="mb-6">
             <Link

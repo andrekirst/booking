@@ -8,7 +8,6 @@ import CreateBookingButton from '../components/CreateBookingButton';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import { UserMenuDropdown } from '../components/ui/UserMenuDropdown';
 import { getCurrentUser } from '../../lib/auth/jwt';
-import { useThemeMenuItems } from '../components/ui/ThemeMenuContent';
 import ViewToggle, { useViewMode } from '../components/ViewToggle';
 import BookingCalendarView from '../components/BookingCalendarView';
 import BookingListView from '../components/BookingListView';
@@ -74,7 +73,6 @@ export default function BookingsPage() {
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
-  const themeMenuItems = useThemeMenuItems();
 
   const fetchBookings = async (isInitialLoad = false) => {
     if (isInitialLoad) {
@@ -248,7 +246,6 @@ export default function BookingsPage() {
                   onProfileClick={handleProfileClick}
                   onAdminClick={handleAdminClick}
                   position="bottom-right"
-                  customItems={themeMenuItems}
                 />
               )}
             </div>
