@@ -88,6 +88,7 @@ export default function BookingsPage() {
         timeRange ?? selectedTimeRange,
         statusFilter ?? undefined
       );
+      console.log('🔍 DEBUG: Setting bookings in state:', data);
       setBookings(data);
     } catch (err: unknown) {
       console.error('Fehler beim Laden der Buchungen:', err);
@@ -117,13 +118,14 @@ export default function BookingsPage() {
   }, []);
 
   // Note: Filter changes are handled directly in handler functions
-  // This useEffect is kept for any edge cases where state changes without handler calls
-  useEffect(() => {
-    // Only trigger if not initial state and has some context
-    if ((selectedTimeRange !== TimeRange.Future || statusFilter !== null) && bookings.length > 0) {
-      fetchBookings(selectedTimeRange, false);
-    }
-  }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  // This useEffect is TEMPORARILY DISABLED for debugging
+  // useEffect(() => {
+  //   // Only trigger if not initial state and has some context
+  //   if ((selectedTimeRange !== TimeRange.Future || statusFilter !== null) && bookings.length > 0) {
+  //     console.log('🔍 DEBUG: useEffect would trigger fetchBookings');
+  //     fetchBookings(selectedTimeRange, false);
+  //   }
+  // }, [selectedTimeRange, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusFilterChange = (status: BookingStatus | null) => {
     setStatusFilter(status);
@@ -213,6 +215,7 @@ export default function BookingsPage() {
   };
 
   const handleTimeRangeChange = (timeRange: TimeRange) => {
+    console.log('🔍 DEBUG: TimeRange change from', selectedTimeRange, 'to', timeRange);
     setSelectedTimeRange(timeRange);
     fetchBookings(timeRange, false);
   };

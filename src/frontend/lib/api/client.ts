@@ -245,7 +245,12 @@ export class HttpApiClient implements ApiClient {
       params.append("status", status.toString());
     }
     const queryString = params.toString();
-    return this.request<Booking[]>(`/bookings${queryString ? `?${queryString}` : ""}`);
+    const url = `/bookings${queryString ? `?${queryString}` : ""}`;
+    console.log('🔍 DEBUG API Call:', url, '| timeRange:', timeRange, '| status:', status);
+    
+    const result = await this.request<Booking[]>(url);
+    console.log('🔍 DEBUG API Response:', result.length, 'bookings');
+    return result;
   }
 
   async getBookingById(id: string): Promise<Booking> {
