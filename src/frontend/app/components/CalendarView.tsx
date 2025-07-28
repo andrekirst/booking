@@ -47,6 +47,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
 
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [forceUpdate, setForceUpdate] = useState(0);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
@@ -86,7 +87,21 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
     });
     
     console.log('🔍 DEBUG Setting calendar events:', events.length, events);
-    setCalendarEvents(events);
+    
+    // First clear events, then set new ones (helps with react-big-calendar)
+    setCalendarEvents([]);
+    
+    // Set events in next tick
+    setTimeout(() => {
+      setCalendarEvents(events);
+      console.log('🔍 DEBUG Events set in calendar');
+    }, 10);
+    
+    // Force additional re-render for stubborn cases
+    setTimeout(() => {
+      console.log('🔍 DEBUG Force updating calendar');
+      setForceUpdate(prev => prev + 1);
+    }, 150);
   }, [bookings]);
 
   const getEventStyle = (event: CalendarEvent) => {
@@ -175,7 +190,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }}
     >
       <Calendar
-        key={`calendar-${calendarEvents.length}-${Date.now()}`}
+        key={`calendar-${calendarEvents.length}-${forceUpdate}`}
         localizer={localizer}
         events={calendarEvents}
         startAccessor="start"
