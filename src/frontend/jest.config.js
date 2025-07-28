@@ -12,6 +12,8 @@ const customJestConfig = {
   testPathIgnorePatterns: ['<rootDir>/e2e/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // Replace deprecated punycode with userland alternative in tests
+    '^punycode$': 'punycode.js',
   },
   // Suppress console errors during tests to prevent CI failures
   silent: true,
