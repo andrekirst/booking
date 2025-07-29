@@ -24,7 +24,7 @@ let mockCalendarApi: MockCalendarApi = {
 // Mock @fullcalendar/react
 jest.mock('@fullcalendar/react', () => {
   // eslint-disable-next-line react/display-name, @typescript-eslint/no-explicit-any
-  return React.forwardRef((props: any, ref: any) => {
+  const MockFullCalendar = React.forwardRef((props: any, ref: any) => {
     const { events = [], eventClick, eventMouseEnter, datesSet } = props;
     // Simulate ref callback
     if (ref) {
@@ -56,7 +56,19 @@ jest.mock('@fullcalendar/react', () => {
           data-testid="mock-mouse-enter"
           onMouseEnter={() => eventMouseEnter && eventMouseEnter({
             event: { 
-              extendedProps: { booking: { id: '1', status: BookingStatus.Confirmed } }
+              extendedProps: { 
+                booking: { 
+                  id: '1', 
+                  status: BookingStatus.Confirmed,
+                  bookingItems: [
+                    { id: '1', sleepingAccommodationId: '1', numberOfGuests: 2 }
+                  ],
+                  startDate: '2025-07-25',
+                  endDate: '2025-07-26',
+                  userFirstName: 'Test',
+                  userLastName: 'User'
+                } 
+              }
             },
             el: { getBoundingClientRect: () => ({ left: 100, top: 100, width: 50 }) }
           })}
@@ -72,16 +84,15 @@ jest.mock('@fullcalendar/react', () => {
       </div>
     );
   });
+  
+  return { default: MockFullCalendar };
 });
 
 // Mock dynamic import
 jest.mock('next/dynamic', () => {
   return jest.fn(() => {
-    // eslint-disable-next-line react/display-name, @typescript-eslint/no-explicit-any
-    return React.forwardRef((props: any, ref: any) => {
-      const MockFullCalendar = jest.requireMock('@fullcalendar/react').default;
-      return <MockFullCalendar {...props} ref={ref} />;
-    });
+    const { default: MockFullCalendar } = jest.requireMock('@fullcalendar/react');
+    return MockFullCalendar;
   });
 });
 
