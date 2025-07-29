@@ -1,12 +1,14 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DayPickerCalendarView from '../DayPickerCalendarView';
 import { Booking, BookingStatus } from '../../../lib/types/api';
 
 // Mock react-day-picker to avoid rendering issues in tests
-let mockOnMonthChange: any = null;
-let mockOnDayClick: any = null;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let mockOnMonthChange: ((date: Date) => void) | null = null;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars  
+let mockOnDayClick: ((date: Date) => void) | null = null;
 
 jest.mock('react-day-picker', () => ({
   DayPicker: ({ 
@@ -19,8 +21,8 @@ jest.mock('react-day-picker', () => ({
     month?: Date;
     onMonthChange?: (date: Date) => void;
     onDayClick?: (date: Date) => void;
-    modifiers?: any;
-    locale?: any;
+    modifiers?: Record<string, unknown>;
+    locale?: Record<string, unknown>;
   }) => {
     mockOnMonthChange = onMonthChange;
     mockOnDayClick = onDayClick;
@@ -171,7 +173,7 @@ describe('DayPickerCalendarView', () => {
 
   describe('Navigation Tests', () => {
     let mockOnSelectBooking: jest.Mock;
-    let user: any;
+    let user: ReturnType<typeof userEvent.setup>;
 
     beforeEach(() => {
       mockOnSelectBooking = jest.fn();
@@ -278,7 +280,7 @@ describe('DayPickerCalendarView', () => {
 
   describe('Day Click Handling', () => {
     let mockOnSelectBooking: jest.Mock;
-    let user: any;
+    let user: ReturnType<typeof userEvent.setup>;
 
     beforeEach(() => {
       mockOnSelectBooking = jest.fn();

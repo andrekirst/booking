@@ -1,11 +1,19 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import FullCalendarView from '../FullCalendarView';
 import { Booking, BookingStatus } from '../../../lib/types/api';
 
 // Mock FullCalendar and its plugins
-let mockCalendarApi: any = {
+interface MockCalendarApi {
+  prev: jest.Mock;
+  next: jest.Mock;
+  today: jest.Mock;
+  changeView: jest.Mock;
+  getDate: jest.Mock;
+}
+
+let mockCalendarApi: MockCalendarApi = {
   prev: jest.fn(),
   next: jest.fn(),
   today: jest.fn(),
@@ -15,7 +23,16 @@ let mockCalendarApi: any = {
 
 // Mock @fullcalendar/react
 jest.mock('@fullcalendar/react', () => {
-  return React.forwardRef(({ events, eventClick, eventMouseEnter, eventMouseLeave, datesSet, ...props }: any, ref: any) => {
+  const MockedFullCalendar = React.forwardRef<
+    { getApi: () => MockCalendarApi },
+    {
+      events?: unknown[];
+      eventClick?: (info: unknown) => void;
+      eventMouseEnter?: (info: unknown) => void;
+      datesSet?: (info: unknown) => void;
+      [key: string]: unknown;
+    }
+  >(({ events, eventClick, eventMouseEnter, datesSet, ...props }, ref) => {
     // Simulate ref callback
     if (ref) {
       if (typeof ref === 'function') {
@@ -61,17 +78,26 @@ jest.mock('@fullcalendar/react', () => {
         </button>
       </div>
     );
+  
+  MockedFullCalendar.displayName = 'MockedFullCalendar';
+  return MockedFullCalendar;
   });
 });
 
 // Mock dynamic import
 jest.mock('next/dynamic', () => {
-  return jest.fn((fn) => {
+  return jest.fn(() => {
     // Return the mocked FullCalendar component
-    return React.forwardRef((props: any, ref: any) => {
+    const MockDynamicComponent = React.forwardRef<
+      { getApi: () => MockCalendarApi },
+      Record<string, unknown>
+    >((props, ref) => {
       const MockFullCalendar = jest.requireMock('@fullcalendar/react').default;
       return <MockFullCalendar {...props} ref={ref} />;
     });
+    
+    MockDynamicComponent.displayName = 'MockDynamicComponent';
+    return MockDynamicComponent;
   });
 });
 
@@ -204,7 +230,7 @@ describe('FullCalendarView', () => {
 
   describe('Navigation Tests', () => {
     let mockOnSelectBooking: jest.Mock;
-    let user: any;
+    let user: ReturnType<typeof userEvent.setup>;
 
     beforeEach(() => {
       mockOnSelectBooking = jest.fn();
@@ -331,7 +357,7 @@ describe('FullCalendarView', () => {
 
   describe('Event Handling', () => {
     let mockOnSelectBooking: jest.Mock;
-    let user: any;
+    let user: ReturnType<typeof userEvent.setup>;
 
     beforeEach(() => {
       mockOnSelectBooking = jest.fn();

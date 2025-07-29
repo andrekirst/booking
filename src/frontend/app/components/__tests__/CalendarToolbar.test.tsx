@@ -76,7 +76,7 @@ describe('CalendarToolbar', () => {
   });
 
   describe('Navigation Functionality', () => {
-    let user: any;
+    let user: ReturnType<typeof userEvent.setup>;
 
     beforeEach(() => {
       user = userEvent.setup();
