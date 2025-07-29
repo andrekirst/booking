@@ -39,7 +39,7 @@ if [ ! -f "$COMPOSE_FILE" ]; then
 fi
 
 # Prüfe ob Services laufen
-RUNNING_SERVICES=$(docker-compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
+RUNNING_SERVICES=$(docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
 
 if [ "$RUNNING_SERVICES" -eq 0 ]; then
     echo "ℹ️  Keine laufenden Services für Agent $AGENT_NUMBER gefunden"
@@ -49,12 +49,12 @@ else
     # Zeige aktuelle Services
     echo ""
     echo "📋 Aktuelle Services:"
-    docker-compose -f "$COMPOSE_FILE" ps
+    docker compose -f "$COMPOSE_FILE" ps
     echo ""
     
     # Stoppe Services
     echo "🛑 Stoppe Services..."
-    docker-compose -f "$COMPOSE_FILE" down --remove-orphans
+    docker compose -f "$COMPOSE_FILE" down --remove-orphans
     
     echo "✅ Services gestoppt"
 fi

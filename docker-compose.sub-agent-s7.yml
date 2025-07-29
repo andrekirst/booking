@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  claude-sub-agent-s7:
+    build:
+      context: ./claude-integration
+      dockerfile: Dockerfile.sub-agent
+      args:
+        AGENT_CONFIG: config/sub-agents/CLAUDE-csharp-expert.md
+    container_name: booking-claude-sub-agent-s7
+    environment:
+      - CLAUDE_AGENT_TYPE=csharp-expert
+      - CLAUDE_AGENT_ID=S7
+      - CLAUDE_AGENT_NAME=C# Code Quality Expert
+      - CLAUDE_AGENT_ROLE=csharp-expert
+      - CLAUDE_AGENT_SPECIALIZATION=solid-principles,clean-code,csharp-best-practices
+      - CLAUDE_CSHARP_MODE=enabled
+      - CLAUDE_SOLID_ANALYSIS=strict
+      - CLAUDE_CODE_QUALITY_THRESHOLD=90
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-3-5-sonnet-20241022}
+      - AGENT_PORT=61100
+      - HEALTH_CHECK_PORT=61101
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - BOOKING_SYSTEM_ROOT=/workspace
+    ports:
+      - "61100:61100"  # Main agent port
+      - "61101:61101"  # Health check port
+    volumes:
+      - ./:/workspace:ro
+      - claude_s7_logs:/app/logs
+      - claude_s7_cache:/app/cache
+    networks:
+      - booking-sub-agent-s7
+    restart: unless-stopped
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:61101/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  redis:
+    image: redis:7-alpine
+    container_name: booking-redis-s7
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis_s7_data:/data
+    networks:
+      - booking-sub-agent-s7
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  booking-sub-agent-s7:
+    driver: bridge
+    name: booking-sub-agent-s7
+
+volumes:
+  claude_s7_logs:
+    name: booking_claude_s7_logs
+  claude_s7_cache:
+    name: booking_claude_s7_cache  
+  redis_s7_data:
+    name: booking_redis_s7_data

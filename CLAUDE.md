@@ -766,13 +766,13 @@ GROUP BY sa.id, sa.name, sa.capacity;
 #### pgweb lädt nicht
 ```bash
 # Container Status prüfen
-docker-compose -f docker-compose.agent2.yml ps
+docker compose -f docker-compose.agent2.yml ps
 
 # pgweb Logs anzeigen
 docker logs booking-pgweb-agent2
 
 # pgweb Container neustarten
-docker-compose -f docker-compose.agent2.yml restart pgweb-agent2
+docker compose -f docker-compose.agent2.yml restart pgweb-agent2
 ```
 
 #### Authentifizierung fehlgeschlagen
@@ -814,7 +814,7 @@ pgweb-agent{AGENT_NUMBER}:
 #### Development (pgweb verfügbar)
 ```bash
 # Mit Development-Profile starten
-docker-compose -f docker-compose.agent2.yml --profile development up -d
+docker compose -f docker-compose.agent2.yml --profile development up -d
 
 # pgweb ist verfügbar unter:
 http://localhost:60204 (Login: admin/admin)
@@ -823,13 +823,87 @@ http://localhost:60204 (Login: admin/admin)
 #### Production (pgweb deaktiviert)
 ```bash
 # Ohne Profile starten (Standard)
-docker-compose -f docker-compose.agent2.yml up -d
+docker compose -f docker-compose.agent2.yml up -d
 
 # pgweb wird NICHT gestartet (Sicherheit)
 # Nur PostgreSQL, Backend und Frontend laufen
 ```
 
-## 15. Kommunikation
+## 15. Docker Compose v2 Migration
+
+### 15.1 Übersicht
+**WICHTIG**: Das Projekt wurde vollständig auf Docker Compose v2 migriert. Die veraltete `docker-compose` Syntax wird nicht mehr verwendet!
+
+### 15.2 Wichtige Änderungen
+#### Kommando-Syntax
+```bash
+# ❌ Veraltet (Docker Compose v1)
+docker-compose up -d
+docker-compose -f file.yml ps
+docker-compose restart service
+
+# ✅ Modern (Docker Compose v2)
+docker compose up -d
+docker compose -f file.yml ps
+docker compose restart service
+```
+
+#### Wichtige Unterschiede
+- **Kein Bindestrich**: `docker compose` statt `docker-compose`
+- **Docker CLI Plugin**: Teil der Docker CLI, nicht separates Tool
+- **Bessere Performance**: Schnellere Ausführung und weniger Speicherverbrauch
+- **Konsistente Syntax**: Einheitlich mit anderen Docker-Kommandos
+
+### 15.3 Benefits für Entwickler
+✅ **Bessere Performance**: Schnellere Container-Starts und -Stops  
+✅ **Vereinfachte Installation**: Bereits in Docker Desktop integriert  
+✅ **Konsistente CLI**: Einheitliche Erfahrung mit Docker-Kommandos  
+✅ **Zukunftssicher**: Docker Compose v1 wird nicht mehr aktiv entwickelt  
+✅ **Bessere Integration**: Nahtlose Zusammenarbeit mit Docker CLI  
+
+### 15.4 Migration Checklist
+**Für alle Entwickler:**
+- [ ] Docker Desktop auf neueste Version aktualisieren
+- [ ] Alle `docker-compose` Kommandos zu `docker compose` ändern
+- [ ] Shell-Scripts und Dokumentation aktualisieren
+- [ ] IDE/Editor-Plugins auf v2 Syntax umstellen
+
+### 15.5 Häufige Probleme
+#### "docker-compose: command not found"
+**Lösung**: Docker Desktop installieren oder Docker Compose Plugin hinzufügen:
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+
+# Oder Docker Desktop installieren (empfohlen)
+```
+
+#### Legacy Scripts funktionieren nicht
+**Lösung**: Alle Scripts auf `docker compose` Syntax aktualisieren oder Alias erstellen:
+```bash
+# Temporärer Alias (nicht empfohlen für Produktion)
+alias docker-compose='docker compose'
+```
+
+### 15.6 Entwicklungsumgebung Setup
+```bash
+# Agent-Container mit Docker Compose v2 starten
+docker compose -f docker-compose.agent2.yml --profile development up -d
+
+# Status prüfen
+docker compose -f docker-compose.agent2.yml ps
+
+# Services neustarten
+docker compose -f docker-compose.agent2.yml restart
+
+# Cleanup
+docker compose -f docker-compose.agent2.yml down --volumes
+```
+
+**REGEL**: Ab sofort wird AUSSCHLIESSLICH `docker compose` (v2) verwendet!
+
+## 16. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)

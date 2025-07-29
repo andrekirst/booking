@@ -123,9 +123,9 @@ for AGENT_NUMBER in 2 3 4; do
         echo "      ✅ Alle Platzhalter korrekt ersetzt"
     fi
     
-    # Prüfe Docker Compose Syntax (falls docker-compose verfügbar)
-    if command -v docker-compose >/dev/null 2>&1; then
-        if docker-compose -f "$OUTPUT_FILE" config >/dev/null 2>&1; then
+    # Prüfe Docker Compose Syntax (falls docker compose verfügbar)
+    if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+        if docker compose -f "$OUTPUT_FILE" config >/dev/null 2>&1; then
             echo "      ✅ Docker Compose Syntax gültig"
         else
             echo "      ❌ Docker Compose Syntax fehlerhaft"

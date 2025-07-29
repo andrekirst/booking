@@ -54,7 +54,7 @@ for AGENT_NUMBER in 2 3 4; do
     fi
     
     # Prüfe laufende Services
-    RUNNING_SERVICES=$(docker-compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
+    RUNNING_SERVICES=$(docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
     
     if [ "$RUNNING_SERVICES" -eq 0 ]; then
         echo "   ℹ️  Keine laufenden Services"
@@ -62,7 +62,7 @@ for AGENT_NUMBER in 2 3 4; do
         echo "   🛑 Stoppe $RUNNING_SERVICES Services..."
         
         # Versuche Services zu stoppen
-        if docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null; then
+        if docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null; then
             echo "   ✅ Services gestoppt"
             STOPPED_COUNT=$((STOPPED_COUNT + 1))
         else

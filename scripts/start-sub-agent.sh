@@ -107,7 +107,7 @@ fi
 
 # Stoppe existierende Services für diesen Sub-Agent
 echo "🛑 Stoppe existierende Services für Sub-Agent $SUB_AGENT_ID..."
-docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
 
 # Prüfe Port-Verfügbarkeit
 echo "🔍 Prüfe Port-Verfügbarkeit..."
@@ -187,10 +187,10 @@ echo "🏗️  Baue und starte Docker Services für Sub-Agent $SUB_AGENT_ID..."
 echo "   Dies kann beim ersten Mal einige Minuten dauern..."
 
 # Baue Images
-docker-compose -f "$COMPOSE_FILE" build --parallel
+docker compose -f "$COMPOSE_FILE" build --parallel
 
 # Starte Services
-docker-compose -f "$COMPOSE_FILE" up -d
+docker compose -f "$COMPOSE_FILE" up -d --wait
 
 # Warte auf Service-Bereitschaft
 echo "⏳ Warte auf Service-Bereitschaft..."
@@ -244,10 +244,10 @@ if [ -n "$ISSUE_NUMBER" ]; then
 fi
 echo ""
 echo "🔧 Management-Befehle:"
-echo "   Status:    docker-compose -f $COMPOSE_FILE ps"
-echo "   Logs:      docker-compose -f $COMPOSE_FILE logs -f"
-echo "   Stoppen:   docker-compose -f $COMPOSE_FILE down"
-echo "   Claude:    docker-compose -f $COMPOSE_FILE exec claude-sub-agent$SUB_AGENT_ID claude"
+echo "   Status:    docker compose -f $COMPOSE_FILE ps"
+echo "   Logs:      docker compose -f $COMPOSE_FILE logs -f"
+echo "   Stoppen:   docker compose -f $COMPOSE_FILE down"
+echo "   Claude:    docker compose -f $COMPOSE_FILE exec claude-sub-agent$SUB_AGENT_ID claude"
 echo ""
 echo "📝 Nächste Schritte:"
 echo "   1. Öffnen Sie eine neue Claude Code Session im Sub-Agent Worktree:"

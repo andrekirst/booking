@@ -206,6 +206,45 @@ sub_agents:
         CLAUDE_DEVOPS_MODE: "enabled"
         CLAUDE_AUTOMATION_LEVEL: "high"
 
+  S7:
+    name: "C# Code Quality Expert"
+    role: "csharp-expert"
+    description: "SOLID Principles, Clean Code, C# Best Practices, Code Quality Assurance"
+    port_range: "61100-61199"
+    base_port: 61100
+    specializations:
+      - "solid-principles"
+      - "clean-code"
+      - "csharp-best-practices"
+      - "code-review"
+      - "refactoring"
+      - "performance-optimization"
+    primary_skills:
+      - "SOLID Principles Implementation"
+      - "Clean Code Practices"
+      - "Modern C# Features (C# 12+)"
+      - "Code Quality Analysis"
+      - "Refactoring Strategies"
+    tools:
+      - "SonarQube/CodeClimate"
+      - "Roslyn Analyzers"
+      - "StyleCop/FxCop"
+      - "Performance Profilers"
+      - "Static Code Analysis"
+    focus_areas:
+      - "Code Quality"
+      - "SOLID Compliance"
+      - "Performance"
+      - "Maintainability"
+      - "Technical Debt Reduction"
+    docker_config:
+      cpu_limit: "2.0"
+      memory_limit: "4G"
+      environment:
+        CLAUDE_CSHARP_MODE: "enabled"
+        CLAUDE_SOLID_ANALYSIS: "strict"
+        CLAUDE_CODE_QUALITY_THRESHOLD: "90"
+
 # Global Sub-Agent Settings
 global_settings:
   network_prefix: "booking-sub-agent"
@@ -247,6 +286,12 @@ assignment_rules:
   security:
     primary_agent: "S1"  # Senior Developer
     secondary_agents: ["S6"]  # DevOps Expert
+  code_quality:
+    primary_agent: "S7"  # C# Code Quality Expert
+    secondary_agents: ["S1"]  # Senior Developer for validation
+  refactoring:
+    primary_agent: "S7"  # C# Code Quality Expert
+    secondary_agents: ["S1", "S4"]  # Senior Dev + Test Expert
 
 # Collaboration Patterns
 collaboration_patterns:
@@ -303,3 +348,45 @@ collaboration_patterns:
       - name: "Infrastructure Optimization"
         agents: ["S6"]
         duration: "1-2 hours"
+
+  code_quality_audit:
+    description: "Umfassende Code-Qualitäts-Analyse und SOLID Compliance Check"
+    agents: ["S7", "S1", "S4"]
+    coordination_agent: "S7"
+    phases:
+      - name: "Initial Code Assessment"
+        agents: ["S7"]
+        duration: "1-2 hours"
+      - name: "SOLID Principles Analysis"
+        agents: ["S7"]
+        duration: "2-3 hours"
+      - name: "Architecture Review"
+        agents: ["S1"]
+        duration: "1-2 hours"
+      - name: "Test Coverage Analysis"
+        agents: ["S4"]
+        duration: "1 hour"
+      - name: "Refactoring Recommendations"
+        agents: ["S7", "S1"]
+        duration: "1-2 hours"
+
+  legacy_code_modernization:
+    description: "Modernisierung von Legacy C# Code mit SOLID Principles"
+    agents: ["S7", "S1", "S4", "S5"]
+    coordination_agent: "S7"
+    phases:
+      - name: "Legacy Code Analysis"
+        agents: ["S7", "S1"]
+        duration: "2-3 hours"
+      - name: "Refactoring Strategy"
+        agents: ["S7", "S5"]
+        duration: "1-2 hours"
+      - name: "Implementation Planning"
+        agents: ["S1"]
+        duration: "1 hour"
+      - name: "Test Strategy"
+        agents: ["S4"]
+        duration: "1 hour"
+      - name: "Step-by-step Refactoring"
+        agents: ["S7", "S1"]
+        duration: "4-8 hours"

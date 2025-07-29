@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Multi-Agent Docker Compose Template
 # Dieses Template wird von generate-agent-configs.sh verwendet, um 
 # spezifische Agent-Konfigurationen zu generieren
@@ -30,6 +28,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
     networks:
       - booking-agent{AGENT_NUMBER}-network
@@ -53,12 +52,21 @@ services:
     depends_on:
       postgres-agent{AGENT_NUMBER}:
         condition: service_healthy
+        restart: true
     volumes:
       # Worktree-spezifisches Volume für Agent {AGENT_NUMBER}
       - ../booking-agent{AGENT_NUMBER}/src/backend:/app/src:ro
     networks:
       - booking-agent{AGENT_NUMBER}-network
     restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../booking-agent{AGENT_NUMBER}/src/backend
+          ignore:
+            - bin/
+            - obj/
+            - "**/*.pdb"
 
   frontend-agent{AGENT_NUMBER}:
     build:
@@ -78,6 +86,15 @@ services:
     networks:
       - booking-agent{AGENT_NUMBER}-network
     restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ../booking-agent{AGENT_NUMBER}/src/frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+            - "**/*.log"
 
   # pgweb Database Web Interface (Development Only)
   pgweb-agent{AGENT_NUMBER}:
@@ -94,6 +111,7 @@ services:
     depends_on:
       postgres-agent{AGENT_NUMBER}:
         condition: service_healthy
+        restart: true
     networks:
       - booking-agent{AGENT_NUMBER}-network
     restart: unless-stopped

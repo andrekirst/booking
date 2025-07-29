@@ -59,7 +59,7 @@ for agent_id in S1 S2 S3 S4 S5 S6; do
     # Status ermitteln
     if [ -f "$compose_file" ]; then
         # Prüfe Container-Status
-        container_status=$(docker-compose -f "$compose_file" ps --format json 2>/dev/null | jq -r '.[].State' 2>/dev/null | head -1 || echo "unknown")
+        container_status=$(docker compose -f "$compose_file" ps --format json 2>/dev/null | jq -r '.[].State' 2>/dev/null | head -1 || echo "unknown")
         
         if [ "$container_status" = "running" ]; then
             status="🟢 Aktiv"
@@ -96,7 +96,7 @@ for agent_id in S1 S2 S3 S4 S5 S6; do
         fi
         
         # Container-Anzahl zählen
-        container_count=$(docker-compose -f "$compose_file" ps -q 2>/dev/null | wc -l || echo 0)
+        container_count=$(docker compose -f "$compose_file" ps -q 2>/dev/null | wc -l || echo 0)
         TOTAL_CONTAINERS=$((TOTAL_CONTAINERS + container_count))
         
     else
@@ -147,7 +147,7 @@ if [ $TOTAL_ACTIVE -gt 0 ]; then
     for agent_id in S1 S2 S3 S4 S5 S6; do
         compose_file="docker-compose.sub-agent$agent_id.yml"
         if [ -f "$compose_file" ]; then
-            container_status=$(docker-compose -f "$compose_file" ps --format json 2>/dev/null | jq -r '.[].State' 2>/dev/null | head -1 || echo "unknown")
+            container_status=$(docker compose -f "$compose_file" ps --format json 2>/dev/null | jq -r '.[].State' 2>/dev/null | head -1 || echo "unknown")
             if [ "$container_status" = "running" ]; then
                 agent_number=${agent_id:1}
                 base_port=$((60500 + ((agent_number - 1) * 100)))
@@ -212,8 +212,8 @@ done || echo "   Keine Sub-Agent Volumes gefunden"
 echo ""
 echo "🔧 Nützliche Befehle:"
 echo "   Alle stoppen:        for id in S1 S2 S3 S4 S5 S6; do ./scripts/stop-sub-agent.sh \$id; done"
-echo "   Logs anzeigen:       docker-compose -f docker-compose.sub-agent<ID>.yml logs -f"
-echo "   Container Shell:     docker-compose -f docker-compose.sub-agent<ID>.yml exec claude-sub-agent<ID> bash"
+echo "   Logs anzeigen:       docker compose -f docker-compose.sub-agent<ID>.yml logs -f"
+echo "   Container Shell:     docker compose -f docker-compose.sub-agent<ID>.yml exec claude-sub-agent<ID> bash"
 echo "   Health Check:        curl http://localhost:<CLAUDE_PORT>/health"
 echo "   Agent Status:        curl http://localhost:<CLAUDE_PORT>/agent/status"
 
