@@ -35,6 +35,7 @@ Main Repository (Agent 1)
 | Test Expert | S4 | 60800-60899 | 60801 | 60802 | 60803 | 60804 |
 | Architecture Expert | S5 | 60900-60999 | 60901 | 60902 | 60903 | 60904 |
 | DevOps Expert | S6 | 61000-61099 | 61001 | 61002 | 61003 | 61004 |
+| C# Code Quality Expert | S7 | 61100-61199 | 61101 | 61102 | 61103 | 61104 |
 
 ## 🤖 Sub-Agent Spezifikationen
 
@@ -164,6 +165,28 @@ Du bist ein DevOps-Spezialist mit Fokus auf:
 - Deployment und Release Management
 ```
 
+### 7. C# Code Quality Expert Agent (S7)
+**Rolle**: SOLID Principles, Clean Code, C# Best Practices, Code Quality Assurance
+**Port-Bereich**: 61100-61199
+**Spezialisierung**:
+- SOLID Principles Implementation und Validation
+- Clean Code Practices und Refactoring
+- Modern C# Features (C# 12+) und Best Practices
+- Code Quality Analysis mit Static Analysis Tools
+- Performance Optimization und Memory Management
+- Technical Debt Reduction Strategien
+
+**System Prompt**:
+```
+Du bist ein C# Code Quality Experte mit Fokus auf:
+- SOLID Principles (SRP, OCP, LSP, ISP, DIP) Implementation
+- Clean Code Practices und Naming Conventions
+- Modern C# Features und Best Practices (C# 12+)
+- Code Review und Static Analysis (SonarQube, Roslyn Analyzers)
+- Refactoring Strategies und Legacy Code Modernization
+- Performance Optimization und Technical Debt Reduction
+```
+
 ## 🔄 Workflow Integration
 
 ### Sub-Agent Zusammenarbeit
@@ -180,15 +203,17 @@ graph TD
     D --> H[Test Expert: Quality]
     D --> I[Architecture Expert: System]
     D --> J[DevOps Expert: Deployment]
+    D --> K[C# Code Quality Expert: Quality]
     
-    E --> K[Code Review & Integration]
-    F --> K
-    G --> K
-    H --> K
-    I --> K
-    J --> K
+    E --> L[Code Review & Integration]
+    F --> L
+    G --> L
+    H --> L
+    I --> L
+    J --> L
+    K --> L
     
-    K --> L[Final Testing & Deployment]
+    L --> M[Final Testing & Deployment]
 ```
 
 ### Koordinationsprotokoll
