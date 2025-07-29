@@ -16,7 +16,8 @@
     "test:e2e:codegen": "playwright codegen",
     "test:api": "playwright test --grep 'API Client Tests|Smoke Tests - API Abstraction'",
     "test:api:ui": "playwright test --grep 'API Client Tests|Smoke Tests - API Abstraction' --ui",
-    "test:smoke": "playwright test --grep 'Smoke Tests - API Abstraction'"
+    "test:smoke": "playwright test --grep 'Smoke Tests - API Abstraction'",
+    "test:middleware": "jest --config=jest.config.middleware.js"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.18",
