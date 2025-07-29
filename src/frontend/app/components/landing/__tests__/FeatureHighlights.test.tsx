@@ -53,8 +53,8 @@ describe('FeatureHighlights', () => {
     const mockLoginButton = { click: mockClick };
     
     jest.spyOn(document, 'querySelector')
-      .mockImplementationOnce(() => mockHeroSection as any)
-      .mockImplementationOnce(() => mockLoginButton as any);
+      .mockImplementationOnce(() => mockHeroSection as HTMLElement | null)
+      .mockImplementationOnce(() => mockLoginButton as HTMLElement | null);
     
     // Mock setTimeout
     jest.useFakeTimers();
