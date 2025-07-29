@@ -1,3 +1,6 @@
+// Suppress punycode deprecation warnings in tests (Issue #72)
+require('./.node-deprecated-modules.js');
+
 import '@testing-library/jest-dom'
 import fetchMock from 'jest-fetch-mock'
 

@@ -98,10 +98,10 @@ export default function RegisterPage() {
 
                             <div className="mt-6">
                                 <Link
-                                    href="/login"
+                                    href="/"
                                     className="font-semibold text-blue-600 hover:text-blue-500 transition-colors"
                                 >
-                                    Zum Login zurückkehren
+                                    Zur Startseite zurückkehren
                                 </Link>
                             </div>
                         </div>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                     {/* Back to Login Button */}
                     <div className="mb-6">
                         <Link
-                            href="/login"
+                            href="/"
                             className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors"
                         >
                             <svg
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                                     d="M15 19l-7-7 7-7"
                                 />
                             </svg>
-                            Zurück zum Login
+                            Zurück zur Startseite
                         </Link>
                     </div>
 
@@ -159,7 +159,7 @@ export default function RegisterPage() {
                         <p className="text-sm text-gray-600">
                             Bereits ein Konto?{' '}
                             <Link
-                                href="/login"
+                                href="/"
                                 className="font-semibold text-blue-600 hover:text-blue-500 transition-colors"
                             >
                                 Hier einloggen

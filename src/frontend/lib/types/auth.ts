@@ -27,7 +27,7 @@ export interface UserMenuItem {
   /** Whether item should be shown (for conditional rendering) */
   show?: boolean;
   /** Visual styling variant */
-  variant?: 'default' | 'danger' | 'selected' | 'label';
+  variant?: 'default' | 'danger';
   /** Whether to show a separator after this item */
   showSeparator?: boolean;
 }

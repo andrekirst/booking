@@ -2,43 +2,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { UserMenuDropdown } from '../UserMenuDropdown';
 import { UserInfo } from '@/lib/types/auth';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-
-// Mock localStorage for theme context
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: jest.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    }),
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
-
-// Mock matchMedia for theme context
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
 
 // Mock user data
 const mockAdminUser: UserInfo = {
@@ -62,15 +25,6 @@ const mockOnLogout = jest.fn();
 const mockOnProfileClick = jest.fn();
 const mockOnAdminClick = jest.fn();
 
-// Wrapper component for ThemeProvider
-const renderWithTheme = (ui: React.ReactElement) => {
-  return render(
-    <ThemeProvider defaultTheme="system">
-      {ui}
-    </ThemeProvider>
-  );
-};
-
 describe('UserMenuDropdown', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -78,7 +32,7 @@ describe('UserMenuDropdown', () => {
 
   describe('Rendering', () => {
     it('should render user avatar button', () => {
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -90,7 +44,7 @@ describe('UserMenuDropdown', () => {
     });
 
     it('should not show dropdown initially', () => {
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -102,7 +56,7 @@ describe('UserMenuDropdown', () => {
 
     it('should show dropdown when avatar is clicked', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -119,7 +73,7 @@ describe('UserMenuDropdown', () => {
   describe('Menu Content', () => {
     beforeEach(async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockAdminUser}
           onLogout={mockOnLogout}
@@ -154,7 +108,7 @@ describe('UserMenuDropdown', () => {
   describe('Admin Visibility', () => {
     it('should show admin menu item for admin users', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockAdminUser}
           onLogout={mockOnLogout}
@@ -170,7 +124,7 @@ describe('UserMenuDropdown', () => {
 
     it('should not show admin menu item for regular users', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -187,7 +141,7 @@ describe('UserMenuDropdown', () => {
   describe('Click Handlers', () => {
     beforeEach(async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockAdminUser}
           onLogout={mockOnLogout}
@@ -242,7 +196,7 @@ describe('UserMenuDropdown', () => {
   describe('Keyboard Navigation', () => {
     it('should open dropdown on Enter key', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -258,7 +212,7 @@ describe('UserMenuDropdown', () => {
 
     it('should open dropdown on Space key', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -274,7 +228,7 @@ describe('UserMenuDropdown', () => {
 
     it('should close dropdown on Escape key', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -297,7 +251,7 @@ describe('UserMenuDropdown', () => {
   describe('Click Outside', () => {
     it('should close dropdown when clicking outside', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <div>
           <UserMenuDropdown
             userInfo={mockRegularUser}
@@ -336,7 +290,7 @@ describe('UserMenuDropdown', () => {
         }
       ];
 
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -364,7 +318,7 @@ describe('UserMenuDropdown', () => {
         }
       ];
 
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -384,7 +338,7 @@ describe('UserMenuDropdown', () => {
 
   describe('Accessibility', () => {
     it('should have correct ARIA attributes on button', () => {
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -398,7 +352,7 @@ describe('UserMenuDropdown', () => {
 
     it('should update aria-expanded when dropdown opens', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}
@@ -413,7 +367,7 @@ describe('UserMenuDropdown', () => {
 
     it('should have correct ARIA attributes on menu', async () => {
       const user = userEvent.setup();
-      renderWithTheme(
+      render(
         <UserMenuDropdown
           userInfo={mockRegularUser}
           onLogout={mockOnLogout}

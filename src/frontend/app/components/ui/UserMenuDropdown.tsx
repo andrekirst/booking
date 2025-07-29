@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { UserMenuDropdownProps, UserMenuItem } from '@/lib/types/auth';
 import { UserAvatar } from './UserAvatar';
-import { ThemeButtonGroup } from './ThemeButtonGroup';
 
 /**
  * User menu dropdown component with profile, admin, and logout options
@@ -145,7 +144,7 @@ export function UserMenuDropdown({
         <div
           ref={dropdownRef}
           className={`
-            absolute z-50 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2
+            absolute z-50 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2
             ${positionClasses[position]}
             animate-in fade-in-0 zoom-in-95 duration-100
           `}
@@ -154,26 +153,21 @@ export function UserMenuDropdown({
           aria-labelledby="user-menu-button"
         >
           {/* User Info Header */}
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+          <div className="px-4 py-3 border-b border-gray-100">
             <div className="flex items-center space-x-3">
               <UserAvatar userInfo={userInfo} size="sm" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <p className="text-sm font-medium text-gray-900 truncate">
                   {userInfo.name}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p className="text-xs text-gray-500 truncate">
                   {userInfo.email}
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
+                <p className="text-xs text-gray-400">
                   {userInfo.role}
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Theme Selection */}
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-            <ThemeButtonGroup />
           </div>
 
           {/* Menu Items */}
@@ -191,13 +185,9 @@ export function UserMenuDropdown({
                       transition-colors duration-150
                       ${item.variant === 'danger' 
                         ? 'text-red-700 hover:bg-red-50 hover:text-red-900' 
-                        : item.variant === 'selected'
-                        ? 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300'
-                        : item.variant === 'label'
-                        ? 'text-gray-500 dark:text-gray-400 font-medium cursor-default'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
+                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                       }
-                      ${item.variant === 'label' ? '' : 'focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100'}
+                      focus:outline-none focus:bg-gray-100 focus:text-gray-900
                     `}
                     role="menuitem"
                   >
@@ -211,7 +201,7 @@ export function UserMenuDropdown({
                   
                   {/* Separator */}
                   {item.showSeparator && !isLastItem && (
-                    <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                    <div className="border-t border-gray-100 my-1" />
                   )}
                 </div>
               );

@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: booking_agent2
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
-      - "60203:5432"
+      - "60203:5432"  # Agent 2 PostgreSQL Port
     volumes:
       - postgres_agent2_data:/var/lib/postgresql/data
     healthcheck:
@@ -37,7 +37,7 @@ services:
       JwtSettings__Audience: "BookingApp-Agent2"
       JwtSettings__ExpirationMinutes: "480"
     ports:
-      - "60202:80"
+      - "60202:80"  # Agent 2 Backend Port
     depends_on:
       postgres-agent2:
         condition: service_healthy
@@ -56,7 +56,7 @@ services:
       NEXT_PUBLIC_API_URL: "http://localhost:60202/api"
       PORT: "3000"
     ports:
-      - "60201:3000"
+      - "60201:3000"  # Agent 2 Frontend Port
     volumes:
       - ./src/frontend:/app:cached
       - /app/node_modules
@@ -64,6 +64,27 @@ services:
     networks:
       - booking-agent2-network
     restart: unless-stopped
+
+  # pgweb Database Web Interface (Development Only)
+  pgweb-agent2:
+    image: sosedoff/pgweb:latest
+    container_name: booking-pgweb-agent2
+    environment:
+      PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent2:5432/booking_agent2?sslmode=disable"
+      PGWEB_AUTH_USER: "admin"
+      PGWEB_AUTH_PASS: "admin"
+      PGWEB_LISTEN_ADDR: "0.0.0.0"
+      PGWEB_LISTEN_PORT: "8081"
+    ports:
+      - "60204:8081"  # Agent 2 pgweb Port
+    depends_on:
+      postgres-agent2:
+        condition: service_healthy
+    networks:
+      - booking-agent2-network
+    restart: unless-stopped
+    profiles:
+      - development  # Only available in development environment
 
 volumes:
   postgres_agent2_data:

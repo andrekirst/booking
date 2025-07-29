@@ -60,7 +60,7 @@ services:
         condition: service_healthy
     volumes:
       # Worktree-spezifisches Volume für Agent 4
-      - ../booking-agent4/src/backend:/app/src:ro
+      - ./src/backend:/app/src:ro
     networks:
       - booking-agent4-network
     restart: unless-stopped
@@ -77,7 +77,7 @@ services:
       - "60401:3000"  # Agent 4 Frontend Port
     volumes:
       # Worktree-spezifisches Volume für Agent 4
-      - ../booking-agent4/src/frontend:/app:cached
+      - ./src/frontend:/app:cached
       - /app/node_modules
       - /app/.next
     networks:
