@@ -113,18 +113,13 @@ jobs:
         echo "- [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) - API-Dokumentation" >> status-summary.md
         echo "- [FRONTEND_COMPONENTS.md](./docs/FRONTEND_COMPONENTS.md) - Komponenten-Übersicht" >> status-summary.md
 
-    - name: Comment PR with Status
+    - name: Display Status Summary
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          if (fs.existsSync('status-summary.md')) {
-            const body = fs.readFileSync('status-summary.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
-          }
+      run: |
+        if [ -f "status-summary.md" ]; then
+          echo "📊 Status Summary für PR erstellt:"
+          echo "=================================="
+          cat status-summary.md
+        else
+          echo "ℹ️  Kein Status Summary verfügbar"
+        fi
