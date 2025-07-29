@@ -1,0 +1,273 @@
+# Template for standard booking agents (agent2, agent3, agent4)
+# Use with: envsubst < booking-agent-template.yml > booking-agent${AGENT_NUMBER}.yml
+# Environment variables: AGENT_NUMBER, FRONTEND_PORT, BACKEND_PORT, DB_PORT
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-agent${AGENT_NUMBER}-backend
+  namespace: booking-system
+  labels:
+    app: booking-agent${AGENT_NUMBER}
+    component: backend
+    version: v1
+    app.kubernetes.io/name: booking-agent${AGENT_NUMBER}
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: booking-system
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: booking-agent${AGENT_NUMBER}
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: booking-agent${AGENT_NUMBER}
+        component: backend
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "80"
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: backend
+        image: booking-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: ASPNETCORE_ENVIRONMENT
+        - name: ASPNETCORE_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: ASPNETCORE_URLS
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: DB_CONNECTION_AGENT${AGENT_NUMBER}
+        - name: JwtSettings__Secret
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: JWT_SECRET
+        - name: JwtSettings__Issuer
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: JWT_ISSUER
+        - name: JwtSettings__Audience
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: JWT_AUDIENCE
+        - name: JwtSettings__ExpirationMinutes
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: JWT_EXPIRATION_MINUTES
+        - name: CorsSettings__AllowedOrigins__0
+          value: "https://booking-agent${AGENT_NUMBER}-frontend.booking-system.svc.cluster.local"
+        - name: AGENT_ID
+          value: "agent${AGENT_NUMBER}"
+        - name: AGENT_TYPE
+          value: "standard"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: app-logs
+          mountPath: /app/logs
+      volumes:
+      - name: app-logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-agent${AGENT_NUMBER}-backend-service
+  namespace: booking-system
+  labels:
+    app: booking-agent${AGENT_NUMBER}
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: booking-agent${AGENT_NUMBER}
+    component: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-agent${AGENT_NUMBER}-frontend
+  namespace: booking-system
+  labels:
+    app: booking-agent${AGENT_NUMBER}
+    component: frontend
+    version: v1
+    app.kubernetes.io/name: booking-agent${AGENT_NUMBER}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: booking-system
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: booking-agent${AGENT_NUMBER}
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: booking-agent${AGENT_NUMBER}
+        component: frontend
+        version: v1
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: frontend
+        image: booking-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://booking-agent${AGENT_NUMBER}-backend.booking-system.svc.cluster.local/api"
+        - name: PORT
+          value: "3000"
+        - name: AGENT_ID
+          value: "agent${AGENT_NUMBER}"
+        - name: AGENT_TYPE
+          value: "standard"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-agent${AGENT_NUMBER}-frontend-service
+  namespace: booking-system
+  labels:
+    app: booking-agent${AGENT_NUMBER}
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: booking-agent${AGENT_NUMBER}
+    component: frontend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: booking-agent${AGENT_NUMBER}-ingress
+  namespace: booking-system
+  labels:
+    app: booking-agent${AGENT_NUMBER}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - booking-agent${AGENT_NUMBER}.example.com
+    secretName: booking-agent${AGENT_NUMBER}-tls
+  rules:
+  - host: booking-agent${AGENT_NUMBER}.example.com
+    http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: booking-agent${AGENT_NUMBER}-backend-service
+            port:
+              number: 80
+      - path: /(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: booking-agent${AGENT_NUMBER}-frontend-service
+            port:
+              number: 3000

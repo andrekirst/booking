@@ -1,0 +1,326 @@
+# ArgoCD GitOps configuration for booking system
+
+# ArgoCD Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  labels:
+    name: argocd
+---
+# ArgoCD Application for booking system
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: booking-system
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/andrekirst/booking.git
+    targetRevision: main
+    path: k8s
+    directory:
+      recurse: true
+      include: '*.yml'
+      exclude: 'ci-cd/*'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: booking-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+---
+# ArgoCD Application for standard agents
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: booking-agents
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: booking-agents
+    app.kubernetes.io/component: gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/andrekirst/booking.git
+    targetRevision: main
+    path: k8s/agents
+    directory:
+      recurse: true
+      include: 'booking-agent*.yml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: booking-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 2m
+---
+# ArgoCD Application for sub-agents
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: claude-sub-agents
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: claude-sub-agents
+    app.kubernetes.io/component: gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/andrekirst/booking.git
+    targetRevision: main
+    path: k8s/sub-agents
+    directory:
+      recurse: true
+      include: 'sub-agent-s*.yml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: booking-system
+  syncPolicy:
+    automated:
+      prune: false  # Don't auto-prune sub-agents to prevent accidental deletion
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+---
+# ArgoCD Application for database
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: booking-databases
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: booking-databases
+    app.kubernetes.io/component: gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/andrekirst/booking.git
+    targetRevision: main
+    path: k8s/database
+    directory:
+      recurse: true
+      include: 'postgres-*.yml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: booking-system
+  syncPolicy:
+    automated:
+      prune: false  # Never auto-prune databases
+      selfHeal: false  # Manual healing for databases
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 2
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
+---
+# ArgoCD Application for monitoring
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: booking-monitoring
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: booking-monitoring
+    app.kubernetes.io/component: gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/andrekirst/booking.git
+    targetRevision: main
+    path: k8s/monitoring
+    directory:
+      recurse: true
+      include: '*.yml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: booking-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+# ArgoCD Project for booking system
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: booking-system-project
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: booking-system-project
+    app.kubernetes.io/component: gitops
+spec:
+  description: Booking system multi-agent project
+  sourceRepos:
+  - 'https://github.com/andrekirst/booking.git'
+  - 'https://github.com/andrekirst/booking-agent*'
+  destinations:
+  - namespace: booking-system
+    server: https://kubernetes.default.svc
+  - namespace: argocd
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  - group: 'rbac.authorization.k8s.io'
+    kind: ClusterRole
+  - group: 'rbac.authorization.k8s.io'
+    kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: '*'
+  - group: 'apps'
+    kind: '*'
+  - group: 'autoscaling'
+    kind: '*'
+  - group: 'networking.k8s.io'
+    kind: '*'
+  - group: 'autoscaling.k8s.io'
+    kind: 'VerticalPodAutoscaler'
+  roles:
+  - name: admin
+    description: Admin privileges to booking system project
+    policies:
+    - p, proj:booking-system-project:admin, applications, *, booking-system-project/*, allow
+    - p, proj:booking-system-project:admin, repositories, *, *, allow
+    groups:
+    - booking-system:admin
+  - name: developer
+    description: Developer access to booking system project
+    policies:
+    - p, proj:booking-system-project:developer, applications, get, booking-system-project/*, allow
+    - p, proj:booking-system-project:developer, applications, sync, booking-system-project/*, allow
+    groups:
+    - booking-system:developer
+  - name: readonly
+    description: Read-only access to booking system project
+    policies:
+    - p, proj:booking-system-project:readonly, applications, get, booking-system-project/*, allow
+    groups:
+    - booking-system:readonly
+---
+# ArgoCD Notification Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-notifications
+    app.kubernetes.io/component: notifications
+data:
+  service.webhook.booking-system: |
+    url: https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+    headers:
+    - name: Content-Type
+      value: application/json
+  
+  template.app-deployed: |
+    webhook:
+      booking-system:
+        method: POST
+        body: |
+          {
+            "text": "Application {{.app.metadata.name}} is now running new version."
+          }
+  
+  template.app-health-degraded: |
+    webhook:
+      booking-system:
+        method: POST
+        body: |
+          {
+            "text": "Application {{.app.metadata.name}} has degraded health status."
+          }
+  
+  template.app-sync-failed: |
+    webhook:
+      booking-system:
+        method: POST
+        body: |
+          {
+            "text": "Application {{.app.metadata.name}} sync is failed."
+          }
+  
+  subscriptions: |
+    - recipients:
+      - booking-system
+      triggers:
+      - on-deployed
+      - on-health-degraded
+      - on-sync-failed
+---
+# ArgoCD RBAC Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac
+    app.kubernetes.io/component: server
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    # Admin policies
+    p, role:admin, applications, *, */*, allow
+    p, role:admin, repositories, *, *, allow
+    p, role:admin, clusters, *, *, allow
+    p, role:admin, projects, *, *, allow
+    
+    # Developer policies  
+    p, role:developer, applications, get, booking-system/*, allow
+    p, role:developer, applications, sync, booking-system/*, allow
+    p, role:developer, applications, action/*, booking-system/*, allow
+    p, role:developer, repositories, get, *, allow
+    
+    # Sub-agent developer policies
+    p, role:sub-agent-developer, applications, get, booking-system/claude-sub-agents, allow
+    p, role:sub-agent-developer, applications, sync, booking-system/claude-sub-agents, allow
+    p, role:sub-agent-developer, applications, action/*, booking-system/claude-sub-agents, allow
+    
+    # Group mappings
+    g, booking-system:admin, role:admin
+    g, booking-system:developer, role:developer
+    g, booking-system:sub-agent-developer, role:sub-agent-developer

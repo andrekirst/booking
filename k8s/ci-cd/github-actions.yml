@@ -1,0 +1,314 @@
+# GitHub Actions workflow for booking system CI/CD
+# This file should be placed in .github/workflows/booking-system.yml
+
+name: Booking System CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+    - 'src/**'
+    - 'k8s/**'
+    - 'Dockerfile*'
+    - '.github/workflows/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+    - 'src/**'
+    - 'k8s/**'
+    - 'Dockerfile*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_API: ${{ github.repository }}/booking-api
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/booking-frontend
+  IMAGE_NAME_CLAUDE: ${{ github.repository }}/claude-sub-agent
+
+jobs:
+  # Build and test backend
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore src/backend/BookingSystem.sln
+    
+    - name: Build backend
+      run: dotnet build src/backend/BookingSystem.sln --no-restore
+    
+    - name: Run backend tests
+      run: dotnet test src/backend/BookingSystem.sln --no-build --verbosity normal --collect:"XPlat Code Coverage"
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: backend
+
+  # Build and test frontend
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: cd src/frontend && npm ci
+    
+    - name: Run linter
+      run: cd src/frontend && npm run lint
+    
+    - name: Run frontend tests
+      run: cd src/frontend && npm run test:coverage
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./src/frontend/coverage/lcov.info
+        flags: frontend
+
+  # Build and push Docker images
+  build-images:
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    
+    strategy:
+      matrix:
+        image:
+        - name: booking-api
+          context: ./src/backend
+          dockerfile: Dockerfile
+        - name: booking-frontend
+          context: ./src/frontend
+          dockerfile: Dockerfile.prod
+        - name: claude-sub-agent
+          context: ./claude-integration
+          dockerfile: Dockerfile.sub-agent
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image.name }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ matrix.image.context }}
+        dockerfile: ${{ matrix.image.dockerfile }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Security scanning
+  security-scan:
+    needs: [build-images]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    
+    strategy:
+      matrix:
+        image: [booking-api, booking-frontend, claude-sub-agent]
+    
+    steps:
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
+        format: sarif
+        output: trivy-results.sarif
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: trivy-results.sarif
+
+  # Deploy to staging
+  deploy-staging:
+    needs: [build-images, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+    
+    - name: Update image tags in staging
+      run: |
+        export KUBECONFIG=kubeconfig
+        # Update backend images
+        kubectl set image deployment/booking-agent2-backend backend=${{ env.REGISTRY }}/${{ github.repository }}/booking-api:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-agent3-backend backend=${{ env.REGISTRY }}/${{ github.repository }}/booking-api:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-agent4-backend backend=${{ env.REGISTRY }}/${{ github.repository }}/booking-api:develop-${{ github.sha }} -n booking-system
+        
+        # Update frontend images
+        kubectl set image deployment/booking-agent2-frontend frontend=${{ env.REGISTRY }}/${{ github.repository }}/booking-frontend:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-agent3-frontend frontend=${{ env.REGISTRY }}/${{ github.repository }}/booking-frontend:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-agent4-frontend frontend=${{ env.REGISTRY }}/${{ github.repository }}/booking-frontend:develop-${{ github.sha }} -n booking-system
+        
+        # Update sub-agent images
+        kubectl set image deployment/booking-sub-s1 claude-agent=${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-sub-s2 claude-agent=${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-sub-s3 claude-agent=${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-sub-s4 claude-agent=${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-sub-s5 claude-agent=${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:develop-${{ github.sha }} -n booking-system
+        kubectl set image deployment/booking-sub-s6 claude-agent=${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:develop-${{ github.sha }} -n booking-system
+    
+    - name: Wait for deployment
+      run: |
+        export KUBECONFIG=kubeconfig
+        kubectl rollout status deployment/booking-agent2-backend -n booking-system --timeout=300s
+        kubectl rollout status deployment/booking-agent2-frontend -n booking-system --timeout=300s
+        kubectl rollout status deployment/booking-sub-s1 -n booking-system --timeout=300s
+
+  # Deploy to production
+  deploy-production:
+    needs: [build-images, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: |
+          ## Changes in this Release
+          - Booking system multi-agent deployment
+          - Backend: ${{ env.REGISTRY }}/${{ github.repository }}/booking-api:${{ github.sha }}
+          - Frontend: ${{ env.REGISTRY }}/${{ github.repository }}/booking-frontend:${{ github.sha }}
+          - Claude Sub-agents: ${{ env.REGISTRY }}/${{ github.repository }}/claude-sub-agent:${{ github.sha }}
+        draft: false
+        prerelease: false
+    
+    - name: Update ArgoCD Application
+      run: |
+        # This will trigger ArgoCD to sync the latest changes
+        curl -X POST "${{ secrets.ARGOCD_SERVER }}/api/v1/applications/booking-system/sync" \
+          -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "revision": "${{ github.sha }}",
+            "prune": true,
+            "dryRun": false,
+            "strategy": {
+              "hook": {
+                "force": true
+              }
+            }
+          }'
+
+  # E2E tests against staging
+  e2e-tests:
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: cd src/frontend && npm ci
+    
+    - name: Install Playwright
+      run: cd src/frontend && npx playwright install --with-deps
+    
+    - name: Run E2E tests
+      run: cd src/frontend && npm run test:e2e
+      env:
+        PLAYWRIGHT_BASE_URL: https://booking-agent2.staging.example.com
+    
+    - name: Upload E2E test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: src/frontend/playwright-report/
+        retention-days: 30
+
+  # Performance tests
+  performance-tests:
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Run k6 performance tests
+      uses: grafana/k6-action@v0.3.1
+      with:
+        filename: tests/performance/load-test.js
+      env:
+        K6_BASE_URL: https://booking-agent2.staging.example.com
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: k6-report
+        path: k6-report.html

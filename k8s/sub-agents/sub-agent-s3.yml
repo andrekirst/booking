@@ -1,0 +1,202 @@
+# UX Expert Sub-Agent (S3)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-sub-s3
+  namespace: booking-system
+  labels:
+    app: booking-sub-s3
+    component: claude-agent
+    role: ux-expert
+    version: v1
+    app.kubernetes.io/name: booking-sub-s3
+    app.kubernetes.io/component: claude-agent
+    app.kubernetes.io/part-of: booking-system
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: booking-sub-s3
+      component: claude-agent
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s3
+        component: claude-agent
+        role: ux-expert
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "3000"
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: claude-agent
+        image: claude-sub-agent:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        - containerPort: 8080
+          name: health
+          protocol: TCP
+        env:
+        - name: CLAUDE_AGENT_ROLE
+          value: "ux-expert"
+        - name: CLAUDE_SUB_AGENT_ID
+          value: "S3"
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: CLAUDE_API_KEY_SUB_AGENT_S3
+        - name: CLAUDE_CONTEXT_PATH
+          value: "/workspace/CLAUDE-ux-expert.md"
+        - name: CLAUDE_WORKSPACE
+          value: "/workspace"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: DB_CONNECTION_SUB_S3
+        - name: AGENT_REGISTRY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: AGENT_REGISTRY_URL
+        - name: CLAUDE_UX_MODE
+          value: "enabled"
+        - name: CLAUDE_ACCESSIBILITY_CHECK
+          value: "strict"
+        - name: CLAUDE_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: CLAUDE_TIMEOUT
+        - name: CLAUDE_MAX_RETRIES
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: CLAUDE_MAX_RETRIES
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: health
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: health
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: claude-config
+          mountPath: /workspace/.claude
+          readOnly: true
+        - name: agent-logs
+          mountPath: /app/logs
+      volumes:
+      - name: workspace
+        emptyDir: {}
+      - name: claude-config
+        configMap:
+          name: sub-agents-config
+          items:
+          - key: sub-agents.yml
+            path: config.yml
+      - name: agent-logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s3-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s3
+    component: claude-agent
+    role: ux-expert
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: http
+    protocol: TCP
+    name: http
+  - port: 8080
+    targetPort: health
+    protocol: TCP
+    name: health
+  selector:
+    app: booking-sub-s3
+    component: claude-agent
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: booking-sub-s3-hpa
+  namespace: booking-system
+  labels:
+    app: booking-sub-s3
+    component: claude-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s3
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 15
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60

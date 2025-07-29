@@ -1,0 +1,168 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-sub-agent-s1
+  namespace: booking-agents
+  labels:
+    app: claude-sub-agent
+    role: senior-developer
+    sub-agent-id: s1
+    priority: high
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: claude-sub-agent
+      sub-agent-id: s1
+  template:
+    metadata:
+      labels:
+        app: claude-sub-agent
+        role: senior-developer
+        sub-agent-id: s1
+        priority: high
+    spec:
+      containers:
+      - name: claude-integration
+        image: booking/claude-sub-agent:latest
+        args: ["--role", "senior-developer", "--agent-id", "S1"]
+        ports:
+        - containerPort: 3000
+          name: health
+        - containerPort: 8080
+          name: claude-api
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            cpu: 4
+            memory: 8Gi
+        env:
+        - name: CLAUDE_AGENT_ROLE
+          value: "senior-developer"
+        - name: SUB_AGENT_ID
+          value: "S1"
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-api-credentials
+              key: api-key
+        - name: CLAUDE_CONTEXT_PATH
+          value: "/workspace/CLAUDE-SENIOR-DEVELOPER.md"
+        - name: AGENT_PRIORITY
+          value: "high"
+        - name: MAX_CONCURRENT_TASKS
+          value: "5"
+        volumeMounts:
+        - name: agent-workspace
+          mountPath: /workspace
+        - name: claude-config
+          mountPath: /config
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: agent-workspace
+        persistentVolumeClaim:
+          claimName: agent-s1-workspace
+      - name: claude-config
+        configMap:
+          name: claude-config-senior-developer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-sub-agent-s1
+  namespace: booking-agents
+  labels:
+    app: claude-sub-agent
+    sub-agent-id: s1
+spec:
+  selector:
+    app: claude-sub-agent
+    sub-agent-id: s1
+  ports:
+  - name: health
+    port: 3000
+    targetPort: 3000
+  - name: claude-api
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-s1-workspace
+  namespace: booking-agents
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: claude-sub-agent-s1-hpa
+  namespace: booking-agents
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: claude-sub-agent-s1
+  minReplicas: 1
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: claude_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "10"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      selectPolicy: Min
