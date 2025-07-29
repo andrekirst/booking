@@ -61,7 +61,7 @@ fi
 
 # Stoppe existierende Services für diesen Agenten (falls laufend)
 echo "🛑 Stoppe existierende Services für Agent $AGENT_NUMBER..."
-docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
 
 # Prüfe Port-Verfügbarkeit
 echo "🔍 Prüfe Port-Verfügbarkeit..."
@@ -103,10 +103,10 @@ echo "🏗️  Baue und starte Docker Services für Agent $AGENT_NUMBER..."
 echo "   Dies kann beim ersten Mal einige Minuten dauern..."
 
 # Baue Images mit Fortschrittsanzeige
-docker-compose -f "$COMPOSE_FILE" build --parallel
+docker compose -f "$COMPOSE_FILE" build --parallel
 
 # Starte Services
-docker-compose -f "$COMPOSE_FILE" up -d
+docker compose -f "$COMPOSE_FILE" up -d --wait
 
 # Warte auf Service-Bereitschaft
 echo "⏳ Warte auf Service-Bereitschaft..."
@@ -119,7 +119,7 @@ ELAPSED=0
 
 while [ $ELAPSED -lt $HEALTH_CHECK_TIMEOUT ]; do
     # Prüfe Datenbank-Status über Docker Health Check
-    DB_STATUS=$(docker-compose -f "$COMPOSE_FILE" ps -q postgres-agent$AGENT_NUMBER | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+    DB_STATUS=$(docker compose -f "$COMPOSE_FILE" ps -q postgres-agent$AGENT_NUMBER | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
     
     if [ "$DB_STATUS" = "healthy" ]; then
         echo "✅ Datenbank ist bereit"
@@ -133,8 +133,8 @@ done
 
 if [ $ELAPSED -ge $HEALTH_CHECK_TIMEOUT ]; then
     echo "❌ Timeout: Datenbank nicht bereit nach $HEALTH_CHECK_TIMEOUT Sekunden"
-    echo "   Prüfen Sie die Logs: docker-compose -f $COMPOSE_FILE logs postgres-agent$AGENT_NUMBER"
-    echo "   Prüfen Sie den Container-Status: docker-compose -f $COMPOSE_FILE ps"
+    echo "   Prüfen Sie die Logs: docker compose -f $COMPOSE_FILE logs postgres-agent$AGENT_NUMBER"
+    echo "   Prüfen Sie den Container-Status: docker compose -f $COMPOSE_FILE ps"
     # Nicht abbrechen - Services könnten trotzdem funktionieren
     echo "⚠️  Fortfahren trotz Health Check Timeout..."
 fi
@@ -156,10 +156,10 @@ if [ -n "$ISSUE_NUMBER" ]; then
 fi
 echo ""
 echo "🔧 Management-Befehle:"
-echo "   Status:  docker-compose -f $COMPOSE_FILE ps"
-echo "   Logs:    docker-compose -f $COMPOSE_FILE logs -f"
-echo "   Stoppen: docker-compose -f $COMPOSE_FILE down"
-echo "   Shell:   docker-compose -f $COMPOSE_FILE exec backend-agent$AGENT_NUMBER bash"
+echo "   Status:  docker compose -f $COMPOSE_FILE ps"
+echo "   Logs:    docker compose -f $COMPOSE_FILE logs -f"
+echo "   Stoppen: docker compose -f $COMPOSE_FILE down"
+echo "   Shell:   docker compose -f $COMPOSE_FILE exec backend-agent$AGENT_NUMBER bash"
 echo ""
 echo "📝 Nächste Schritte:"
 echo "   1. Öffnen Sie eine neue Claude Code Session im Worktree:"

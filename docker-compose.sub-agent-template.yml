@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Claude Code Sub-Agent Docker Compose Template
 # Dieses Template wird für spezialisierte Sub-Agents verwendet
 #

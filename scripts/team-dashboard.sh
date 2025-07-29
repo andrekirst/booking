@@ -186,7 +186,7 @@ get_role_metrics() {
                 echo "    Domain events: $EVENT_FILES"
                 ;;
             "devops-expert")
-                DOCKER_FILES=$(find . -name "Dockerfile*" -o -name "docker-compose*.yml" 2>/dev/null | wc -l)
+                DOCKER_FILES=$(find . -name "Dockerfile*" -o -name "docker compose*.yml" 2>/dev/null | wc -l)
                 echo "    Docker configs: $DOCKER_FILES"
                 ;;
         esac
