@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { EventClickArg, EventInput, EventHoveringArg, PluginDef } from '@fullcalendar/core';
+import { EventClickArg, EventInput, EventHoveringArg, PluginDef, Calendar, DatesSetArg } from '@fullcalendar/core';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import BookingTooltip from './BookingTooltip';
 import CalendarLegend from './CalendarLegend';
+import CalendarToolbar from './CalendarToolbar';
 import './fullcalendar.css';
 
-// Dynamic import for FullCalendar to avoid SSR issues
+// Dynamic import for FullCalendar to avoid SSR issues  
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), {
   ssr: false,
   loading: () => <div className="animate-pulse bg-gray-100 h-96 rounded-lg"></div>
-});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}) as React.ComponentType<any>;
 
 interface FullCalendarViewProps {
   bookings: Booking[];
@@ -22,6 +24,9 @@ interface FullCalendarViewProps {
 export default function FullCalendarView({ bookings, onSelectBooking }: FullCalendarViewProps) {
   const [plugins, setPlugins] = useState<PluginDef[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentView, setCurrentView] = useState<'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'>('dayGridMonth');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const calendarRef = useRef<{ getApi: () => Calendar } | null>(null);
 
   useEffect(() => {
     const loadPlugins = async () => {
@@ -106,6 +111,100 @@ export default function FullCalendarView({ bookings, onSelectBooking }: FullCale
     setTooltip(prev => ({ ...prev, visible: false }));
   };
 
+  // Handle calendar navigation
+  const handleNavigate = (navigate: 'PREV' | 'NEXT' | 'TODAY') => {
+    if (!calendarRef.current) return;
+    
+    const calendarApi = calendarRef.current.getApi();
+    
+    switch (navigate) {
+      case 'PREV':
+        calendarApi.prev();
+        setCurrentDate(calendarApi.getDate());
+        break;
+      case 'NEXT':
+        calendarApi.next();
+        setCurrentDate(calendarApi.getDate());
+        break;
+      case 'TODAY':
+        calendarApi.today();
+        setCurrentDate(calendarApi.getDate());
+        break;
+    }
+  };
+
+  // Handle view change
+  const handleViewChange = (view: 'month' | 'week' | 'day') => {
+    if (!calendarRef.current) return;
+    
+    const calendarApi = calendarRef.current.getApi();
+    let fullCalendarView: string;
+    
+    switch (view) {
+      case 'month':
+        fullCalendarView = 'dayGridMonth';
+        setCurrentView('dayGridMonth');
+        break;
+      case 'week':
+        fullCalendarView = 'timeGridWeek';
+        setCurrentView('timeGridWeek');
+        break;
+      case 'day':
+        fullCalendarView = 'timeGridDay';
+        setCurrentView('timeGridDay');
+        break;
+      default:
+        fullCalendarView = 'dayGridMonth';
+        setCurrentView('dayGridMonth');
+    }
+    
+    calendarApi.changeView(fullCalendarView);
+  };
+
+  // Generate label based on current view and date
+  const generateLabel = (): string => {
+    if (!currentDate) return '';
+    
+    const options: Intl.DateTimeFormatOptions = { 
+      month: 'long',
+      year: 'numeric'
+    };
+
+    switch (currentView) {
+      case 'dayGridMonth':
+        return new Intl.DateTimeFormat('de-DE', options).format(currentDate);
+      case 'timeGridWeek':
+        // Calculate week range
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+        
+        return `${startOfWeek.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endOfWeek.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+      case 'timeGridDay':
+        return currentDate.toLocaleDateString('de-DE', { 
+          weekday: 'long', 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric' 
+        });
+      default:
+        return new Intl.DateTimeFormat('de-DE', options).format(currentDate);
+    }
+  };
+
+  // Convert FullCalendar view to simplified view
+  const getSimplifiedView = (): 'month' | 'week' | 'day' => {
+    switch (currentView) {
+      case 'timeGridWeek':
+        return 'week';
+      case 'timeGridDay':
+        return 'day';
+      default:
+        return 'month';
+    }
+  };
+
   if (isLoading || plugins.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden">
@@ -122,14 +221,19 @@ export default function FullCalendarView({ bookings, onSelectBooking }: FullCale
       className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden"
       style={{ height: 'fit-content' }}
     >
+      {/* Custom Calendar Toolbar */}
+      <CalendarToolbar
+        label={generateLabel()}
+        onNavigate={handleNavigate}
+        onView={handleViewChange}
+        view={getSimplifiedView()}
+      />
+      
       <FullCalendar
+        ref={calendarRef}
         plugins={plugins}
         initialView="dayGridMonth"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }}
+        headerToolbar={false} // Disable internal toolbar
         events={events}
         eventClick={handleEventClick}
         eventMouseEnter={handleEventMouseEnter}
@@ -149,6 +253,10 @@ export default function FullCalendarView({ bookings, onSelectBooking }: FullCale
           day: 'Tag'
         }}
         noEventsText="Keine Buchungen in diesem Zeitraum"
+        datesSet={(dateInfo: DatesSetArg) => {
+          // Update current date when calendar navigates
+          setCurrentDate(dateInfo.start);
+        }}
       />
       
       {/* Legend */}

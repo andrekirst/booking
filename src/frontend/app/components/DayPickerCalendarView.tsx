@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { DayPicker } from 'react-day-picker';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addMonths, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { Booking, BookingStatus } from '../../lib/types/api';
+import { Booking } from '../../lib/types/api';
 import BookingTooltip from './BookingTooltip';
 import CalendarLegend from './CalendarLegend';
+import CalendarToolbar from './CalendarToolbar';
 import 'react-day-picker/style.css';
 import './day-picker-calendar.css';
 
@@ -16,9 +17,8 @@ interface DayPickerCalendarViewProps {
 }
 
 export default function DayPickerCalendarView({ bookings, onSelectBooking }: DayPickerCalendarViewProps) {
-  console.log('🔍 DEBUG DayPickerCalendarView received bookings:', bookings.length, bookings);
 
-  const [tooltip, setTooltip] = useState<{
+  const [tooltip] = useState<{
     booking: Booking;
     position: { x: number; y: number };
     visible: boolean;
@@ -28,17 +28,18 @@ export default function DayPickerCalendarView({ bookings, onSelectBooking }: Day
     visible: false,
   });
 
+  // Month navigation state
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  
   // Force key change when bookings change to ensure calendar re-renders
   const [calendarKey, setCalendarKey] = useState(0);
 
   useEffect(() => {
-    console.log('🔍 DEBUG DayPickerCalendarView bookings changed, forcing re-render. New bookings:', bookings.length);
     setCalendarKey(prev => prev + 1);
   }, [bookings]);
 
   // Transform bookings into date ranges using useMemo for performance
   const bookingDates = useMemo(() => {
-    console.log('🔍 DEBUG Recalculating booking dates for', bookings.length, 'bookings');
     const dates = new Map<string, Booking[]>();
     
     bookings.forEach(booking => {
@@ -60,7 +61,6 @@ export default function DayPickerCalendarView({ bookings, onSelectBooking }: Day
       }
     });
     
-    console.log('🔍 DEBUG Booking dates calculated. Total dates with bookings:', dates.size);
     return dates;
   }, [bookings]);
 
@@ -78,14 +78,50 @@ export default function DayPickerCalendarView({ bookings, onSelectBooking }: Day
     }
   };
 
+  // Handle calendar navigation
+  const handleNavigate = (navigate: 'PREV' | 'NEXT' | 'TODAY') => {
+    switch (navigate) {
+      case 'PREV':
+        setCurrentMonth(subMonths(currentMonth, 1));
+        break;
+      case 'NEXT':
+        setCurrentMonth(addMonths(currentMonth, 1));
+        break;
+      case 'TODAY':
+        setCurrentMonth(new Date());
+        break;
+    }
+  };
+
+  // Generate label for current month
+  const generateLabel = (): string => {
+    return format(currentMonth, 'MMMM yyyy', { locale: de });
+  };
+
+  // Handle view change (DayPicker only supports month view)
+  const handleViewChange = () => {
+    // DayPicker only supports month view, so we ignore view changes
+    // This is for consistency with the CalendarToolbar interface
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden day-picker-calendar">
+      {/* Calendar Toolbar */}
+      <CalendarToolbar
+        label={generateLabel()}
+        onNavigate={handleNavigate}
+        onView={handleViewChange}
+        view="month"
+      />
+      
       <DayPicker
         key={calendarKey} // Force re-render when bookings change
         mode="single"
         locale={de}
         showOutsideDays
         fixedWeeks
+        month={currentMonth}
+        onMonthChange={setCurrentMonth}
         onDayClick={handleDayClick}
         modifiers={{
           'has-bookings': (date) => getBookingsForDate(date).length > 0

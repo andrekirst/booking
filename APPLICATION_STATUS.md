@@ -1,6 +1,6 @@
 # Application Status Report
 
-> 🤖 Automatisch generiert am 2025-07-29 10:53:06
+> 🤖 Automatisch generiert am 2025-07-29 14:31:07
 > 
 > Dieses Dokument bietet eine vollständige Übersicht über den aktuellen Stand der Booking-Anwendung.
 
@@ -15,14 +15,6 @@ booking/
 ├── scripts/               # Automation Scripts
 └── docs/                  # Dokumentation
 ```
-
-### 📈 Anwendungsstatistiken  
-- **Frontend-Komponenten:** 65 (inkl. Seiten)
-- **API-Endpoints:** 6 Controller mit 25+ Endpoints
-- **Datenmodelle:** 5 Entities + 2 Read Models
-- **Seiten/Routen:** 13 verfügbare Routen
-- **Letzte Analyse:** 2025-07-29 10:53:06
-
 
 
 ## 🎨 Frontend-Komponenten
@@ -226,4 +218,4 @@ _Datei: `src/backend/Booking.Api/Controllers/AdminController.cs`_
 - **Multi-Agent Development** - Parallele Entwicklung mit Git Worktrees
 
 
-_Letztes Update: 2025-07-29 10:53:07_
+_Letztes Update: 2025-07-29 14:31:08_
