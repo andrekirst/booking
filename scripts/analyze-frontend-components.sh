@@ -66,9 +66,9 @@ echo "📊 **Statistiken:**"
 echo ""
 
 # Komponenten-Statistiken
-local total_components=$(find "$PROJECT_ROOT/src/frontend" -name "*.tsx" -not -path "*/__tests__/*" -not -path "*/node_modules/*" | wc -l)
-local components_with_tests=$(find "$PROJECT_ROOT/src/frontend" -name "*.test.tsx" | wc -l)
-local test_coverage=$((components_with_tests * 100 / total_components))
+total_components=$(find "$PROJECT_ROOT/src/frontend" -name "*.tsx" -not -path "*/__tests__/*" -not -path "*/node_modules/*" | wc -l)
+components_with_tests=$(find "$PROJECT_ROOT/src/frontend" -name "*.test.tsx" | wc -l)
+test_coverage=$((components_with_tests * 100 / total_components))
 
 echo "- **Gesamt Komponenten:** $total_components"
 echo "- **Komponenten mit Tests:** $components_with_tests"  
@@ -76,8 +76,8 @@ echo "- **Test Coverage:** ${test_coverage}%"
 echo ""
 
 # UI-Komponenten vs. Page-Komponenten
-local ui_components=$(find "$PROJECT_ROOT/src/frontend" -path "*/components/*" -name "*.tsx" -not -path "*/__tests__/*" | wc -l)
-local page_components=$(find "$PROJECT_ROOT/src/frontend" -name "page.tsx" | wc -l)
+ui_components=$(find "$PROJECT_ROOT/src/frontend" -path "*/components/*" -name "*.tsx" -not -path "*/__tests__/*" | wc -l)
+page_components=$(find "$PROJECT_ROOT/src/frontend" -name "page.tsx" | wc -l)
 
 echo "- **UI-Komponenten:** $ui_components"
 echo "- **Seiten-Komponenten:** $page_components"

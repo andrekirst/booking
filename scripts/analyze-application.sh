@@ -14,10 +14,10 @@ echo "📁 Projekt-Root: $PROJECT_ROOT"
 echo "📄 Output: $OUTPUT_FILE"
 
 # Header für APPLICATION_STATUS.md
-cat > "$OUTPUT_FILE" << EOF
+cat > "$OUTPUT_FILE" << 'HEADER_EOF'
 # Application Status Report
 
-> 🤖 Automatisch generiert am $(date '+%Y-%m-%d %H:%M:%S')
+> 🤖 Automatisch generiert am TIMESTAMP_PLACEHOLDER
 > 
 > Dieses Dokument bietet eine vollständige Übersicht über den aktuellen Stand der Booking-Anwendung.
 
@@ -33,7 +33,10 @@ booking/
 └── docs/                  # Dokumentation
 ```
 
-EOF
+HEADER_EOF
+
+# Timestamp ersetzen
+sed -i "s/TIMESTAMP_PLACEHOLDER/$(date '+%Y-%m-%d %H:%M:%S')/g" "$OUTPUT_FILE"
 
 # Frontend-Komponenten analysieren
 echo "🔍 Analysiere Frontend-Komponenten..."
