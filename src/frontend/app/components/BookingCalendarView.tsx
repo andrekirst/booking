@@ -17,7 +17,6 @@ export default function BookingCalendarView({
   onSelectBookingById, 
   selectedBookingId 
 }: BookingCalendarViewProps) {
-  
   return (
     <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-3 xl:gap-6">
       <div className="xl:col-span-2">

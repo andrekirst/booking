@@ -33,7 +33,6 @@ interface CalendarEvent {
 }
 
 export default function CalendarView({ bookings, onSelectBooking }: CalendarViewProps) {
-  
   const [tooltip, setTooltip] = useState<{
     booking: Booking;
     position: { x: number; y: number };
@@ -46,9 +45,6 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
 
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Simple key based directly on bookings data to force complete re-render
-  const calendarKey = `calendar-${bookings.length}-${bookings.map(b => b.id).join('-')}`;
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -58,7 +54,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }
     };
   }, []);
-  
+
   // Transform bookings to calendar events
   const events: CalendarEvent[] = bookings.map((booking) => {
     const startDate = new Date(booking.startDate);
@@ -159,7 +155,6 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }}
     >
       <Calendar
-        key={calendarKey}
         localizer={localizer}
         events={events}
         startAccessor="start"
@@ -200,8 +195,6 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         view={currentView}
         onView={(view) => setCurrentView(view as 'month' | 'week' | 'day')}
         views={['month', 'week', 'day']}
-        showAllEvents
-        doShowMoreDrillDown={false}
       />
       
       {/* Legend */}
