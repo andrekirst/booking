@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import { apiClient } from "@/lib/api/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +15,15 @@ export default function LoginPage() {
   const [messageType, setMessageType] = useState<"success" | "error" | null>(
     null
   );
+
+  // Check for redirect parameter and show informational message
+  useEffect(() => {
+    const redirectPath = searchParams.get('redirect');
+    if (redirectPath) {
+      setMessage(`Bitte melden Sie sich an, um auf ${redirectPath} zuzugreifen.`);
+      setMessageType("error");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,9 +37,12 @@ export default function LoginPage() {
       setMessage("Anmeldung erfolgreich");
       setMessageType("success");
 
-      // Redirect to bookings page after successful login
+      // Get redirect path from URL parameters or default to bookings
+      const redirectPath = searchParams.get('redirect') || '/bookings';
+      
+      // Redirect after successful login
       setTimeout(() => {
-        router.push("/bookings");
+        router.push(redirectPath);
       }, 1000);
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'message' in error 
@@ -221,5 +234,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
