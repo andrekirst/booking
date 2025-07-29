@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: booking-system
+  labels:
+    name: booking-system
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: infrastructure
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Booking system multi-agent environment"
+    owner: "booking-team"
+    environment: "production"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: booking-system-quota
+  namespace: booking-system
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
+    persistentvolumeclaims: "20"
+    services: "30"
+    secrets: "50"
+    configmaps: "50"
+    pods: "100"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: booking-system-limits
+  namespace: booking-system
+spec:
+  limits:
+  - default:
+      cpu: "500m"
+      memory: "1Gi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    type: Container
+  - default:
+      storage: "10Gi"
+    type: PersistentVolumeClaim

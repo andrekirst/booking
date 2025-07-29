@@ -1,0 +1,405 @@
+# Flux v2 GitOps configuration as alternative to ArgoCD
+
+# Flux System Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flux-system
+  labels:
+    name: flux-system
+---
+# Git Repository Source
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: booking-system-repo
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 1m
+  ref:
+    branch: main
+  url: https://github.com/andrekirst/booking.git
+  secretRef:
+    name: git-credentials
+---
+# Core Infrastructure Kustomization
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: booking-system-core
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-core
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 5m
+  path: "./k8s/core"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: booking-system-repo
+  validation: client
+  healthChecks:
+  - apiVersion: v1
+    kind: Namespace
+    name: booking-system
+  timeout: 5m
+---
+# Database Kustomization
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: booking-system-database
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-database
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 10m
+  path: "./k8s/database"
+  prune: false  # Never auto-prune databases
+  sourceRef:
+    kind: GitRepository
+    name: booking-system-repo
+  dependsOn:
+  - name: booking-system-core
+  validation: client
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: StatefulSet
+    name: postgres-cluster
+    namespace: booking-system
+  timeout: 10m
+---
+# Standard Agents Kustomization
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: booking-system-agents
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-agents
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 2m
+  path: "./k8s/agents"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: booking-system-repo
+  dependsOn:
+  - name: booking-system-core
+  - name: booking-system-database
+  validation: client
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: booking-agent2-backend
+    namespace: booking-system
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: booking-agent2-frontend
+    namespace: booking-system
+  timeout: 8m
+---
+# Sub-Agents Kustomization
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: booking-system-sub-agents
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-sub-agents
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 2m
+  path: "./k8s/sub-agents"
+  prune: false  # Don't auto-prune sub-agents
+  sourceRef:
+    kind: GitRepository
+    name: booking-system-repo
+  dependsOn:
+  - name: booking-system-core
+  - name: booking-system-database
+  validation: client
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s1
+    namespace: booking-system
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s2
+    namespace: booking-system
+  timeout: 8m
+  postBuild:
+    substitute:
+      cluster_name: "production"
+      environment: "prod"
+---
+# Monitoring Kustomization
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: booking-system-monitoring
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-monitoring
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 5m
+  path: "./k8s/monitoring"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: booking-system-repo
+  dependsOn:
+  - name: booking-system-core
+  validation: client
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: prometheus
+    namespace: booking-system
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: grafana
+    namespace: booking-system
+  timeout: 10m
+---
+# Image Repository for automated updates
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: booking-api
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-api
+    app.kubernetes.io/component: gitops
+spec:
+  image: ghcr.io/andrekirst/booking/booking-api
+  interval: 1m
+  secretRef:
+    name: github-registry-credentials
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: booking-frontend
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-frontend
+    app.kubernetes.io/component: gitops
+spec:
+  image: ghcr.io/andrekirst/booking/booking-frontend
+  interval: 1m
+  secretRef:
+    name: github-registry-credentials
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: claude-sub-agent
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: claude-sub-agent
+    app.kubernetes.io/component: gitops
+spec:
+  image: ghcr.io/andrekirst/booking/claude-sub-agent
+  interval: 1m
+  secretRef:
+    name: github-registry-credentials
+---
+# Image Policy for booking-api
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: booking-api-policy
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-api-policy
+    app.kubernetes.io/component: gitops
+spec:
+  imageRepositoryRef:
+    name: booking-api
+  policy:
+    semver:
+      range: '>=1.0.0'
+  filterTags:
+    pattern: '^main-[a-f0-9]+'
+    extract: '$0'
+---
+# Image Policy for booking-frontend
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: booking-frontend-policy
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-frontend-policy
+    app.kubernetes.io/component: gitops
+spec:
+  imageRepositoryRef:
+    name: booking-frontend
+  policy:
+    semver:
+      range: '>=1.0.0'
+  filterTags:
+    pattern: '^main-[a-f0-9]+'
+    extract: '$0'
+---
+# Image Policy for claude-sub-agent
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: claude-sub-agent-policy
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: claude-sub-agent-policy
+    app.kubernetes.io/component: gitops
+spec:
+  imageRepositoryRef:
+    name: claude-sub-agent
+  policy:
+    semver:
+      range: '>=1.0.0'
+  filterTags:
+    pattern: '^main-[a-f0-9]+'
+    extract: '$0'
+---
+# Image Update Automation
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: booking-system-image-updates
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-image-updates
+    app.kubernetes.io/component: gitops
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: booking-system-repo
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: flux@booking-system.com
+        name: Flux Bot
+      messageTemplate: |
+        Automated image update
+        
+        Automation name: {{ .AutomationObject }}
+        
+        Files:
+        {{ range $filename, $_ := .Updated.Files -}}
+        - {{ $filename }}
+        {{ end -}}
+        
+        Objects:
+        {{ range $resource, $_ := .Updated.Objects -}}
+        - {{ $resource.Kind }} {{ $resource.Name }}
+        {{ end -}}
+    push:
+      branch: main
+  update:
+    path: "./k8s"
+    strategy: Setters
+---
+# Alert Provider for Slack notifications
+apiVersion: notification.toolkit.fluxcd.io/v1beta2
+kind: Provider
+metadata:
+  name: slack-provider
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: slack-provider
+    app.kubernetes.io/component: notifications
+spec:
+  type: slack
+  channel: "#booking-system-alerts"
+  secretRef:
+    name: slack-webhook-secret
+---
+# Alert for failed reconciliations
+apiVersion: notification.toolkit.fluxcd.io/v1beta2
+kind: Alert
+metadata:
+  name: booking-system-alerts
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: booking-system-alerts
+    app.kubernetes.io/component: notifications
+spec:
+  providerRef:
+    name: slack-provider
+  eventSeverity: error
+  eventSources:
+  - kind: GitRepository
+    name: booking-system-repo
+  - kind: Kustomization
+    name: booking-system-core
+  - kind: Kustomization
+    name: booking-system-agents
+  - kind: Kustomization
+    name: booking-system-sub-agents
+  - kind: Kustomization
+    name: booking-system-database
+  - kind: Kustomization
+    name: booking-system-monitoring
+  summary: "Booking System - {{ .InvolvedObject.Kind }} {{ .InvolvedObject.Name }} in {{ .InvolvedObject.Namespace }} failed reconciliation"
+---
+# Git Credentials Secret Template
+apiVersion: v1
+kind: Secret
+metadata:
+  name: git-credentials
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: git-credentials
+    app.kubernetes.io/component: gitops
+type: Opaque
+stringData:
+  username: git
+  password: "YOUR_GITHUB_TOKEN_HERE"  # Replace with actual token
+---
+# GitHub Registry Credentials Secret Template
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-registry-credentials
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: github-registry-credentials
+    app.kubernetes.io/component: gitops
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "ghcr.io": {
+          "username": "YOUR_GITHUB_USERNAME",
+          "password": "YOUR_GITHUB_TOKEN",
+          "auth": "BASE64_ENCODED_USERNAME:TOKEN"
+        }
+      }
+    }
+---
+# Slack Webhook Secret Template
+apiVersion: v1
+kind: Secret
+metadata:
+  name: slack-webhook-secret
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: slack-webhook-secret
+    app.kubernetes.io/component: notifications
+type: Opaque
+stringData:
+  address: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"

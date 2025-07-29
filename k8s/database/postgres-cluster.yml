@@ -1,0 +1,319 @@
+# PostgreSQL StatefulSet with clustering support
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-cluster
+  namespace: booking-system
+  labels:
+    app: postgres-cluster
+    component: database
+    app.kubernetes.io/name: postgres-cluster
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: booking-system
+spec:
+  serviceName: postgres-cluster-headless
+  replicas: 3
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: postgres-cluster
+      component: database
+  template:
+    metadata:
+      labels:
+        app: postgres-cluster
+        component: database
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9187"
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_cluster"
+        - name: POSTGRES_INITDB_ARGS
+          value: "--encoding=UTF8 --locale=C"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        - name: POSTGRES_REPLICATION_USER
+          value: "replicator"
+        - name: POSTGRES_REPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - -e
+            - |
+              exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+              [ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f /bitnami/postgresql/.initialized ]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+      
+      # PostgreSQL Exporter for metrics
+      - name: postgres-exporter
+        image: prometheuscommunity/postgres-exporter:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9187
+          name: metrics
+        env:
+        - name: DATA_SOURCE_NAME
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/$(POSTGRES_DB)?sslmode=disable"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_cluster"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+      - name: init-scripts
+        configMap:
+          name: postgres-init-scripts
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+      labels:
+        app: postgres-cluster
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "fast-ssd"
+      resources:
+        requests:
+          storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-cluster-headless
+  namespace: booking-system
+  labels:
+    app: postgres-cluster
+    component: database
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 5432
+    targetPort: postgres
+    protocol: TCP
+    name: postgres
+  selector:
+    app: postgres-cluster
+    component: database
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-cluster-service
+  namespace: booking-system
+  labels:
+    app: postgres-cluster
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    protocol: TCP
+    name: postgres
+  - port: 9187
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app: postgres-cluster
+    component: database
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: booking-system
+  labels:
+    app: postgres-cluster
+    component: database-config
+data:
+  postgresql.conf: |
+    # PostgreSQL configuration for Kubernetes cluster
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 200
+    shared_buffers = 256MB
+    effective_cache_size = 1GB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 4MB
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 8
+    max_parallel_workers_per_gather = 2
+    max_parallel_workers = 8
+    max_parallel_maintenance_workers = 2
+    
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = 'pg_log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_statement = 'all'
+    log_min_duration_statement = 1000
+    
+    # Replication
+    wal_level = replica
+    max_wal_senders = 10
+    max_replication_slots = 10
+    hot_standby = on
+    hot_standby_feedback = on
+    
+    # Security
+    ssl = off
+    password_encryption = scram-sha-256
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: booking-system
+  labels:
+    app: postgres-cluster
+    component: database-init
+data:
+  01-init-databases.sql: |
+    -- Create databases for each agent
+    CREATE DATABASE booking_agent2;
+    CREATE DATABASE booking_agent3;
+    CREATE DATABASE booking_agent4;
+    CREATE DATABASE booking_sub_s1;
+    CREATE DATABASE booking_sub_s2;
+    CREATE DATABASE booking_sub_s3;
+    CREATE DATABASE booking_sub_s4;
+    CREATE DATABASE booking_sub_s5;
+    CREATE DATABASE booking_sub_s6;
+    
+    -- Create replication user
+    CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'replication_password';
+    
+    -- Grant permissions
+    GRANT CONNECT ON DATABASE booking_agent2 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_agent3 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_agent4 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_sub_s1 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_sub_s2 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_sub_s3 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_sub_s4 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_sub_s5 TO booking_user;
+    GRANT CONNECT ON DATABASE booking_sub_s6 TO booking_user;
+  
+  02-init-schemas.sql: |
+    -- Initialize schema for each database
+    \c booking_agent2;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_agent3;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_agent4;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_sub_s1;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_sub_s2;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_sub_s3;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_sub_s4;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_sub_s5;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;
+    
+    \c booking_sub_s6;
+    CREATE SCHEMA IF NOT EXISTS public;
+    GRANT ALL ON SCHEMA public TO booking_user;

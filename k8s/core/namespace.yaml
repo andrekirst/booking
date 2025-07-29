@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: booking-agents
+  labels:
+    app: booking-multi-agent-system
+    environment: development
+    version: v1.0.0
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: booking-agents-quota
+  namespace: booking-agents
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 64Gi
+    limits.cpu: "40"
+    limits.memory: 128Gi
+    persistentvolumeclaims: "30"
+    pods: "100"
+    services: "50"
+    secrets: "20"
+    configmaps: "20"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: booking-agents-limits
+  namespace: booking-agents
+spec:
+  limits:
+  - default:
+      cpu: "2"
+      memory: "4Gi"
+    defaultRequest:
+      cpu: "500m"
+      memory: "1Gi"
+    type: Container
+  - default:
+      storage: "10Gi"
+    type: PersistentVolumeClaim

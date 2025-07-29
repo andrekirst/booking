@@ -1,0 +1,650 @@
+# PostgreSQL instances for sub-agents (S1-S6)
+# Lightweight instances for sub-agent data storage
+
+# PostgreSQL for Sub-Agent S1 (Senior Developer)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-sub-s1-postgres
+  namespace: booking-system
+  labels:
+    app: booking-sub-s1-postgres
+    component: database
+    agent: sub-s1
+spec:
+  serviceName: booking-sub-s1-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-sub-s1-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s1-postgres
+        component: database
+        agent: sub-s1
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_sub_s1"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s1-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s1-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-sub-s1-postgres
+    component: database
+---
+# PostgreSQL for Sub-Agent S2 (UI Developer)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-sub-s2-postgres
+  namespace: booking-system
+  labels:
+    app: booking-sub-s2-postgres
+    component: database
+    agent: sub-s2
+spec:
+  serviceName: booking-sub-s2-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-sub-s2-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s2-postgres
+        component: database
+        agent: sub-s2
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_sub_s2"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s2-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s2-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-sub-s2-postgres
+    component: database
+---
+# PostgreSQL for Sub-Agent S3 (UX Expert)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-sub-s3-postgres
+  namespace: booking-system
+  labels:
+    app: booking-sub-s3-postgres
+    component: database
+    agent: sub-s3
+spec:
+  serviceName: booking-sub-s3-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-sub-s3-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s3-postgres
+        component: database
+        agent: sub-s3
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_sub_s3"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s3-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s3-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-sub-s3-postgres
+    component: database
+---
+# PostgreSQL for Sub-Agent S4 (Test Expert)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-sub-s4-postgres
+  namespace: booking-system
+  labels:
+    app: booking-sub-s4-postgres
+    component: database
+    agent: sub-s4
+spec:
+  serviceName: booking-sub-s4-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-sub-s4-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s4-postgres
+        component: database
+        agent: sub-s4
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_sub_s4"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s4-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s4-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-sub-s4-postgres
+    component: database
+---
+# PostgreSQL for Sub-Agent S5 (Architecture Expert)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-sub-s5-postgres
+  namespace: booking-system
+  labels:
+    app: booking-sub-s5-postgres
+    component: database
+    agent: sub-s5
+spec:
+  serviceName: booking-sub-s5-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-sub-s5-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s5-postgres
+        component: database
+        agent: sub-s5
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_sub_s5"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s5-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s5-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-sub-s5-postgres
+    component: database
+---
+# PostgreSQL for Sub-Agent S6 (DevOps Expert)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-sub-s6-postgres
+  namespace: booking-system
+  labels:
+    app: booking-sub-s6-postgres
+    component: database
+    agent: sub-s6
+spec:
+  serviceName: booking-sub-s6-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-sub-s6-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-sub-s6-postgres
+        component: database
+        agent: sub-s6
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_sub_s6"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-s6-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-sub-s6-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-sub-s6-postgres
+    component: database
