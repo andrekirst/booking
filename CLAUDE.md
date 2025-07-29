@@ -77,6 +77,55 @@ const response = await apiClient.login(credentials);
 4. Mock-Implementation in `MockApiClient` hinzufügen
 5. Komponenten verwenden `const { apiClient } = useApi()`
 
+## 0. Anwendungs-Status-Tracking für Context-Management
+
+### Übersicht über verfügbare Analyse-Tools
+Das Projekt verfügt über automatisierte Analyse-Scripts für besseres Context-Management:
+
+#### 📊 APPLICATION_STATUS.md - Zentraler Anwendungsstand
+- **Zweck**: Vollständige Übersicht über aktuelle Anwendungsstruktur
+- **Inhalt**: Frontend-Komponenten, API-Endpoints, Routen, Datenmodelle
+- **Update**: Automatisch über `./scripts/analyze-application.sh`
+- **Verwendung**: Lies diese Datei VOR jeder neuen Task für Context
+
+#### 🔧 Verfügbare Analyse-Scripts
+```bash
+# 1. Vollständige Anwendungsanalyse (immer zuerst ausführen)
+./scripts/analyze-application.sh
+
+# 2. Detaillierte API-Endpoint-Analyse  
+./scripts/analyze-api-endpoints.sh
+
+# 3. Frontend-Komponenten-Details
+./scripts/analyze-frontend-components.sh
+
+# 4. Komponenten-Verwendung-Tracking
+./scripts/analyze-component-usage.sh
+```
+
+#### 🎯 OBLIGATORISCHE Verwendung der Scripts
+**VOR jeder neuen Task/Issue-Bearbeitung:**
+1. **IMMER** `./scripts/analyze-application.sh` ausführen
+2. `APPLICATION_STATUS.md` lesen für aktuellen Context
+3. Bei API-Changes: `./scripts/analyze-api-endpoints.sh` ausführen  
+4. Bei Frontend-Änderungen: relevante Frontend-Scripts nutzen
+
+#### 📈 Context-Management Best Practices
+- **Verhindert Duplikationen**: Prüfe existierende Komponenten vor Neuerstellung
+- **Bessere Architektur-Entscheidungen**: Verstehe bestehende Patterns
+- **Effizienter Development**: Weniger Zeit für Codebase-Exploration
+- **Konsistenz**: Folge bestehenden Konventionen und Strukturen
+
+### APPLICATION_STATUS.md als Referenz
+Die `APPLICATION_STATUS.md` Datei ist der zentrale Referenzpunkt für:
+- **Verfügbare Frontend-Komponenten** (65+ Komponenten)
+- **API-Endpoints** (6 Controller, 25+ Endpoints)  
+- **Routen/Seiten** (13 verfügbare Routen)
+- **Datenmodelle** (5 Entities, 2 Read Models)
+- **Technologie-Stack** (aktueller Stand)
+
+**WICHTIG**: Diese Datei MUSS vor jeder Entwicklungsaufgabe konsultiert werden!
+
 ## 1. Anforderungen aus requirements.md nutzen
 - Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.
 - Neue Issues, Features oder Tasks werden auf Basis der Anforderungen in `requirements.md` erstellt.
