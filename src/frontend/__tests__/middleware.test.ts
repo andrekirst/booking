@@ -13,7 +13,7 @@ jest.mock('next/server', () => ({
 
 // Import after mocking
 import { middleware } from '../middleware';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 describe('Middleware Route Protection', () => {
   // Helper function um NextRequest mit URL und optionalen Headers/Cookies zu erstellen

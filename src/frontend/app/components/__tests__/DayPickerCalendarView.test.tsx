@@ -24,13 +24,13 @@ jest.mock('react-day-picker', () => ({
     modifiers?: Record<string, unknown>;
     locale?: Record<string, unknown>;
   }) => {
-    mockOnMonthChange = onMonthChange;
-    mockOnDayClick = onDayClick;
+    mockOnMonthChange = onMonthChange || null;
+    mockOnDayClick = onDayClick || null;
     
     return (
       <div data-testid="day-picker">
         <div data-testid="current-month">{month?.toISOString()}</div>
-        <div data-testid="locale">{locale?.code || 'no-locale'}</div>
+        <div data-testid="locale">{String(locale?.code || 'no-locale')}</div>
         <div data-testid="has-modifiers">{modifiers ? 'yes' : 'no'}</div>
         <button 
           data-testid="mock-day-button"

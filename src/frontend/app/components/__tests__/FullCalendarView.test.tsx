@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import FullCalendarView from '../FullCalendarView';
 import { Booking, BookingStatus } from '../../../lib/types/api';
@@ -23,16 +23,9 @@ let mockCalendarApi: MockCalendarApi = {
 
 // Mock @fullcalendar/react
 jest.mock('@fullcalendar/react', () => {
-  const MockedFullCalendar = React.forwardRef<
-    { getApi: () => MockCalendarApi },
-    {
-      events?: unknown[];
-      eventClick?: (info: unknown) => void;
-      eventMouseEnter?: (info: unknown) => void;
-      datesSet?: (info: unknown) => void;
-      [key: string]: unknown;
-    }
-  >(({ events, eventClick, eventMouseEnter, datesSet, ...props }, ref) => {
+  // eslint-disable-next-line react/display-name, @typescript-eslint/no-explicit-any
+  return React.forwardRef((props: any, ref: any) => {
+    const { events = [], eventClick, eventMouseEnter, datesSet } = props;
     // Simulate ref callback
     if (ref) {
       if (typeof ref === 'function') {
@@ -45,9 +38,9 @@ jest.mock('@fullcalendar/react', () => {
     return (
       <div data-testid="fullcalendar">
         <div data-testid="events-count">{events?.length || 0}</div>
-        <div data-testid="event-display">{props.eventDisplay}</div>
-        <div data-testid="locale">{props.locale}</div>
-        <div data-testid="height">{props.height}</div>
+        <div data-testid="event-display">{String(props.eventDisplay || '')}</div>
+        <div data-testid="locale">{String(props.locale || '')}</div>
+        <div data-testid="height">{String(props.height || '')}</div>
         <button 
           data-testid="mock-event"
           onClick={() => eventClick && eventClick({
@@ -78,26 +71,17 @@ jest.mock('@fullcalendar/react', () => {
         </button>
       </div>
     );
-  
-  MockedFullCalendar.displayName = 'MockedFullCalendar';
-  return MockedFullCalendar;
   });
 });
 
 // Mock dynamic import
 jest.mock('next/dynamic', () => {
   return jest.fn(() => {
-    // Return the mocked FullCalendar component
-    const MockDynamicComponent = React.forwardRef<
-      { getApi: () => MockCalendarApi },
-      Record<string, unknown>
-    >((props, ref) => {
+    // eslint-disable-next-line react/display-name, @typescript-eslint/no-explicit-any
+    return React.forwardRef((props: any, ref: any) => {
       const MockFullCalendar = jest.requireMock('@fullcalendar/react').default;
       return <MockFullCalendar {...props} ref={ref} />;
     });
-    
-    MockDynamicComponent.displayName = 'MockDynamicComponent';
-    return MockDynamicComponent;
   });
 });
 
