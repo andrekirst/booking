@@ -301,14 +301,26 @@ export default function BookingDetailPage() {
                 // TODO: Implement cancel booking functionality
                 console.log('Cancel booking:', booking.id);
               }}
-              onEdit={() => router.push(`/bookings/${booking.id}/edit`)}
+              onEdit={() => {
+                // Scroll to booking overview for editing
+                const bookingOverview = document.querySelector('[data-testid="booking-overview"]');
+                if (bookingOverview) {
+                  bookingOverview.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  // Fallback: scroll to the main content
+                  const mainContent = document.querySelector('[data-testid="booking-details"]');
+                  if (mainContent) {
+                    mainContent.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
               onAccept={handleAcceptBooking}
               onReject={handleRejectBooking}
             />
           )}
 
           {/* Main Content */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white rounded-lg shadow-lg p-6" data-testid="booking-details">
             {(bookingLoading || accommodationsLoading) ? (
               <div className="space-y-6">
                 <BookingOverviewSkeleton />
