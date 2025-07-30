@@ -1,0 +1,103 @@
+# Booking Project - Main .gitignore
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor files (keep our configured .vscode settings)
+.idea/
+*.swp
+*.swo
+*~
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pdb
+*.dll
+*.exe
+*.nupkg
+*.snupkg
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Next.js
+.next/
+.env*.local
+out/
+build/
+dist/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+coverage/
+*.tgz
+*.tar.gz
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration files with sensitive data
+appsettings.Production.json
+appsettings.Local.json
+*.secrets.json
+
+# Docker
+docker-compose.override.yml
+.env
+.env.local
+.env.production
+
+# Backup files
+*.backup
+*.bak
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Documentation build
+/docs/_build/
+/docs/html/
+/docs/latex/
+
+# Scripts output
+/scripts/output/
+/scripts/logs/
+
+# Custom directories
+/temp/
+/uploads/
+/downloads/
+src/

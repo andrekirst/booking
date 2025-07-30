@@ -1,0 +1,326 @@
+# Individual PostgreSQL instances for each agent (alternative to cluster)
+# This provides full database isolation per agent
+
+# PostgreSQL for Agent 2
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-agent2-postgres
+  namespace: booking-system
+  labels:
+    app: booking-agent2-postgres
+    component: database
+    agent: agent2
+spec:
+  serviceName: booking-agent2-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-agent2-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-agent2-postgres
+        component: database
+        agent: agent2
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_agent2"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "fast-ssd"
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-agent2-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-agent2-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-agent2-postgres
+    component: database
+---
+# PostgreSQL for Agent 3
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-agent3-postgres
+  namespace: booking-system
+  labels:
+    app: booking-agent3-postgres
+    component: database
+    agent: agent3
+spec:
+  serviceName: booking-agent3-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-agent3-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-agent3-postgres
+        component: database
+        agent: agent3
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_agent3"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "fast-ssd"
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-agent3-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-agent3-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-agent3-postgres
+    component: database
+---
+# PostgreSQL for Agent 4
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: booking-agent4-postgres
+  namespace: booking-system
+  labels:
+    app: booking-agent4-postgres
+    component: database
+    agent: agent4
+spec:
+  serviceName: booking-agent4-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-agent4-postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: booking-agent4-postgres
+        component: database
+        agent: agent4
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "booking_agent4"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "fast-ssd"
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-agent4-postgres-service
+  namespace: booking-system
+  labels:
+    app: booking-agent4-postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres
+    name: postgres
+  selector:
+    app: booking-agent4-postgres
+    component: database
