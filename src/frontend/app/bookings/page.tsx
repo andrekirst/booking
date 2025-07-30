@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Booking, BookingStatus } from '../../lib/types/api';
 import { apiClient } from '../../lib/api/client';
@@ -74,7 +74,7 @@ export default function BookingsPage() {
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const [statusFilter, setStatusFilter] = useState<BookingStatus | null>(null);
 
-  const fetchBookings = async (isInitialLoad = false) => {
+  const fetchBookings = useCallback(async (isInitialLoad = false) => {
     if (isInitialLoad) {
       setIsLoading(true);
     } else {
@@ -103,14 +103,14 @@ export default function BookingsPage() {
         setIsFilterLoading(false);
       }
     }
-  };
+  }, [statusFilter, router]);
 
   // Initial load - only once
   useEffect(() => {
     checkUserRole();
     setCurrentUser(getCurrentUser());
     fetchBookings(true);
-  }, []);
+  }, [fetchBookings]);
 
   // Status filter changes - only fetch bookings
   useEffect(() => {

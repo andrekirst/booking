@@ -71,7 +71,7 @@ describe('LandingPage', () => {
       back: jest.fn(),
       forward: jest.fn(),
       refresh: jest.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof useRouter>);
   });
 
   it('redirects authenticated users to bookings', async () => {
