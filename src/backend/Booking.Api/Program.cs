@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Booking.Api;
@@ -99,6 +100,33 @@ public class Program
         // Configure ProjectionRetryOptions
         builder.Services.Configure<ProjectionRetryOptions>(builder.Configuration.GetSection(ProjectionRetryOptions.SectionName));
         
+        // Configure SeedingSettings with environment variable support and validation
+        builder.Services.Configure<SeedingSettings>(options =>
+        {
+            // Bind from configuration (including environment variables)
+            builder.Configuration.GetSection(SeedingSettings.SectionName).Bind(options);
+        });
+        
+        // Add validation for SeedingSettings
+        builder.Services.AddOptions<SeedingSettings>()
+            .Bind(builder.Configuration.GetSection(SeedingSettings.SectionName))
+            .PostConfigure(options =>
+            {
+                // Log configuration summary
+                var logger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger<SeedingSettings>();
+                logger.LogInformation("Seeding configuration loaded: {ConfigSummary}", options.GetConfigurationSummary());
+                
+                // Log validation warnings
+                var validationErrors = options.Validate();
+                foreach (var error in validationErrors)
+                {
+                    if (error.StartsWith("WARNING"))
+                        logger.LogWarning("{ValidationWarning}", error);
+                    else
+                        logger.LogError("{ValidationError}", error);
+                }
+            });
+        
         // Configure JWT Authentication
         var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
         
@@ -152,15 +180,19 @@ public class Program
 
         var app = builder.Build();
 
-        // Ensure database is created and seeded in development
-        if (app.Environment.IsDevelopment())
+        // Ensure database is created and seeded (environment-aware seeding)
+        using (var scope = app.Services.CreateScope())
         {
-            using var scope = app.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
             var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+            var seedingSettings = scope.ServiceProvider.GetRequiredService<IOptions<SeedingSettings>>().Value;
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             
+            // Always ensure database is migrated
             await context.Database.MigrateAsync();
-            await DbSeeder.SeedAsync(context, passwordService);
+            
+            // Run seeding with environment detection and safety controls
+            await DbSeeder.SeedAsync(context, passwordService, app.Environment, seedingSettings, logger);
         }
 
         // Configure the HTTP request pipeline.
