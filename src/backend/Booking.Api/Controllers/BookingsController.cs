@@ -236,6 +236,133 @@ public class BookingsController(IMediator mediator) : ControllerBase
         }
     }
 
+    [HttpPatch("{id:guid}/date-range")]
+    public async Task<ActionResult> ChangeDateRange(Guid id, [FromBody] ChangeDateRangeRequestDto request)
+    {
+        // First check if booking exists and user has permission
+        var existingBooking = await mediator.Send(new GetBookingByIdQuery(id));
+        if (existingBooking == null)
+        {
+            return NotFound();
+        }
+
+        var userId = GetCurrentUserId();
+        var isAdmin = User.IsInRole("Administrator");
+        
+        if (!isAdmin && existingBooking.UserId != userId)
+        {
+            return Forbid();
+        }
+
+        var command = new ChangeDateRangeCommand(id, request.StartDate, request.EndDate, request.ChangeReason);
+        
+        try
+        {
+            var result = await mediator.Send(command);
+            if (!result.Success)
+            {
+                return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", result.Message, "Date Range Change Error"));
+            }
+            
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", ex.Message, "Domain Validation Error"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ValidationExtensions.CreateValidationProblem("Business", ex.Message, "Business Rule Violation"));
+        }
+    }
+
+    [HttpPatch("{id:guid}/accommodations")]
+    public async Task<ActionResult> ChangeAccommodations(Guid id, [FromBody] ChangeAccommodationsRequestDto request)
+    {
+        // First check if booking exists and user has permission
+        var existingBooking = await mediator.Send(new GetBookingByIdQuery(id));
+        if (existingBooking == null)
+        {
+            return NotFound();
+        }
+
+        var userId = GetCurrentUserId();
+        var isAdmin = User.IsInRole("Administrator");
+        
+        if (!isAdmin && existingBooking.UserId != userId)
+        {
+            return Forbid();
+        }
+
+        // Convert CreateBookingItemDto to BookingItemDto for the command
+        var bookingItems = request.BookingItems.Select(item => new BookingItemDto(
+            item.SleepingAccommodationId, 
+            string.Empty, // We don't need the name for the command
+            item.PersonCount
+        )).ToList();
+
+        var command = new ChangeAccommodationsCommand(id, bookingItems);
+        
+        try
+        {
+            var result = await mediator.Send(command);
+            if (!result.Success)
+            {
+                return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", result.Message, "Accommodations Change Error"));
+            }
+            
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", ex.Message, "Domain Validation Error"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ValidationExtensions.CreateValidationProblem("Business", ex.Message, "Business Rule Violation"));
+        }
+    }
+
+    [HttpPatch("{id:guid}/notes")]
+    public async Task<ActionResult> ChangeNotes(Guid id, [FromBody] ChangeNotesRequestDto request)
+    {
+        // First check if booking exists and user has permission
+        var existingBooking = await mediator.Send(new GetBookingByIdQuery(id));
+        if (existingBooking == null)
+        {
+            return NotFound();
+        }
+
+        var userId = GetCurrentUserId();
+        var isAdmin = User.IsInRole("Administrator");
+        
+        if (!isAdmin && existingBooking.UserId != userId)
+        {
+            return Forbid();
+        }
+
+        var command = new ChangeNotesCommand(id, request.Notes);
+        
+        try
+        {
+            var result = await mediator.Send(command);
+            if (!result.Success)
+            {
+                return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", result.Message, "Notes Change Error"));
+            }
+            
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ValidationExtensions.CreateValidationProblem("Domain", ex.Message, "Domain Validation Error"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ValidationExtensions.CreateValidationProblem("Business", ex.Message, "Business Rule Violation"));
+        }
+    }
+
     [HttpGet("availability")]
     public async Task<ActionResult<BookingAvailabilityDto>> CheckAvailability(
         [FromQuery] DateTime startDate,

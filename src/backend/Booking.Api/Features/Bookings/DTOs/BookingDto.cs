@@ -119,3 +119,37 @@ public record ConflictingBookingDto(
     int PersonCount,
     string UserName
 );
+
+// Request DTOs for granular updates
+[DateRangeValidation(
+    StartDatePropertyName = nameof(StartDate),
+    EndDatePropertyName = nameof(EndDate),
+    AllowSameDay = false,
+    AllowToday = true
+)]
+public record ChangeDateRangeRequestDto(
+    [FutureDate(AllowToday = true)]
+    [Display(Name = "Neues Anreisedatum")]
+    DateTime StartDate,
+    
+    [FutureDate(AllowToday = true)]
+    [Display(Name = "Neues Abreisedatum")]
+    DateTime EndDate,
+    
+    [StringLength(200, ErrorMessage = "Änderungsgrund darf maximal 200 Zeichen lang sein")]
+    [Display(Name = "Grund für die Änderung")]
+    string? ChangeReason
+);
+
+public record ChangeAccommodationsRequestDto(
+    [Required(ErrorMessage = "Mindestens eine Schlafmöglichkeit muss ausgewählt werden")]
+    [MinLength(1, ErrorMessage = "Mindestens eine Schlafmöglichkeit muss ausgewählt werden")]
+    [Display(Name = "Neue Schlafmöglichkeiten")]
+    List<CreateBookingItemDto> BookingItems
+);
+
+public record ChangeNotesRequestDto(
+    [StringLength(500, ErrorMessage = "Notizen dürfen maximal 500 Zeichen lang sein")]
+    [Display(Name = "Neue Notizen")]
+    string? Notes
+);
