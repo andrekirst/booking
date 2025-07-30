@@ -1,6 +1,6 @@
 # Application Status Report
 
-> 🤖 Automatisch generiert am 2025-07-29 20:55:06
+> 🤖 Automatisch generiert am 2025-07-30 13:54:43
 > 
 > Dieses Dokument bietet eine vollständige Übersicht über den aktuellen Stand der Booking-Anwendung.
 
@@ -22,6 +22,10 @@ booking/
 ### React-Komponenten
 - **function** - `src/frontend/components/ui/ConfirmationModal.tsx`
 - **function** - `src/frontend/app/components/FullCalendarView.tsx`
+- **function** - `src/frontend/app/components/landing/FeatureHighlights.tsx`
+- **function** - `src/frontend/app/components/landing/LandingPage.tsx`
+- **function** - `src/frontend/app/components/landing/LoginCard.tsx`
+- **function** - `src/frontend/app/components/landing/HeroSection.tsx`
 - **function** - `src/frontend/app/components/BookingListView.tsx`
 - **function** - `src/frontend/app/components/CompactBookingList.tsx`
 - **function** - `src/frontend/app/components/BookingCalendarView.tsx`
@@ -218,4 +222,4 @@ _Datei: `src/backend/Booking.Api/Controllers/AdminController.cs`_
 - **Multi-Agent Development** - Parallele Entwicklung mit Git Worktrees
 
 
-_Letztes Update: 2025-07-29 20:55:07_
+_Letztes Update: 2025-07-30 13:54:44_

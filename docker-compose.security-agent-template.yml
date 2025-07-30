@@ -1,0 +1,224 @@
+# Claude Code Security-Expert Sub-Agent Docker Compose Template
+# Erweiterte Konfiguration mit Security-Tools für Agent S7
+#
+# Platzhalter:
+# {SUB_AGENT_ID} - wird durch S7 ersetzt
+# {AGENT_ROLE} - wird durch security-expert ersetzt  
+# {BASE_PORT} - wird durch den Basis-Port ersetzt (60700)
+# {FRONTEND_PORT} - wird durch Frontend-Port ({BASE_PORT}+1) ersetzt
+# {BACKEND_PORT} - wird durch Backend-Port ({BASE_PORT}+2) ersetzt
+# {DB_PORT} - wird durch DB-Port ({BASE_PORT}+3) ersetzt
+# {CLAUDE_PORT} - wird durch Claude-Port ({BASE_PORT}+4) ersetzt
+# {SONARQUBE_PORT} - wird durch SonarQube-Port ({BASE_PORT}+5) ersetzt
+# {ZAP_PORT} - wird durch OWASP ZAP-Port ({BASE_PORT}+6) ersetzt
+
+services:
+  postgres-sub-agent{SUB_AGENT_ID}:
+    image: postgres:16-alpine
+    container_name: booking-postgres-sub-agent{SUB_AGENT_ID}
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_DB: booking_sub_agent{SUB_AGENT_ID}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "{DB_PORT}:5432"  # Sub-Agent {SUB_AGENT_ID} PostgreSQL Port
+    volumes:
+      - postgres_sub_agent{SUB_AGENT_ID}_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_sub_agent{SUB_AGENT_ID}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+
+  backend-sub-agent{SUB_AGENT_ID}:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: booking-api-sub-agent{SUB_AGENT_ID}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:80"
+      ConnectionStrings__DefaultConnection: "Host=postgres-sub-agent{SUB_AGENT_ID};Port=5432;Database=booking_sub_agent{SUB_AGENT_ID};Username=booking_user;Password=booking_password"
+      CorsSettings__AllowedOrigins__0: "http://localhost:{FRONTEND_PORT}"
+      CorsSettings__AllowedOrigins__1: "http://localhost:{CLAUDE_PORT}"
+      CorsSettings__AllowedOrigins__2: "http://localhost:{ZAP_PORT}"
+      JwtSettings__Secret: "development-jwt-secret-key-for-sub-agent{SUB_AGENT_ID}-{AGENT_ROLE}-testing-only-256-bits-minimum"
+      JwtSettings__Issuer: "BookingApi-SubAgent{SUB_AGENT_ID}"
+      JwtSettings__Audience: "BookingApp-SubAgent{SUB_AGENT_ID}"
+      JwtSettings__ExpirationMinutes: "480"
+      # Sub-Agent specific environment
+      SUB_AGENT_ROLE: "{AGENT_ROLE}"
+      SUB_AGENT_ID: "{SUB_AGENT_ID}"
+      # Security-specific settings
+      SECURITY_SCAN_MODE: "enabled"
+      OWASP_ZAP_URL: "http://owasp-zap-{SUB_AGENT_ID}:8080"
+    ports:
+      - "{BACKEND_PORT}:80"  # Sub-Agent {SUB_AGENT_ID} Backend Port
+    depends_on:
+      postgres-sub-agent{SUB_AGENT_ID}:
+        condition: service_healthy
+    volumes:
+      # Sub-Agent-spezifisches Volume
+      - ../booking-sub-agent{SUB_AGENT_ID}/src/backend:/app/src:ro
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+    restart: unless-stopped
+
+  frontend-sub-agent{SUB_AGENT_ID}:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    container_name: booking-frontend-sub-agent{SUB_AGENT_ID}
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:{BACKEND_PORT}/api"
+      PORT: "3000"
+      # Sub-Agent specific environment
+      SUB_AGENT_ROLE: "{AGENT_ROLE}"
+      SUB_AGENT_ID: "{SUB_AGENT_ID}"
+      NEXT_PUBLIC_SUB_AGENT_MODE: "true"
+      # Security-specific settings
+      NEXT_PUBLIC_SECURITY_MODE: "enabled"
+      NEXT_PUBLIC_CSP_REPORT_URI: "http://localhost:{BACKEND_PORT}/api/security/csp-report"
+    ports:
+      - "{FRONTEND_PORT}:3000"  # Sub-Agent {SUB_AGENT_ID} Frontend Port
+    volumes:
+      # Sub-Agent-spezifisches Volume
+      - ../booking-sub-agent{SUB_AGENT_ID}/src/frontend:/app:cached
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+    restart: unless-stopped
+
+  # SonarQube for Static Application Security Testing (SAST)
+  sonarqube-{SUB_AGENT_ID}:
+    image: sonarqube:community
+    container_name: booking-sonarqube-sub-agent{SUB_AGENT_ID}
+    environment:
+      SONAR_JDBC_URL: "jdbc:postgresql://postgres-sub-agent{SUB_AGENT_ID}:5432/booking_sub_agent{SUB_AGENT_ID}"
+      SONAR_JDBC_USERNAME: booking_user
+      SONAR_JDBC_PASSWORD: booking_password
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    ports:
+      - "{SONARQUBE_PORT}:9000"  # SonarQube Web UI
+    volumes:
+      - sonarqube_sub_agent{SUB_AGENT_ID}_data:/opt/sonarqube/data
+      - sonarqube_sub_agent{SUB_AGENT_ID}_logs:/opt/sonarqube/logs
+      - sonarqube_sub_agent{SUB_AGENT_ID}_extensions:/opt/sonarqube/extensions
+    depends_on:
+      postgres-sub-agent{SUB_AGENT_ID}:
+        condition: service_healthy
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+    restart: unless-stopped
+    profiles:
+      - security-tools  # Only start with security-tools profile
+
+  # OWASP ZAP for Dynamic Application Security Testing (DAST)
+  owasp-zap-{SUB_AGENT_ID}:
+    image: owasp/zap2docker-stable
+    container_name: booking-zap-sub-agent{SUB_AGENT_ID}
+    command: zap-webswing.sh
+    environment:
+      ZAP_PORT: 8080
+    ports:
+      - "{ZAP_PORT}:8080"  # ZAP Web UI
+    volumes:
+      - zap_sub_agent{SUB_AGENT_ID}_data:/zap/wrk
+      - ../booking-sub-agent{SUB_AGENT_ID}/security/zap:/zap/wrk/scripts:ro
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+    restart: unless-stopped
+    profiles:
+      - security-tools  # Only start with security-tools profile
+
+  # Security Scanner Service (Custom)
+  security-scanner-{SUB_AGENT_ID}:
+    build:
+      context: ./security/scanner
+      dockerfile: Dockerfile
+    container_name: booking-security-scanner-sub-agent{SUB_AGENT_ID}
+    environment:
+      TARGET_FRONTEND_URL: "http://frontend-sub-agent{SUB_AGENT_ID}:3000"
+      TARGET_BACKEND_URL: "http://backend-sub-agent{SUB_AGENT_ID}:80"
+      SONARQUBE_URL: "http://sonarqube-{SUB_AGENT_ID}:9000"
+      ZAP_URL: "http://owasp-zap-{SUB_AGENT_ID}:8080"
+      SCAN_RESULTS_PATH: "/security/reports"
+    volumes:
+      - security_reports_{SUB_AGENT_ID}:/security/reports
+      - ../booking-sub-agent{SUB_AGENT_ID}/src:/app/src:ro
+    depends_on:
+      - backend-sub-agent{SUB_AGENT_ID}
+      - frontend-sub-agent{SUB_AGENT_ID}
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+    restart: "no"  # Run on-demand
+    profiles:
+      - security-tools
+
+  claude-sub-agent{SUB_AGENT_ID}:
+    build:
+      context: ./claude-integration
+      dockerfile: Dockerfile.sub-agent
+      args:
+        AGENT_ROLE: "{AGENT_ROLE}"
+        SUB_AGENT_ID: "{SUB_AGENT_ID}"
+    container_name: claude-sub-agent{SUB_AGENT_ID}
+    environment:
+      CLAUDE_AGENT_ROLE: "{AGENT_ROLE}"
+      CLAUDE_SUB_AGENT_ID: "{SUB_AGENT_ID}"
+      CLAUDE_CONTEXT_PATH: "/workspace/CLAUDE-{AGENT_ROLE}.md"
+      CLAUDE_WORKSPACE: "/workspace"
+      # Integration URLs
+      FRONTEND_URL: "http://localhost:{FRONTEND_PORT}"
+      BACKEND_URL: "http://localhost:{BACKEND_PORT}"
+      DATABASE_URL: "postgresql://booking_user:booking_password@postgres-sub-agent{SUB_AGENT_ID}:{DB_PORT}/booking_sub_agent{SUB_AGENT_ID}"
+      # Security Tools URLs
+      SONARQUBE_URL: "http://localhost:{SONARQUBE_PORT}"
+      ZAP_URL: "http://localhost:{ZAP_PORT}"
+      SECURITY_REPORTS_PATH: "/workspace/security/reports"
+    ports:
+      - "{CLAUDE_PORT}:3000"  # Sub-Agent {SUB_AGENT_ID} Claude Integration Port
+    volumes:
+      # Sub-Agent Workspace
+      - ../booking-sub-agent{SUB_AGENT_ID}:/workspace:cached
+      # Agent-specific configurations
+      - ./config/sub-agents/CLAUDE-{AGENT_ROLE}.md:/workspace/CLAUDE.md:ro
+      - ./config/sub-agents/{AGENT_ROLE}-settings.json:/workspace/.claude/settings.json:ro
+      # Security-specific volumes
+      - security_reports_{SUB_AGENT_ID}:/workspace/security/reports
+    networks:
+      - booking-sub-agent{SUB_AGENT_ID}-network
+    restart: unless-stopped
+    depends_on:
+      - frontend-sub-agent{SUB_AGENT_ID}
+      - backend-sub-agent{SUB_AGENT_ID}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_sub_agent{SUB_AGENT_ID}_data:
+    name: booking_postgres_sub_agent{SUB_AGENT_ID}_data
+  sonarqube_sub_agent{SUB_AGENT_ID}_data:
+    name: booking_sonarqube_sub_agent{SUB_AGENT_ID}_data
+  sonarqube_sub_agent{SUB_AGENT_ID}_logs:
+    name: booking_sonarqube_sub_agent{SUB_AGENT_ID}_logs
+  sonarqube_sub_agent{SUB_AGENT_ID}_extensions:
+    name: booking_sonarqube_sub_agent{SUB_AGENT_ID}_extensions
+  zap_sub_agent{SUB_AGENT_ID}_data:
+    name: booking_zap_sub_agent{SUB_AGENT_ID}_data
+  security_reports_{SUB_AGENT_ID}:
+    name: booking_security_reports_{SUB_AGENT_ID}
+
+networks:
+  booking-sub-agent{SUB_AGENT_ID}-network:
+    driver: bridge
+    name: booking-sub-agent{SUB_AGENT_ID}-network
