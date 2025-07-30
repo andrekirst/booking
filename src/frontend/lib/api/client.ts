@@ -3,6 +3,9 @@ import {
   Booking,
   BookingAvailability,
   BookingStatus,
+  ChangeDateRangeRequest,
+  ChangeAccommodationsRequest,
+  ChangeNotesRequest,
   CreateBookingRequest,
   EmailSettings,
   EmailSettingsResponse,
@@ -49,6 +52,11 @@ export interface ApiClient {
     endDate: string,
     excludeBookingId?: string
   ): Promise<BookingAvailability>;
+
+  // Granular booking edit endpoints
+  changeDateRange(bookingId: string, request: ChangeDateRangeRequest): Promise<Booking>;
+  changeAccommodations(bookingId: string, request: ChangeAccommodationsRequest): Promise<Booking>;
+  changeNotes(bookingId: string, request: ChangeNotesRequest): Promise<Booking>;
 
   // Sleeping Accommodations endpoints
   getSleepingAccommodations(includeInactive?: boolean): Promise<SleepingAccommodation[]>;
@@ -328,6 +336,28 @@ export class HttpApiClient implements ApiClient {
     return this.request<BookingAvailability>(
       `/bookings/availability?${params.toString()}`
     );
+  }
+
+  // Granular booking edit methods
+  async changeDateRange(bookingId: string, request: ChangeDateRangeRequest): Promise<Booking> {
+    return this.request<Booking>(`/bookings/${bookingId}/change-date-range`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+  }
+
+  async changeAccommodations(bookingId: string, request: ChangeAccommodationsRequest): Promise<Booking> {
+    return this.request<Booking>(`/bookings/${bookingId}/change-accommodations`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+  }
+
+  async changeNotes(bookingId: string, request: ChangeNotesRequest): Promise<Booking> {
+    return this.request<Booking>(`/bookings/${bookingId}/change-notes`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   }
 
   async getSleepingAccommodations(includeInactive: boolean = false): Promise<SleepingAccommodation[]> {

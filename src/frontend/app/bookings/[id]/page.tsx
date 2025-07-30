@@ -323,7 +323,13 @@ export default function BookingDetailPage() {
                     label: 'Details',
                     content: (
                       <div className="space-y-6">
-                        <BookingOverview booking={booking} />
+                        <BookingOverview 
+                          booking={booking} 
+                          onBookingUpdate={(updatedBooking) => {
+                            setBooking(updatedBooking);
+                          }}
+                          allowEditing={booking.status === BookingStatus.Pending}
+                        />
                         <BookingAccommodations
                           booking={booking}
                           accommodations={accommodations}
