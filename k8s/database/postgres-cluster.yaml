@@ -1,0 +1,215 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-cluster
+  namespace: booking-agents
+  labels:
+    app: postgres
+    component: database
+spec:
+  serviceName: postgres-cluster
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          value: booking_cluster
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_INITDB_ARGS
+          value: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            cpu: 4
+            memory: 8Gi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+      - name: init-scripts
+        configMap:
+          name: postgres-init-scripts
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-cluster
+  namespace: booking-agents
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-cluster-read
+  namespace: booking-agents
+  labels:
+    app: postgres
+    service-type: read
+spec:
+  selector:
+    app: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: booking-agents
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration for Multi-Agent System
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 200
+    shared_buffers = 256MB
+    effective_cache_size = 1GB
+    work_mem = 4MB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 8
+    max_parallel_workers_per_gather = 2
+    max_parallel_workers = 8
+    max_parallel_maintenance_workers = 2
+    
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = 'log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_statement = 'all'
+    log_min_duration_statement = 1000
+    
+    # Replication settings
+    wal_level = replica
+    archive_mode = on
+    archive_command = '/bin/true'
+    max_wal_senders = 3
+    hot_standby = on
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: booking-agents
+data:
+  01-create-databases.sql: |
+    -- Create databases for each agent
+    CREATE DATABASE agent_a2 OWNER postgres;
+    CREATE DATABASE agent_a3 OWNER postgres;
+    CREATE DATABASE agent_a4 OWNER postgres;
+    
+    -- Create databases for sub-agents
+    CREATE DATABASE sub_agent_s1 OWNER postgres;
+    CREATE DATABASE sub_agent_s2 OWNER postgres;
+    CREATE DATABASE sub_agent_s3 OWNER postgres;
+    CREATE DATABASE sub_agent_s4 OWNER postgres;
+    CREATE DATABASE sub_agent_s5 OWNER postgres;
+    CREATE DATABASE sub_agent_s6 OWNER postgres;
+    
+  02-create-users.sql: |
+    -- Create users for each agent with proper permissions
+    CREATE USER agent_a2_user WITH PASSWORD 'secure_password_a2';
+    CREATE USER agent_a3_user WITH PASSWORD 'secure_password_a3';
+    CREATE USER agent_a4_user WITH PASSWORD 'secure_password_a4';
+    
+    CREATE USER sub_agent_s1_user WITH PASSWORD 'secure_password_s1';
+    CREATE USER sub_agent_s2_user WITH PASSWORD 'secure_password_s2';
+    CREATE USER sub_agent_s3_user WITH PASSWORD 'secure_password_s3';
+    CREATE USER sub_agent_s4_user WITH PASSWORD 'secure_password_s4';
+    CREATE USER sub_agent_s5_user WITH PASSWORD 'secure_password_s5';
+    CREATE USER sub_agent_s6_user WITH PASSWORD 'secure_password_s6';
+    
+    -- Grant permissions
+    GRANT ALL PRIVILEGES ON DATABASE agent_a2 TO agent_a2_user;
+    GRANT ALL PRIVILEGES ON DATABASE agent_a3 TO agent_a3_user;
+    GRANT ALL PRIVILEGES ON DATABASE agent_a4 TO agent_a4_user;
+    
+    GRANT ALL PRIVILEGES ON DATABASE sub_agent_s1 TO sub_agent_s1_user;
+    GRANT ALL PRIVILEGES ON DATABASE sub_agent_s2 TO sub_agent_s2_user;
+    GRANT ALL PRIVILEGES ON DATABASE sub_agent_s3 TO sub_agent_s3_user;
+    GRANT ALL PRIVILEGES ON DATABASE sub_agent_s4 TO sub_agent_s4_user;
+    GRANT ALL PRIVILEGES ON DATABASE sub_agent_s5 TO sub_agent_s5_user;
+    GRANT ALL PRIVILEGES ON DATABASE sub_agent_s6 TO sub_agent_s6_user;

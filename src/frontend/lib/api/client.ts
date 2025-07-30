@@ -19,6 +19,7 @@ import {
   SleepingAccommodation,
   TestEmailRequest,
   TestEmailResponse,
+  TimeRange,
   UpdateBookingRequest,
   UpdateEmailSettingsRequest,
   VerifyEmailRequest,
@@ -35,7 +36,7 @@ export interface ApiClient {
   logout(): Promise<void>;
 
   // Booking endpoints
-  getBookings(status?: BookingStatus): Promise<Booking[]>;
+  getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]>;
   getBookingById(id: string): Promise<Booking>;
   createBooking(booking: CreateBookingRequest): Promise<Booking>;
   updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking>;
@@ -93,10 +94,20 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  // Method to refresh token from localStorage
+  // Method to refresh token from localStorage or cookies
   private refreshToken(): void {
     if (typeof window !== "undefined") {
+      // Try localStorage first (primary source)
       this.token = localStorage.getItem("auth_token");
+      
+      // Fallback to cookie if localStorage is empty
+      if (!this.token) {
+        const cookies = document.cookie.split(';');
+        const authCookie = cookies.find(cookie => cookie.trim().startsWith('auth_token='));
+        if (authCookie) {
+          this.token = authCookie.split('=')[1];
+        }
+      }
     }
   }
 
@@ -196,6 +207,10 @@ export class HttpApiClient implements ApiClient {
     this.token = response.token;
     if (typeof window !== "undefined") {
       localStorage.setItem("auth_token", response.token);
+      
+      // Also store in httpOnly cookie for middleware access
+      // Using secure cookie settings for production
+      document.cookie = `auth_token=${response.token}; path=/; secure; samesite=strict; max-age=${24 * 60 * 60}`;
     }
 
     return response;
@@ -232,16 +247,23 @@ export class HttpApiClient implements ApiClient {
     this.token = null;
     if (typeof window !== "undefined") {
       localStorage.removeItem("auth_token");
+      
+      // Also remove cookie
+      document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
   }
 
-  async getBookings(status?: BookingStatus): Promise<Booking[]> {
+  async getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]> {
     const params = new URLSearchParams();
+    if (timeRange !== undefined) {
+      params.append("timeRange", timeRange.toString());
+    }
     if (status !== undefined) {
       params.append("status", status.toString());
     }
     const queryString = params.toString();
-    return this.request<Booking[]>(`/bookings${queryString ? `?${queryString}` : ""}`);
+    const url = `/bookings${queryString ? `?${queryString}` : ""}`;
+    return await this.request<Booking[]>(url);
   }
 
   async getBookingById(id: string): Promise<Booking> {

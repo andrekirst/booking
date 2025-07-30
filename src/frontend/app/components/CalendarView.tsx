@@ -33,6 +33,7 @@ interface CalendarEvent {
 }
 
 export default function CalendarView({ bookings, onSelectBooking }: CalendarViewProps) {
+  
   const [tooltip, setTooltip] = useState<{
     booking: Booking;
     position: { x: number; y: number };
@@ -44,7 +45,11 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
   });
 
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day'>('month');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Simple key based directly on bookings data to force complete re-render
+  const calendarKey = `calendar-${bookings.length}-${bookings.map(b => b.id).join('-')}`;
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -54,7 +59,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }
     };
   }, []);
-
+  
   // Transform bookings to calendar events
   const events: CalendarEvent[] = bookings.map((booking) => {
     const startDate = new Date(booking.startDate);
@@ -128,6 +133,53 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
     }, 100);
   };
 
+  // Handle calendar navigation
+  const handleNavigate = (navigate: 'PREV' | 'NEXT' | 'TODAY') => {
+    const newDate = new Date(currentDate);
+    
+    switch (navigate) {
+      case 'PREV':
+        if (currentView === 'month') {
+          newDate.setMonth(newDate.getMonth() - 1);
+        } else if (currentView === 'week') {
+          newDate.setDate(newDate.getDate() - 7);
+        } else if (currentView === 'day') {
+          newDate.setDate(newDate.getDate() - 1);
+        }
+        break;
+      case 'NEXT':
+        if (currentView === 'month') {
+          newDate.setMonth(newDate.getMonth() + 1);
+        } else if (currentView === 'week') {
+          newDate.setDate(newDate.getDate() + 7);
+        } else if (currentView === 'day') {
+          newDate.setDate(newDate.getDate() + 1);
+        }
+        break;
+      case 'TODAY':
+        setCurrentDate(new Date());
+        return;
+    }
+    
+    setCurrentDate(newDate);
+  };
+
+  // Generate label based on current view and date
+  const generateLabel = (): string => {
+    switch (currentView) {
+      case 'month':
+        return dayjs(currentDate).format('MMMM YYYY');
+      case 'week':
+        const startOfWeek = dayjs(currentDate).startOf('week');
+        const endOfWeek = dayjs(currentDate).endOf('week');
+        return `${startOfWeek.format('DD.MM.')} - ${endOfWeek.format('DD.MM.YYYY')}`;
+      case 'day':
+        return dayjs(currentDate).format('dddd, DD.MM.YYYY');
+      default:
+        return dayjs(currentDate).format('MMMM YYYY');
+    }
+  };
+
 
   const messages = {
     allDay: 'Ganztägig',
@@ -155,6 +207,7 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
       }}
     >
       <Calendar
+        key={calendarKey}
         localizer={localizer}
         events={events}
         startAccessor="start"
@@ -162,6 +215,8 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         style={{ height: 600 }}
         onSelectEvent={handleSelectEvent}
         eventPropGetter={getEventStyle}
+        date={currentDate}
+        onNavigate={(date) => setCurrentDate(date)}
         components={{
           event: (props) => (
             <CalendarEvent
@@ -170,13 +225,12 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
               onMouseLeave={handleEventMouseLeave}
             />
           ),
-          toolbar: (props) => (
+          toolbar: () => (
             <CalendarToolbar
-              {...props}
-              onView={(view) => {
-                setCurrentView(view);
-                props.onView(view);
-              }}
+              label={generateLabel()}
+              onNavigate={handleNavigate}
+              onView={(view) => setCurrentView(view)}
+              view={currentView}
             />
           ),
         }}
@@ -195,6 +249,8 @@ export default function CalendarView({ bookings, onSelectBooking }: CalendarView
         view={currentView}
         onView={(view) => setCurrentView(view as 'month' | 'week' | 'day')}
         views={['month', 'week', 'day']}
+        showAllEvents
+        doShowMoreDrillDown={false}
       />
       
       {/* Legend */}

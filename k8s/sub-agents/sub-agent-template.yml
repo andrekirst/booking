@@ -1,0 +1,211 @@
+# Template for specialized Claude sub-agents (S1-S6)
+# Use with: envsubst < sub-agent-template.yml > sub-agent-${SUB_AGENT_ID}.yml
+# Environment variables: SUB_AGENT_ID, AGENT_ROLE, RESOURCES_CPU_REQUESTS, RESOURCES_CPU_LIMITS, RESOURCES_MEM_REQUESTS, RESOURCES_MEM_LIMITS
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-sub-${SUB_AGENT_ID}
+  namespace: booking-system
+  labels:
+    app: booking-sub-${SUB_AGENT_ID}
+    component: claude-agent
+    role: ${AGENT_ROLE}
+    version: v1
+    app.kubernetes.io/name: booking-sub-${SUB_AGENT_ID}
+    app.kubernetes.io/component: claude-agent
+    app.kubernetes.io/part-of: booking-system
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: booking-sub-${SUB_AGENT_ID}
+      component: claude-agent
+  template:
+    metadata:
+      labels:
+        app: booking-sub-${SUB_AGENT_ID}
+        component: claude-agent
+        role: ${AGENT_ROLE}
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "3000"
+    spec:
+      serviceAccountName: booking-system-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: claude-agent
+        image: claude-sub-agent:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        - containerPort: 8080
+          name: health
+          protocol: TCP
+        env:
+        - name: CLAUDE_AGENT_ROLE
+          value: "${AGENT_ROLE}"
+        - name: CLAUDE_SUB_AGENT_ID
+          value: "${SUB_AGENT_ID}"
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: CLAUDE_API_KEY_SUB_AGENT_${SUB_AGENT_ID}
+        - name: CLAUDE_CONTEXT_PATH
+          value: "/workspace/CLAUDE-${AGENT_ROLE}.md"
+        - name: CLAUDE_WORKSPACE
+          value: "/workspace"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: booking-system-secrets
+              key: DB_CONNECTION_SUB_${SUB_AGENT_ID}
+        - name: AGENT_REGISTRY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: AGENT_REGISTRY_URL
+        - name: CLAUDE_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: CLAUDE_TIMEOUT
+        - name: CLAUDE_MAX_RETRIES
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: CLAUDE_MAX_RETRIES
+        - name: CLAUDE_RATE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: CLAUDE_RATE_LIMIT
+        - name: CLAUDE_CONTEXT_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: booking-system-config
+              key: CLAUDE_CONTEXT_SIZE
+        resources:
+          requests:
+            cpu: ${RESOURCES_CPU_REQUESTS}
+            memory: ${RESOURCES_MEM_REQUESTS}
+          limits:
+            cpu: ${RESOURCES_CPU_LIMITS}
+            memory: ${RESOURCES_MEM_LIMITS}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: health
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: health
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: claude-config
+          mountPath: /workspace/.claude
+          readOnly: true
+        - name: agent-logs
+          mountPath: /app/logs
+      volumes:
+      - name: workspace
+        emptyDir: {}
+      - name: claude-config
+        configMap:
+          name: sub-agents-config
+          items:
+          - key: sub-agents.yml
+            path: config.yml
+      - name: agent-logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-sub-${SUB_AGENT_ID}-service
+  namespace: booking-system 
+  labels:
+    app: booking-sub-${SUB_AGENT_ID}
+    component: claude-agent
+    role: ${AGENT_ROLE}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: http
+    protocol: TCP
+    name: http
+  - port: 8080
+    targetPort: health
+    protocol: TCP
+    name: health
+  selector:
+    app: booking-sub-${SUB_AGENT_ID}
+    component: claude-agent
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: booking-sub-${SUB_AGENT_ID}-hpa
+  namespace: booking-system
+  labels:
+    app: booking-sub-${SUB_AGENT_ID}
+    component: claude-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-${SUB_AGENT_ID}
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60

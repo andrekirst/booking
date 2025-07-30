@@ -75,9 +75,9 @@ else
     echo "🔍 Prüfe Status der Sub-Agent Services..."
     
     # Zeige aktuellen Status
-    if docker-compose -f "$COMPOSE_FILE" ps 2>/dev/null | grep -q "Up"; then
+    if docker compose -f "$COMPOSE_FILE" ps 2>/dev/null | grep -q "Up"; then
         echo "📊 Aktuelle Services:"
-        docker-compose -f "$COMPOSE_FILE" ps
+        docker compose -f "$COMPOSE_FILE" ps
         echo ""
     else
         echo "ℹ️  Keine laufenden Services gefunden"
@@ -87,9 +87,9 @@ else
     echo "🛑 Stoppe Docker Services..."
     if [ "$REMOVE_DATA" = "--remove-data" ]; then
         echo "   Entferne auch Volumes..."
-        docker-compose -f "$COMPOSE_FILE" down --volumes --remove-orphans
+        docker compose -f "$COMPOSE_FILE" down --volumes --remove-orphans
     else
-        docker-compose -f "$COMPOSE_FILE" down --remove-orphans
+        docker compose -f "$COMPOSE_FILE" down --remove-orphans
     fi
     
     echo "✅ Docker Services gestoppt"
@@ -160,7 +160,7 @@ ACTIVE_AGENTS=0
 for agent_id in S1 S2 S3 S4 S5 S6; do
     if [ "$agent_id" != "$SUB_AGENT_ID" ]; then
         compose_file="docker-compose.sub-agent$agent_id.yml"
-        if [ -f "$compose_file" ] && docker-compose -f "$compose_file" ps 2>/dev/null | grep -q "Up"; then
+        if [ -f "$compose_file" ] && docker compose -f "$compose_file" ps 2>/dev/null | grep -q "Up"; then
             echo "   $agent_id: ${AGENT_INFO[$agent_id]} - ✅ Aktiv"
             ACTIVE_AGENTS=$((ACTIVE_AGENTS + 1))
         else

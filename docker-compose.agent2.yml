@@ -1,4 +1,7 @@
-version: '3.8'
+# AUTOMATISCH GENERIERT - NICHT MANUELL BEARBEITEN!
+# Generiert von: generate-agent-configs.sh am Di 29. Jul 20:49:55 CEST 2025
+# Template: docker-compose.agent-template.yml
+# Agent: 2 | Ports: 60201/60202/60203/60204
 
 services:
   postgres-agent2:
@@ -18,6 +21,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
     networks:
       - booking-agent2-network
@@ -41,11 +45,20 @@ services:
     depends_on:
       postgres-agent2:
         condition: service_healthy
+        restart: true
     volumes:
       - ./src/backend:/app/src:ro
     networks:
       - booking-agent2-network
     restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../booking-agent2/src/backend
+          ignore:
+            - bin/
+            - obj/
+            - "**/*.pdb"
 
   frontend-agent2:
     build:
@@ -64,6 +77,15 @@ services:
     networks:
       - booking-agent2-network
     restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ../booking-agent2/src/frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+            - "**/*.log"
 
   # pgweb Database Web Interface (Development Only)
   pgweb-agent2:
@@ -80,6 +102,7 @@ services:
     depends_on:
       postgres-agent2:
         condition: service_healthy
+        restart: true
     networks:
       - booking-agent2-network
     restart: unless-stopped

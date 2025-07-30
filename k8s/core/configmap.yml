@@ -1,0 +1,304 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: booking-system-config
+  namespace: booking-system
+  labels:
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: configuration
+data:
+  # Agent Discovery Configuration
+  AGENT_DISCOVERY_ENABLED: "true"
+  AGENT_REGISTRY_URL: "http://agent-registry-service:8080"
+  AGENT_HEALTH_CHECK_INTERVAL: "30s"
+  AGENT_HEALTH_CHECK_TIMEOUT: "10s"
+  AGENT_HEALTH_CHECK_RETRIES: "3"
+  
+  # Database Configuration
+  POSTGRES_PORT: "5432"
+  POSTGRES_MAX_CONNECTIONS: "100"
+  POSTGRES_SHARED_BUFFERS: "256MB"
+  POSTGRES_EFFECTIVE_CACHE_SIZE: "1GB"
+  
+  # Application Configuration
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:80"
+  
+  # JWT Configuration
+  JWT_EXPIRATION_MINUTES: "480"
+  JWT_REFRESH_EXPIRATION_DAYS: "7"
+  
+  # CORS Configuration  
+  CORS_ALLOW_CREDENTIALS: "true"
+  CORS_MAX_AGE: "86400"
+  
+  # Logging Configuration
+  LOG_LEVEL: "Information"
+  LOG_FORMAT: "json"
+  LOG_MAX_SIZE: "10MB"
+  LOG_MAX_FILES: "3"
+  
+  # Claude Integration
+  CLAUDE_TIMEOUT: "300s"
+  CLAUDE_MAX_RETRIES: "3"
+  CLAUDE_RATE_LIMIT: "100"
+  CLAUDE_CONTEXT_SIZE: "200000"
+  
+  # Sub-Agent Configuration
+  SUB_AGENT_SCALING_ENABLED: "true"
+  SUB_AGENT_MIN_REPLICAS: "1"
+  SUB_AGENT_MAX_REPLICAS: "10"
+  SUB_AGENT_TARGET_CPU: "70"
+  SUB_AGENT_TARGET_MEMORY: "80"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sub-agents-config
+  namespace: booking-system
+  labels:
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: sub-agents
+data:
+  sub-agents.yml: |
+    sub_agents:
+      S1:
+        name: "Senior Developer"
+        role: "senior-developer"
+        description: "Architekturentscheidungen, Code-Reviews, komplexe Problemlösungen"
+        specializations:
+          - "architecture"
+          - "performance"
+          - "code-review"
+          - "mentoring"
+          - "complex-problem-solving"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        environment:
+          CLAUDE_AGENT_PRIORITY: "high"
+          CLAUDE_REVIEW_MODE: "enabled"
+      
+      S2:
+        name: "UI Developer"
+        role: "ui-developer"
+        description: "Frontend-Komponenten, Styling, User Interface Implementation"
+        specializations:
+          - "react"
+          - "nextjs"
+          - "tailwind"
+          - "responsive-design"
+          - "component-libraries"
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+          limits:
+            cpu: "1500m"
+            memory: "3Gi"
+        environment:
+          CLAUDE_UI_MODE: "enabled"
+          CLAUDE_DESIGN_SYSTEM: "tailwind"
+      
+      S3:
+        name: "UX Expert"
+        role: "ux-expert"
+        description: "User Experience Design, Usability-Optimierungen, Accessibility"
+        specializations:
+          - "ux-design"
+          - "accessibility"
+          - "usability-testing"
+          - "user-journey"
+          - "interaction-design"
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
+        environment:
+          CLAUDE_UX_MODE: "enabled"
+          CLAUDE_ACCESSIBILITY_CHECK: "strict"
+      
+      S4:
+        name: "Test Expert"
+        role: "test-expert"
+        description: "Test-Strategien, Unit/Integration/E2E Tests, Test-Automatisierung"
+        specializations:
+          - "unit-testing"
+          - "integration-testing"
+          - "e2e-testing"
+          - "test-automation"
+          - "quality-assurance"
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+          limits:
+            cpu: "1500m"
+            memory: "3Gi"
+        environment:
+          CLAUDE_TEST_MODE: "enabled"
+          CLAUDE_COVERAGE_TARGET: "80"
+      
+      S5:
+        name: "Architecture Expert"
+        role: "architecture-expert"
+        description: "System-Design, Performance-Optimierungen, Skalierbarkeit"
+        specializations:
+          - "system-architecture"
+          - "database-design"
+          - "scalability"
+          - "event-sourcing"
+          - "microservices"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        environment:
+          CLAUDE_ARCHITECTURE_MODE: "enabled"
+          CLAUDE_PATTERN_ANALYSIS: "advanced"
+      
+      S6:
+        name: "DevOps Expert"
+        role: "devops-expert"
+        description: "CI/CD-Pipelines, Deployment-Automatisierung, Infrastructure as Code"
+        specializations:
+          - "ci-cd"
+          - "docker"
+          - "kubernetes"
+          - "infrastructure"
+          - "monitoring"
+          - "deployment"
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+          limits:
+            cpu: "1500m"
+            memory: "3Gi"
+        environment:
+          CLAUDE_DEVOPS_MODE: "enabled"
+          CLAUDE_AUTOMATION_LEVEL: "high"
+    
+    global_settings:
+      health_check_interval: "30s"
+      health_check_timeout: "10s"
+      health_check_retries: 3
+      restart_policy: "Always"
+      
+    assignment_rules:
+      frontend:
+        primary_agent: "S2"
+        secondary_agents: ["S3"]
+      backend:
+        primary_agent: "S1"
+        secondary_agents: ["S5"]
+      testing:
+        primary_agent: "S4"
+        secondary_agents: ["S1"]
+      architecture:
+        primary_agent: "S5"
+        secondary_agents: ["S1"]
+      devops:
+        primary_agent: "S6"
+        secondary_agents: ["S1"]
+      ux:
+        primary_agent: "S3"
+        secondary_agents: ["S2"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-registry-config
+  namespace: booking-system
+  labels:
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: agent-registry
+data:
+  config.json: |
+    {
+      "registry": {
+        "port": 8080,
+        "healthCheckInterval": "30s",
+        "agentTimeout": "5m",
+        "maxAgents": 100
+      },
+      "agents": {
+        "standard": {
+          "booking-agent2": {
+            "type": "standard",
+            "priority": 1,
+            "endpoints": {
+              "frontend": "http://booking-agent2-frontend-service:3000",
+              "backend": "http://booking-agent2-backend-service:80",
+              "database": "postgres://booking-agent2-postgres-service:5432"
+            }
+          },
+          "booking-agent3": {
+            "type": "standard", 
+            "priority": 1,
+            "endpoints": {
+              "frontend": "http://booking-agent3-frontend-service:3000",
+              "backend": "http://booking-agent3-backend-service:80",
+              "database": "postgres://booking-agent3-postgres-service:5432"
+            }
+          },
+          "booking-agent4": {
+            "type": "standard",
+            "priority": 1,
+            "endpoints": {
+              "frontend": "http://booking-agent4-frontend-service:3000",
+              "backend": "http://booking-agent4-backend-service:80",
+              "database": "postgres://booking-agent4-postgres-service:5432"
+            }
+          }
+        },
+        "sub_agents": {
+          "S1": {
+            "type": "sub-agent",
+            "role": "senior-developer",
+            "priority": 10,
+            "scalable": true
+          },
+          "S2": {
+            "type": "sub-agent",
+            "role": "ui-developer", 
+            "priority": 8,
+            "scalable": true
+          },
+          "S3": {
+            "type": "sub-agent",
+            "role": "ux-expert",
+            "priority": 6,
+            "scalable": true
+          },
+          "S4": {
+            "type": "sub-agent",
+            "role": "test-expert",
+            "priority": 8,
+            "scalable": true
+          },
+          "S5": {
+            "type": "sub-agent",
+            "role": "architecture-expert",
+            "priority": 10,
+            "scalable": true
+          },
+          "S6": {
+            "type": "sub-agent",
+            "role": "devops-expert",
+            "priority": 9,
+            "scalable": true
+          }
+        }
+      }
+    }

@@ -77,6 +77,55 @@ const response = await apiClient.login(credentials);
 4. Mock-Implementation in `MockApiClient` hinzufügen
 5. Komponenten verwenden `const { apiClient } = useApi()`
 
+## 0. Anwendungs-Status-Tracking für Context-Management
+
+### Übersicht über verfügbare Analyse-Tools
+Das Projekt verfügt über automatisierte Analyse-Scripts für besseres Context-Management:
+
+#### 📊 APPLICATION_STATUS.md - Zentraler Anwendungsstand
+- **Zweck**: Vollständige Übersicht über aktuelle Anwendungsstruktur
+- **Inhalt**: Frontend-Komponenten, API-Endpoints, Routen, Datenmodelle
+- **Update**: Automatisch über `./scripts/analyze-application.sh`
+- **Verwendung**: Lies diese Datei VOR jeder neuen Task für Context
+
+#### 🔧 Verfügbare Analyse-Scripts
+```bash
+# 1. Vollständige Anwendungsanalyse (immer zuerst ausführen)
+./scripts/analyze-application.sh
+
+# 2. Detaillierte API-Endpoint-Analyse  
+./scripts/analyze-api-endpoints.sh
+
+# 3. Frontend-Komponenten-Details
+./scripts/analyze-frontend-components.sh
+
+# 4. Komponenten-Verwendung-Tracking
+./scripts/analyze-component-usage.sh
+```
+
+#### 🎯 OBLIGATORISCHE Verwendung der Scripts
+**VOR jeder neuen Task/Issue-Bearbeitung:**
+1. **IMMER** `./scripts/analyze-application.sh` ausführen
+2. `APPLICATION_STATUS.md` lesen für aktuellen Context
+3. Bei API-Changes: `./scripts/analyze-api-endpoints.sh` ausführen  
+4. Bei Frontend-Änderungen: relevante Frontend-Scripts nutzen
+
+#### 📈 Context-Management Best Practices
+- **Verhindert Duplikationen**: Prüfe existierende Komponenten vor Neuerstellung
+- **Bessere Architektur-Entscheidungen**: Verstehe bestehende Patterns
+- **Effizienter Development**: Weniger Zeit für Codebase-Exploration
+- **Konsistenz**: Folge bestehenden Konventionen und Strukturen
+
+### APPLICATION_STATUS.md als Referenz
+Die `APPLICATION_STATUS.md` Datei ist der zentrale Referenzpunkt für:
+- **Verfügbare Frontend-Komponenten** (65+ Komponenten)
+- **API-Endpoints** (6 Controller, 25+ Endpoints)  
+- **Routen/Seiten** (13 verfügbare Routen)
+- **Datenmodelle** (5 Entities, 2 Read Models)
+- **Technologie-Stack** (aktueller Stand)
+
+**WICHTIG**: Diese Datei MUSS vor jeder Entwicklungsaufgabe konsultiert werden!
+
 ## 1. Anforderungen aus requirements.md nutzen
 - Verwende die Datei `requirements.md` als zentrale Quelle für fachliche und technische Anforderungen.
 - Neue Issues, Features oder Tasks werden auf Basis der Anforderungen in `requirements.md` erstellt.
@@ -717,13 +766,13 @@ GROUP BY sa.id, sa.name, sa.capacity;
 #### pgweb lädt nicht
 ```bash
 # Container Status prüfen
-docker-compose -f docker-compose.agent2.yml ps
+docker compose -f docker-compose.agent2.yml ps
 
 # pgweb Logs anzeigen
 docker logs booking-pgweb-agent2
 
 # pgweb Container neustarten
-docker-compose -f docker-compose.agent2.yml restart pgweb-agent2
+docker compose -f docker-compose.agent2.yml restart pgweb-agent2
 ```
 
 #### Authentifizierung fehlgeschlagen
@@ -765,7 +814,7 @@ pgweb-agent{AGENT_NUMBER}:
 #### Development (pgweb verfügbar)
 ```bash
 # Mit Development-Profile starten
-docker-compose -f docker-compose.agent2.yml --profile development up -d
+docker compose -f docker-compose.agent2.yml --profile development up -d
 
 # pgweb ist verfügbar unter:
 http://localhost:60204 (Login: admin/admin)
@@ -774,15 +823,89 @@ http://localhost:60204 (Login: admin/admin)
 #### Production (pgweb deaktiviert)
 ```bash
 # Ohne Profile starten (Standard)
-docker-compose -f docker-compose.agent2.yml up -d
+docker compose -f docker-compose.agent2.yml up -d
 
 # pgweb wird NICHT gestartet (Sicherheit)
 # Nur PostgreSQL, Backend und Frontend laufen
 ```
 
-## 15. Docker Multi-Agent-Umgebung - OBLIGATORISCHE ERINNERUNG
+## 15. Docker Compose v2 Migration
 
-### 15.1 KRITISCHE REGEL für alle Issue-Bearbeitungen
+### 15.1 Übersicht
+**WICHTIG**: Das Projekt wurde vollständig auf Docker Compose v2 migriert. Die veraltete `docker-compose` Syntax wird nicht mehr verwendet!
+
+### 15.2 Wichtige Änderungen
+#### Kommando-Syntax
+```bash
+# ❌ Veraltet (Docker Compose v1)
+docker-compose up -d
+docker-compose -f file.yml ps
+docker-compose restart service
+
+# ✅ Modern (Docker Compose v2)
+docker compose up -d
+docker compose -f file.yml ps
+docker compose restart service
+```
+
+#### Wichtige Unterschiede
+- **Kein Bindestrich**: `docker compose` statt `docker-compose`
+- **Docker CLI Plugin**: Teil der Docker CLI, nicht separates Tool
+- **Bessere Performance**: Schnellere Ausführung und weniger Speicherverbrauch
+- **Konsistente Syntax**: Einheitlich mit anderen Docker-Kommandos
+
+### 15.3 Benefits für Entwickler
+✅ **Bessere Performance**: Schnellere Container-Starts und -Stops  
+✅ **Vereinfachte Installation**: Bereits in Docker Desktop integriert  
+✅ **Konsistente CLI**: Einheitliche Erfahrung mit Docker-Kommandos  
+✅ **Zukunftssicher**: Docker Compose v1 wird nicht mehr aktiv entwickelt  
+✅ **Bessere Integration**: Nahtlose Zusammenarbeit mit Docker CLI  
+
+### 15.4 Migration Checklist
+**Für alle Entwickler:**
+- [ ] Docker Desktop auf neueste Version aktualisieren
+- [ ] Alle `docker-compose` Kommandos zu `docker compose` ändern
+- [ ] Shell-Scripts und Dokumentation aktualisieren
+- [ ] IDE/Editor-Plugins auf v2 Syntax umstellen
+
+### 15.5 Häufige Probleme
+#### "docker-compose: command not found"
+**Lösung**: Docker Desktop installieren oder Docker Compose Plugin hinzufügen:
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+
+# Oder Docker Desktop installieren (empfohlen)
+```
+
+#### Legacy Scripts funktionieren nicht
+**Lösung**: Alle Scripts auf `docker compose` Syntax aktualisieren oder Alias erstellen:
+```bash
+# Temporärer Alias (nicht empfohlen für Produktion)
+alias docker-compose='docker compose'
+```
+
+### 15.6 Entwicklungsumgebung Setup
+```bash
+# Agent-Container mit Docker Compose v2 starten
+docker compose -f docker-compose.agent2.yml --profile development up -d
+
+# Status prüfen
+docker compose -f docker-compose.agent2.yml ps
+
+# Services neustarten
+docker compose -f docker-compose.agent2.yml restart
+
+# Cleanup
+docker compose -f docker-compose.agent2.yml down --volumes
+```
+
+**REGEL**: Ab sofort wird AUSSCHLIESSLICH `docker compose` (v2) verwendet!
+
+## 16. Docker Multi-Agent-Umgebung - OBLIGATORISCHE ERINNERUNG
+
+### 16.1 KRITISCHE REGEL für alle Issue-Bearbeitungen
 **⚠️ IMMER VOR JEDER ISSUE-BEARBEITUNG:**
 
 ```bash
@@ -799,14 +922,14 @@ echo "- Backend:  http://localhost:60{AGENT}02"
 echo "- Database: localhost:60{AGENT}03"
 ```
 
-### 15.2 Warum Docker Multi-Agent-Umgebung?
+### 16.2 Warum Docker Multi-Agent-Umgebung?
 - ✅ **Isolierte Test-Umgebung** für jeden Agenten
 - ✅ **Parallele Entwicklung** ohne Konflikte
 - ✅ **Sofortige Testbarkeit** für den User
 - ✅ **Konsistente Umgebung** zwischen Development und Production
 - ✅ **Automatische Database-Setup** mit Migrationen
 
-### 15.3 NIEMALS lokales `npm run dev` als Ersatz!
+### 16.3 NIEMALS lokales `npm run dev` als Ersatz!
 **❌ FALSCH**: `cd src/frontend && npm run dev`
 **✅ RICHTIG**: `./scripts/start-agent.sh 4 feat/issue-branch`
 
@@ -816,13 +939,13 @@ echo "- Database: localhost:60{AGENT}03"
 - Keine Backend-Services
 - User kann nicht vollständig testen
 
-### 15.4 User-Erwartung
+### 16.4 User-Erwartung
 **Der User erwartet IMMER:**
 1. Komplette Docker-Umgebung mit allen Services
 2. Sofort testbare URLs (Frontend + Backend + Database)
 3. Keine lokalen Development-Server als Workaround
 
-### 15.5 Erinnerungs-Checkliste
+### 16.5 Erinnerungs-Checkliste
 **Bei JEDER Issue-Bearbeitung MUSS Claude:**
 - [ ] Agent-Status prüfen (`./scripts/status-agents.sh`)
 - [ ] Entsprechenden Agent starten (`./scripts/start-agent.sh`)
@@ -830,7 +953,7 @@ echo "- Database: localhost:60{AGENT}03"
 - [ ] Status bestätigen (alle Services healthy)
 - [ ] NIEMALS lokales `npm run dev` als Ersatz anbieten
 
-## 16. Kommunikation
+## 17. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)

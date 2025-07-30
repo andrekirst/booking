@@ -87,7 +87,7 @@ echo ""
 echo "🔍 Prüfe Agent-Verfügbarkeit..."
 for agent in "${AGENTS[@]}"; do
     compose_file="docker-compose.sub-agent$agent.yml"
-    if [ -f "$compose_file" ] && docker-compose -f "$compose_file" ps 2>/dev/null | grep -q "Up"; then
+    if [ -f "$compose_file" ] && docker compose -f "$compose_file" ps 2>/dev/null | grep -q "Up"; then
         echo "⚠️  Agent $agent bereits aktiv - wird neu gestartet"
         ./scripts/stop-sub-agent.sh "$agent"
         sleep 2
@@ -236,7 +236,7 @@ done)
 $(for agent in "${AGENTS[@]}"; do echo "./scripts/stop-sub-agent.sh $agent"; done)
 
 # Logs anzeigen
-$(for agent in "${AGENTS[@]}"; do echo "docker-compose -f docker-compose.sub-agent$agent.yml logs -f"; done)
+$(for agent in "${AGENTS[@]}"; do echo "docker compose -f docker-compose.sub-agent$agent.yml logs -f"; done)
 \`\`\`
 
 ### Collaboration Notes

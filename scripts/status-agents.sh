@@ -48,7 +48,7 @@ for AGENT_NUMBER in 2 3 4; do
     fi
     
     # Prüfe Service-Status
-    RUNNING_SERVICES=$(docker-compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
+    RUNNING_SERVICES=$(docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
     
     if [ "$RUNNING_SERVICES" -gt 0 ]; then
         echo "   🐳 Services: ✅ $RUNNING_SERVICES laufend"
@@ -56,7 +56,7 @@ for AGENT_NUMBER in 2 3 4; do
         
         # Detaillierter Service-Status
         echo "   📋 Service-Details:"
-        docker-compose -f "$COMPOSE_FILE" ps --format "table" 2>/dev/null | tail -n +2 | while read -r line; do
+        docker compose -f "$COMPOSE_FILE" ps --format "table" 2>/dev/null | tail -n +2 | while read -r line; do
             if [ -n "$line" ]; then
                 SERVICE_NAME=$(echo "$line" | awk '{print $1}')
                 SERVICE_STATUS=$(echo "$line" | awk '{print $2}')
@@ -170,7 +170,7 @@ echo "─────────────────────"
 echo "   Agent starten: ./scripts/start-agent.sh <AGENT_NUMBER> <BRANCH_NAME>"
 echo "   Agent stoppen: ./scripts/stop-agent.sh <AGENT_NUMBER>"
 echo "   Alle stoppen:  ./scripts/stop-all-agents.sh"
-echo "   Logs anzeigen: docker-compose -f docker-compose.agent<N>.yml logs -f"
+echo "   Logs anzeigen: docker compose -f docker-compose.agent<N>.yml logs -f"
 echo ""
 
 # Warnung bei hoher Ressourcen-Nutzung

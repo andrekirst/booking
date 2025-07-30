@@ -1,9 +1,7 @@
 # AUTOMATISCH GENERIERT - NICHT MANUELL BEARBEITEN!
-# Generiert von: generate-agent-configs.sh am Fr 25. Jul 20:29:42 CEST 2025
+# Generiert von: generate-agent-configs.sh am Di 29. Jul 20:49:55 CEST 2025
 # Template: docker-compose.agent-template.yml
-# Agent: 3 | Ports: 60301/60302/60303
-
-version: '3.8'
+# Agent: 3 | Ports: 60301/60302/60303/60304
 
 # Multi-Agent Docker Compose Template
 # Dieses Template wird von generate-agent-configs.sh verwendet, um 
@@ -35,6 +33,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
     networks:
       - booking-agent3-network
@@ -58,12 +57,21 @@ services:
     depends_on:
       postgres-agent3:
         condition: service_healthy
+        restart: true
     volumes:
       # Worktree-spezifisches Volume für Agent 3
       - ../booking-agent3/src/backend:/app/src:ro
     networks:
       - booking-agent3-network
     restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ../booking-agent3/src/backend
+          ignore:
+            - bin/
+            - obj/
+            - "**/*.pdb"
 
   frontend-agent3:
     build:
@@ -83,6 +91,37 @@ services:
     networks:
       - booking-agent3-network
     restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ../booking-agent3/src/frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+            - "**/*.log"
+
+  # pgweb Database Web Interface (Development Only)
+  pgweb-agent3:
+    image: sosedoff/pgweb:latest
+    container_name: booking-pgweb-agent3
+    environment:
+      PGWEB_DATABASE_URL: "postgres://booking_user:booking_password@postgres-agent3:5432/booking_agent3?sslmode=disable"
+      PGWEB_AUTH_USER: "admin"
+      PGWEB_AUTH_PASS: "admin"
+      PGWEB_LISTEN_ADDR: "0.0.0.0"
+      PGWEB_LISTEN_PORT: "8081"
+    ports:
+      - "60304:8081"  # Agent 3 pgweb Port
+    depends_on:
+      postgres-agent3:
+        condition: service_healthy
+        restart: true
+    networks:
+      - booking-agent3-network
+    restart: unless-stopped
+    profiles:
+      - development  # Only available in development environment
 
 volumes:
   postgres_agent3_data:

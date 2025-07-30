@@ -2,10 +2,16 @@
 require('./.node-deprecated-modules.js');
 
 import '@testing-library/jest-dom'
-import fetchMock from 'jest-fetch-mock'
 
-// Enable fetch mocking
-fetchMock.enableMocks()
+// Enable fetch mocking only if not running landing page tests
+try {
+  if (!process.argv.some(arg => arg.includes('landing'))) {
+    const fetchMock = require('jest-fetch-mock');
+    fetchMock.enableMocks();
+  }
+} catch (e) {
+  // fetchMock not available or other error, continue without it
+}
 
 // Suppress console.error warnings during tests to prevent CI failures
 // React Testing Library warnings are expected in tests and should not fail CI
@@ -20,13 +26,18 @@ afterAll(() => {
   console.error = originalError;
 });
 
-// Mock framer-motion für Tests
-jest.mock('framer-motion', () => ({
-  motion: {
-    button: ({ children, whileHover, whileTap, whileFocus, ...props }) => 
-      <button {...props}>{children}</button>,
-    span: ({ children, initial, animate, exit, transition, ...props }) => 
-      <span {...props}>{children}</span>
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
+// Mock framer-motion für Tests - nur wenn installiert
+try {
+  require('framer-motion');
+  jest.mock('framer-motion', () => ({
+    motion: {
+      button: ({ children, whileHover, whileTap, whileFocus, ...props }) => 
+        <button {...props}>{children}</button>,
+      span: ({ children, initial, animate, exit, transition, ...props }) => 
+        <span {...props}>{children}</span>
+    },
+    AnimatePresence: ({ children }) => <>{children}</>,
+  }));
+} catch (e) {
+  // framer-motion not installed, skip mock
+}

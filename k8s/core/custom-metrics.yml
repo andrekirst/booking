@@ -1,0 +1,289 @@
+# Custom metrics for Claude API usage-based scaling
+
+# Custom Metrics API Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-metrics-config
+  namespace: booking-system
+  labels:
+    app.kubernetes.io/name: booking-system
+    app.kubernetes.io/component: metrics
+data:
+  config.yaml: |
+    rules:
+    - seriesQuery: 'claude_api_requests_total{namespace!="",pod!=""}'
+      name:
+        as: "claude_api_requests_per_second"
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      metricsQuery: 'rate(claude_api_requests_total{<<.LabelMatchers>>}[2m])'
+    
+    - seriesQuery: 'claude_api_response_time_seconds{namespace!="",pod!=""}'
+      name:
+        as: "claude_api_response_time"
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      metricsQuery: 'avg(claude_api_response_time_seconds{<<.LabelMatchers>>})'
+    
+    - seriesQuery: 'claude_context_tokens_used{namespace!="",pod!=""}'
+      name:
+        as: "claude_context_utilization"
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      metricsQuery: 'avg(claude_context_tokens_used{<<.LabelMatchers>>})'
+    
+    - seriesQuery: 'claude_agent_queue_size{namespace!="",pod!=""}'
+      name:
+        as: "claude_agent_queue_length"
+      resources:
+        overrides:
+          namespace: {resource: "namespace"}
+          pod: {resource: "pod"}
+      metricsQuery: 'avg(claude_agent_queue_size{<<.LabelMatchers>>})'
+---
+# HPA with custom metrics for Sub-Agent S1
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: booking-sub-s1-custom-hpa
+  namespace: booking-system
+  labels:
+    app: booking-sub-s1
+    component: claude-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s1
+  minReplicas: 1
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: claude_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "10"
+  - type: Pods
+    pods:
+      metric:
+        name: claude_agent_queue_length
+      target:
+        type: AverageValue
+        averageValue: "5"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 3
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+---
+# HPA with custom metrics for Sub-Agent S2
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: booking-sub-s2-custom-hpa
+  namespace: booking-system
+  labels:
+    app: booking-sub-s2
+    component: claude-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s2
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: claude_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "8"
+  - type: Pods
+    pods:
+      metric:
+        name: claude_agent_queue_length
+      target:
+        type: AverageValue
+        averageValue: "4"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+---
+# HPA with custom metrics for Sub-Agent S4 (Test Expert)  
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: booking-sub-s4-custom-hpa
+  namespace: booking-system
+  labels:
+    app: booking-sub-s4
+    component: claude-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s4
+  minReplicas: 1
+  maxReplicas: 12
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: claude_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "12"
+  - type: Pods
+    pods:
+      metric:
+        name: claude_agent_queue_length
+      target:
+        type: AverageValue
+        averageValue: "6"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 45
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 3
+        periodSeconds: 45
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+---
+# HPA with custom metrics for Sub-Agent S5 (Architecture Expert)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: booking-sub-s5-custom-hpa
+  namespace: booking-system
+  labels:
+    app: booking-sub-s5
+    component: claude-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: booking-sub-s5
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: claude_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "6"
+  - type: Pods
+    pods:
+      metric:
+        name: claude_context_utilization
+      target:
+        type: AverageValue
+        averageValue: "150000"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 90
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 90
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+      - type: Percent
+        value: 20
+        periodSeconds: 120

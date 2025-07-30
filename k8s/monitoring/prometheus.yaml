@@ -1,0 +1,287 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: booking-agents
+  labels:
+    app: prometheus
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        component: monitoring
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.45.0
+        ports:
+        - containerPort: 9090
+          name: prometheus
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus/
+        - --web.console.libraries=/etc/prometheus/console_libraries
+        - --web.console.templates=/etc/prometheus/consoles
+        - --storage.tsdb.retention.time=30d
+        - --web.enable-lifecycle
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage
+        persistentVolumeClaim:
+          claimName: prometheus-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: booking-agents
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - name: prometheus
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-storage
+  namespace: booking-agents
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: booking-agents
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+      - "booking_agents_rules.yml"
+    
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager:9093
+    
+    scrape_configs:
+    # Kubernetes API Server
+    - job_name: 'kubernetes-api-server'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - booking-agents
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+    
+    # Booking Agents
+    - job_name: 'booking-agents'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - booking-agents
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_app]
+        action: keep
+        regex: (booking-agent|claude-sub-agent)
+      - source_labels: [__meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: (health|metrics)
+      - source_labels: [__meta_kubernetes_service_label_sub_agent_id]
+        target_label: sub_agent_id
+      - source_labels: [__meta_kubernetes_service_label_role]
+        target_label: agent_role
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod_name
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+    
+    # PostgreSQL Exporter
+    - job_name: 'postgres'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - booking-agents
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_app]
+        action: keep
+        regex: postgres
+      - source_labels: [__meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: metrics
+    
+    # Custom Claude API Metrics
+    - job_name: 'claude-api-metrics'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - booking-agents
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_app]
+        action: keep
+        regex: claude-sub-agent
+      - source_labels: [__meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: claude-api
+      - source_labels: [__address__]
+        target_label: __address__
+        regex: (.+):(.+)
+        replacement: ${1}:8080
+      - source_labels: [__meta_kubernetes_service_label_sub_agent_id]
+        target_label: sub_agent_id
+      - source_labels: [__meta_kubernetes_service_label_role]
+        target_label: agent_role
+    
+    # Node Exporter for Host Metrics
+    - job_name: 'node-exporter'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - booking-agents
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_app]
+        action: keep
+        regex: node-exporter
+    
+    # Agent Performance Metrics
+    - job_name: 'agent-performance'
+      static_configs:
+      - targets: ['agent-metrics-collector:8080']
+      scrape_interval: 30s
+      metrics_path: /metrics/performance
+  
+  booking_agents_rules.yml: |
+    groups:
+    - name: booking_agents
+      rules:
+      # Claude API Usage Rules
+      - alert: HighClaudeAPIUsage
+        expr: claude_api_requests_per_second > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Claude API usage detected"
+          description: "Sub-agent {{ $labels.sub_agent_id }} is making {{ $value }} requests per second to Claude API"
+      
+      - alert: ClaudeAPITokenLimit
+        expr: claude_api_tokens_used_today > 900000
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Claude API token limit approaching"
+          description: "Sub-agent {{ $labels.sub_agent_id }} has used {{ $value }} tokens today, approaching daily limit"
+      
+      # Agent Health Rules
+      - alert: AgentDown
+        expr: up{job="booking-agents"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Booking agent is down"
+          description: "Agent {{ $labels.pod_name }} in namespace {{ $labels.namespace }} has been down for more than 1 minute"
+      
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{namespace="booking-agents"} / container_spec_memory_limit_bytes{namespace="booking-agents"}) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is using {{ $value }}% of memory limit"
+      
+      - alert: HighCPUUsage
+        expr: (rate(container_cpu_usage_seconds_total{namespace="booking-agents"}[5m]) / container_spec_cpu_quota{namespace="booking-agents"} * container_spec_cpu_period{namespace="booking-agents"}) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is using {{ $value }}% of CPU limit"
+      
+      # Database Rules
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} has been down for more than 1 minute"
+      
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL high connection usage"
+          description: "PostgreSQL instance {{ $labels.instance }} is using {{ $value }}% of max connections"
+      
+      # Scaling Rules
+      - record: claude_api_requests_per_second
+        expr: rate(claude_api_requests_total[1m])
+      
+      - record: agent_task_completion_rate
+        expr: rate(agent_tasks_completed_total[5m])
+      
+      - record: agent_error_rate
+        expr: rate(agent_errors_total[5m]) / rate(agent_requests_total[5m]) * 100

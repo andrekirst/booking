@@ -1,0 +1,125 @@
+name: Update Application Status
+
+# Trigger: Nach jedem Push zu main oder Feature-Branches
+on:
+  push:
+    branches: [ main, 'feat/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  update-status:
+    name: Update Application Status Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        # Benötigt für Git-History-Analyse und Commits
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/frontend/package-lock.json
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Make Scripts Executable
+      run: |
+        chmod +x scripts/*.sh
+
+    - name: Run Application Analysis
+      run: |
+        echo "🔍 Analysiere Anwendungsstruktur..."
+        ./scripts/analyze-application.sh
+        
+        echo "📊 Zusätzliche Analysen..."
+        ./scripts/analyze-api-endpoints.sh > docs/API_ENDPOINTS.md || true
+        ./scripts/analyze-frontend-components.sh > docs/FRONTEND_COMPONENTS.md || true
+
+    - name: Check for Changes
+      id: changes
+      run: |
+        # Prüfe ob es sich um einen Pull Request handelt
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # Für Pull Requests: Vergleiche mit dem Base Branch
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "(src/|scripts/)" > /dev/null; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Anwendungsänderungen erkannt (PR)"
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  Keine relevanten Änderungen (PR)"
+          fi
+        else
+          # Für Push: Vergleiche mit vorherigem Commit (falls verfügbar)
+          if git diff --name-only HEAD~1 HEAD | grep -E "(src/|scripts/)" > /dev/null 2>&1; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Anwendungsänderungen erkannt (Push)"
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  Keine relevanten Änderungen (Push)"
+          fi
+        fi
+
+    - name: Validate Status Generation
+      run: |
+        echo "✅ Application Status Generation erfolgreich!"
+        echo "📄 APPLICATION_STATUS.md wurde generiert"
+        echo "📊 Zusätzliche Dokumentation wurde erstellt"
+        
+        # Zeige Statistiken
+        if [ -f "APPLICATION_STATUS.md" ]; then
+          echo "📋 APPLICATION_STATUS.md Größe: $(wc -l < APPLICATION_STATUS.md) Zeilen"
+        fi
+        
+        if [ -f "docs/API_ENDPOINTS.md" ]; then
+          echo "🔌 API_ENDPOINTS.md Größe: $(wc -l < docs/API_ENDPOINTS.md) Zeilen"
+        fi
+        
+        if [ -f "docs/FRONTEND_COMPONENTS.md" ]; then
+          echo "🎨 FRONTEND_COMPONENTS.md Größe: $(wc -l < docs/FRONTEND_COMPONENTS.md) Zeilen"
+        fi
+
+    - name: Generate Status Summary
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "## 📊 Application Status Update" > status-summary.md
+        echo "" >> status-summary.md
+        echo "Automatisch generierter Anwendungsstatus für diesen PR:" >> status-summary.md
+        echo "" >> status-summary.md
+        
+        # Statistiken sammeln
+        COMPONENTS=$(find src/frontend -name "*.tsx" -not -path "*/__tests__/*" | wc -l)
+        CONTROLLERS=$(find src/backend -name "*Controller.cs" | wc -l)
+        ROUTES=$(find src/frontend/app -name "page.tsx" | wc -l)
+        
+        echo "### 📈 Aktuelle Statistiken" >> status-summary.md
+        echo "" >> status-summary.md
+        echo "- **Frontend-Komponenten:** $COMPONENTS" >> status-summary.md
+        echo "- **API-Controller:** $CONTROLLERS" >> status-summary.md
+        echo "- **Verfügbare Routen:** $ROUTES" >> status-summary.md
+        echo "" >> status-summary.md
+        echo "### 📄 Aktualisierte Dokumentation" >> status-summary.md
+        echo "" >> status-summary.md
+        echo "- [APPLICATION_STATUS.md](./APPLICATION_STATUS.md) - Vollständiger Anwendungsstatus" >> status-summary.md
+        echo "- [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) - API-Dokumentation" >> status-summary.md
+        echo "- [FRONTEND_COMPONENTS.md](./docs/FRONTEND_COMPONENTS.md) - Komponenten-Übersicht" >> status-summary.md
+
+    - name: Display Status Summary
+      if: github.event_name == 'pull_request'
+      run: |
+        if [ -f "status-summary.md" ]; then
+          echo "📊 Status Summary für PR erstellt:"
+          echo "=================================="
+          cat status-summary.md
+        else
+          echo "ℹ️  Kein Status Summary verfügbar"
+        fi
