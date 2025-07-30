@@ -148,6 +148,7 @@ jobs:
         context: ./src/backend
         file: ./src/backend/Dockerfile
         push: false
+        load: true
         tags: booking-backend:security-scan
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -158,6 +159,7 @@ jobs:
         context: ./src/frontend
         file: ./src/frontend/Dockerfile.dev
         push: false
+        load: true
         tags: booking-frontend:security-scan
         cache-from: type=gha
         cache-to: type=gha,mode=max
