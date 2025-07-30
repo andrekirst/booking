@@ -241,6 +241,11 @@ public class BookingAggregate : AggregateRoot
         {
             throw new InvalidOperationException("Cannot modify a completed booking");
         }
+
+        if (Status == BookingStatus.Rejected)
+        {
+            throw new InvalidOperationException("Cannot modify booking with status Rejected");
+        }
     }
 
     private List<AccommodationChange> CalculateAccommodationChanges(List<BookingItem> previousItems, List<BookingItem> newItems)
