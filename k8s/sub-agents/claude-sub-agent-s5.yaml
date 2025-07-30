@@ -1,0 +1,442 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-sub-agent-s5
+  namespace: booking-agents
+  labels:
+    app: claude-sub-agent
+    role: security-expert
+    sub-agent-id: s5
+    agent-number: agent5
+    priority: critical
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: claude-sub-agent
+      sub-agent-id: s5
+  template:
+    metadata:
+      labels:
+        app: claude-sub-agent
+        role: security-expert
+        sub-agent-id: s5
+        agent-number: agent5
+        priority: critical
+    spec:
+      containers:
+      - name: claude-integration
+        image: booking/claude-sub-agent:latest
+        args: ["--role", "security-expert", "--agent-id", "S5"]
+        ports:
+        - containerPort: 3000
+          name: health
+        - containerPort: 8080
+          name: claude-api
+        - containerPort: 9090
+          name: security-metrics
+        resources:
+          requests:
+            cpu: 1.5
+            memory: 3Gi
+          limits:
+            cpu: 6
+            memory: 12Gi
+        env:
+        - name: CLAUDE_AGENT_ROLE
+          value: "security-expert"
+        - name: SUB_AGENT_ID
+          value: "S5"
+        - name: AGENT_NUMBER
+          value: "5"
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-api-credentials
+              key: api-key
+        - name: CLAUDE_CONTEXT_PATH
+          value: "/workspace/CLAUDE-AGENT5-SECURITY.md"
+        - name: AGENT_PRIORITY
+          value: "critical"
+        - name: MAX_CONCURRENT_TASKS
+          value: "8"
+        # Security Tools Configuration (Issue #83)
+        - name: SAST_TOOLS
+          value: "SONARQUBE,CODEQL,SNYK_CODE,SECURITY_CODE_SCAN"
+        - name: DAST_TOOLS
+          value: "OWASP_ZAP,BURP_SUITE,NIKTO"
+        - name: SCA_TOOLS
+          value: "SNYK_OPEN_SOURCE,DEPENDABOT,NPM_AUDIT,DEPENDENCY_CHECK"
+        - name: CONTAINER_SCANNING
+          value: "DOCKER_SCOUT,TRIVY,CHECKOV"
+        # Security Frameworks (Issue #83)
+        - name: SECURITY_FRAMEWORKS
+          value: "OWASP_TOP10,SANS_TOP25,NIST_CSF"
+        - name: COMPLIANCE_STANDARDS
+          value: "GDPR,HIPAA,SOX,PCI_DSS"
+        - name: THREAT_MODELING
+          value: "STRIDE,DREAD,PASTA"
+        # DevSecOps Integration
+        - name: SECURITY_GATES
+          value: "enabled"
+        - name: AUTOMATED_SCANNING
+          value: "enabled"
+        - name: INCIDENT_RESPONSE
+          value: "enabled"
+        - name: VULNERABILITY_THRESHOLD
+          value: "HIGH"
+        - name: FALSE_POSITIVE_THRESHOLD
+          value: "15"
+        # Multi-Agent Coordination
+        - name: AGENT_COORDINATION
+          value: "enabled"
+        - name: SECURITY_APPROVAL_REQUIRED
+          value: "true"
+        - name: CROSS_AGENT_COMMUNICATION
+          value: "enabled"
+        volumeMounts:
+        - name: agent-workspace
+          mountPath: /workspace
+        - name: claude-config
+          mountPath: /config
+        - name: security-tools
+          mountPath: /security/tools
+        - name: vulnerability-db
+          mountPath: /security/vulndb
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        # Security Context (Defense in Depth)
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_ADMIN
+      volumes:
+      - name: agent-workspace
+        persistentVolumeClaim:
+          claimName: agent-s5-workspace
+      - name: claude-config
+        configMap:
+          name: claude-config-security-expert
+      - name: security-tools
+        configMap:
+          name: security-tools-config
+      - name: vulnerability-db
+        emptyDir:
+          sizeLimit: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-sub-agent-s5
+  namespace: booking-agents
+  labels:
+    app: claude-sub-agent
+    sub-agent-id: s5
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: claude-sub-agent
+    sub-agent-id: s5
+  ports:
+  - name: health
+    port: 3000
+    targetPort: 3000
+  - name: claude-api
+    port: 8080
+    targetPort: 8080
+  - name: security-metrics
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-s5-workspace
+  namespace: booking-agents
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: claude-sub-agent-s5-hpa
+  namespace: booking-agents
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: claude-sub-agent-s5
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: claude_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "8"
+  - type: Pods
+    pods:
+      metric:
+        name: security_scans_active
+      target:
+        type: AverageValue
+        averageValue: "3"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      selectPolicy: Min
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claude-config-security-expert
+  namespace: booking-agents
+data:
+  agent-config.yaml: |
+    # Agent 5 - Security-Expert Configuration (Issue #83)
+    agent:
+      id: 5
+      role: security-expert
+      priority: critical
+      specialization: "Application Security, DevSecOps, Vulnerability Management"
+      
+    # Core Security Capabilities (Issue #83)
+    security_capabilities:
+      - secure_code_reviews
+      - vulnerability_assessment
+      - security_architecture_review
+      - compliance_auditing
+      - incident_response
+      - security_training
+      - threat_modeling
+      - penetration_testing
+      
+    # Security Toolchain Integration
+    tools:
+      sast:
+        - name: "SonarQube"
+          purpose: "Comprehensive code quality + security analysis"
+          integration: "GitHub Actions workflows"
+        - name: "GitHub CodeQL" 
+          purpose: "Deep semantic analysis for .NET/Node.js"
+          integration: "Pre-commit hooks"
+        - name: "Snyk Code"
+          purpose: "AI-powered vulnerability detection"
+          integration: "IDE real-time analysis"
+        - name: "Security Code Scan"
+          purpose: "Free .NET security analyzer"
+          integration: "PR-based automated reviews"
+          
+      dast:
+        - name: "OWASP ZAP"
+          purpose: "Runtime vulnerability scanning"
+          automation: "Automated scans against staging environments"
+        - name: "Burp Suite Community"
+          purpose: "Web app penetration testing"  
+          automation: "API endpoint security testing"
+        - name: "Nikto"
+          purpose: "Web server vulnerability scanner"
+          automation: "Authentication/authorization testing"
+          
+      sca:
+        - name: "Snyk Open Source"
+          purpose: "Dependency vulnerability scanning"
+          process: "Continuous dependency monitoring"
+        - name: "GitHub Dependabot"
+          purpose: "Automated dependency updates"
+          process: "Automatic security patches"
+        - name: "npm audit"
+          purpose: "Node.js package vulnerability checks"
+          process: "License compliance checks"
+        - name: "OWASP Dependency-Check"
+          purpose: "Multi-language SCA"
+          
+      container_security:
+        - name: "Docker Scout"
+          purpose: "Container image vulnerability scanning"
+          coverage: "Dockerfile security analysis"
+        - name: "Trivy"
+          purpose: "Comprehensive security scanner"
+          coverage: "Kubernetes configuration auditing"
+        - name: "Checkov"
+          purpose: "Infrastructure-as-Code security scanning"
+          coverage: "Cloud infrastructure scanning"
+          
+    # Security Workflows (Issue #83)
+    workflows:
+      pr_security_gate:
+        trigger: "Pull Request created"
+        actions:
+          - "Trigger automated SAST scans"
+          - "Add vulnerabilities as PR comments"
+          - "Require security approval before merge"
+        tools: ["SonarQube", "CodeQL", "Security Code Scan"]
+        
+      dependency_monitoring:
+        trigger: "Continuous"
+        actions:
+          - "Monitor dependencies continuously"
+          - "Detect new vulnerabilities automatically"
+          - "Create security PRs with updates"
+          - "Alert on critical vulnerabilities"
+        tools: ["Snyk", "Dependabot", "npm audit"]
+        
+      infrastructure_auditing:
+        trigger: "Infrastructure changes"
+        actions:
+          - "Scan Dockerfile/docker-compose.yml changes"
+          - "Check container images for vulnerabilities"
+          - "Validate Infrastructure-as-Code"
+          - "Generate security compliance report"
+        tools: ["Docker Scout", "Trivy", "Checkov"]
+        
+      runtime_security_testing:
+        trigger: "Deployment to staging"
+        actions:
+          - "Start automated DAST scans"
+          - "Identify runtime vulnerabilities"
+          - "Send security report to development team"
+        tools: ["OWASP ZAP", "Burp Suite", "Custom Scripts"]
+        
+    # Security Metrics & KPIs (Issue #83)
+    metrics:
+      vulnerability_management:
+        mttd: "< 24 hours"  # Mean Time to Detection
+        mttr_critical: "< 7 days"   # Mean Time to Remediation - Critical
+        mttr_high: "< 30 days"      # Mean Time to Remediation - High
+        vulnerability_density: "< 1 Critical per 10k LOC"
+        false_positive_rate: "< 15%"
+        
+      code_security_quality:
+        security_code_coverage: "> 80%"
+        owasp_top10_compliance: "100%"
+        dependency_freshness: "< 30 days"
+        secret_detection: "0 credentials in code"
+        
+      process_efficiency:
+        security_review_time: "< 2 hours for standard PRs"
+        automation_rate: "> 95%"
+        incident_response_time: "< 1 hour"
+        
+    # Multi-Agent Coordination (Issue #83)
+    multi_agent_coordination:
+      agent2_frontend:
+        security_focus: "XSS prevention, CSP headers, input validation"
+        coordination: "Security reviews for UI components"
+        
+      agent3_backend:
+        security_focus: "SQL injection prevention, authentication, authorization"
+        coordination: "API security audits, secure coding practices"
+        
+      agent4_testing:
+        security_focus: "Security test cases, penetration testing scenarios"
+        coordination: "Security testing integration, vulnerability validation"
+        
+      security_gates:
+        approval_required: true
+        blocking_vulnerabilities: ["CRITICAL", "HIGH"]
+        compliance_checks: ["OWASP_TOP10", "GDPR", "HIPAA"]
+---
+apiVersion: v1
+kind: ConfigMap  
+metadata:
+  name: security-tools-config
+  namespace: booking-agents
+data:
+  sonarqube-config.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!-- SonarQube Security Rules Configuration -->
+    <configuration>
+      <rules>
+        <rule key="security:sql-injection" severity="CRITICAL"/>
+        <rule key="security:xss" severity="HIGH"/>
+        <rule key="security:csrf" severity="HIGH"/>
+        <rule key="security:weak-cryptography" severity="CRITICAL"/>
+        <rule key="security:hardcoded-secrets" severity="CRITICAL"/>
+      </rules>
+    </configuration>
+    
+  zap-baseline.conf: |
+    # OWASP ZAP Baseline Security Scan Configuration
+    # For Agent 5 automated security testing
+    
+    # Authentication Configuration
+    auth.method=form
+    auth.loginurl=http://localhost:3000/auth/login
+    auth.username=security-test-user
+    
+    # Scan Configuration  
+    spider.maxduration=10
+    activescan.policy=Default Policy
+    activescan.strength=MEDIUM
+    
+    # Reporting
+    report.format=JSON,HTML,XML
+    report.destination=/security/reports/
+    
+  dependency-check-config.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration>
+      <autoUpdate>true</autoUpdate>
+      <dataDirectory>/security/vulndb</dataDirectory>
+      <format>ALL</format>
+      <failBuildOnCVSS>7</failBuildOnCVSS>
+      <suppressionFile>/security/suppression.xml</suppressionFile>
+    </configuration>
