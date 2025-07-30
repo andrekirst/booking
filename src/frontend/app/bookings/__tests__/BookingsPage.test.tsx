@@ -172,7 +172,7 @@ describe('BookingsPage', () => {
       render(<BookingsPage />);
       
       await waitFor(() => {
-        expect(mockRouter.push).toHaveBeenCalledWith('/login');
+        expect(mockRouter.push).toHaveBeenCalledWith('/');
       });
     });
 
@@ -324,7 +324,7 @@ describe('BookingsPage', () => {
       fireEvent.click(logoutButton);
       
       expect(apiClient.logout).toHaveBeenCalled();
-      expect(mockRouter.push).toHaveBeenCalledWith('/login');
+      expect(mockRouter.push).toHaveBeenCalledWith('/');
     });
   });
 
