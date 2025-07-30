@@ -198,7 +198,7 @@ describe('BookingDetailPage', () => {
       render(<BookingDetailPage />);
 
       await waitFor(() => {
-        expect(mockRouter.push).toHaveBeenCalledWith('/');
+        expect(mockRouter.push).toHaveBeenCalledWith('/login');
       });
     });
   });
