@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: [
+    '@fullcalendar/react',
+    '@fullcalendar/core',
+    '@fullcalendar/daygrid',
+    '@fullcalendar/timegrid',
+    '@fullcalendar/interaction'
+  ],
+  
   webpack: (config, { isServer }) => {
     // Replace deprecated punycode module with userland alternative
     config.resolve.alias = {
