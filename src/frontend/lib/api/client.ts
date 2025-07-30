@@ -19,6 +19,7 @@ import {
   SleepingAccommodation,
   TestEmailRequest,
   TestEmailResponse,
+  TimeRange,
   UpdateBookingRequest,
   UpdateEmailSettingsRequest,
   VerifyEmailRequest,
@@ -35,7 +36,7 @@ export interface ApiClient {
   logout(): Promise<void>;
 
   // Booking endpoints
-  getBookings(status?: BookingStatus): Promise<Booking[]>;
+  getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]>;
   getBookingById(id: string): Promise<Booking>;
   createBooking(booking: CreateBookingRequest): Promise<Booking>;
   updateBooking(id: string, booking: UpdateBookingRequest): Promise<Booking>;
@@ -153,7 +154,7 @@ export class HttpApiClient implements ApiClient {
           // Token expired or invalid
           this.logout();
           if (typeof window !== "undefined") {
-            window.location.href = "/";
+            window.location.href = "/login";
           }
         }
 
@@ -235,13 +236,17 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  async getBookings(status?: BookingStatus): Promise<Booking[]> {
+  async getBookings(timeRange?: TimeRange, status?: BookingStatus): Promise<Booking[]> {
     const params = new URLSearchParams();
+    if (timeRange !== undefined) {
+      params.append("timeRange", timeRange.toString());
+    }
     if (status !== undefined) {
       params.append("status", status.toString());
     }
     const queryString = params.toString();
-    return this.request<Booking[]>(`/bookings${queryString ? `?${queryString}` : ""}`);
+    const url = `/bookings${queryString ? `?${queryString}` : ""}`;
+    return await this.request<Booking[]>(url);
   }
 
   async getBookingById(id: string): Promise<Booking> {
@@ -399,24 +404,11 @@ export class HttpApiClient implements ApiClient {
   }
 
   getToken(): string | null {
-    // Prüfe zuerst Memory, dann localStorage
-    if (this.token) {
-      return this.token;
-    }
-    
-    if (typeof window !== "undefined") {
-      const storedToken = localStorage.getItem("auth_token");
-      if (storedToken) {
-        this.token = storedToken; // Synchronisiere Memory
-        return storedToken;
-      }
-    }
-    
-    return null;
+    return this.token;
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!this.token;
   }
 }
 
