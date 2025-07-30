@@ -133,10 +133,10 @@ function VerifyEmailContent() {
                 <div className="space-y-4">
                     {status === 'success' ? (
                         <Link
-                            href="/"
+                            href="/login"
                             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
                         >
-                            Zur Startseite
+                            Zum Login
                         </Link>
                     ) : status === 'error' ? (
                         <div className="space-y-3">
