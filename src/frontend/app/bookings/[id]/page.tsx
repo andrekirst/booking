@@ -302,15 +302,26 @@ export default function BookingDetailPage() {
                 console.log('Cancel booking:', booking.id);
               }}
               onEdit={() => {
+                console.log('🔧 Edit button clicked!');
+                console.log('Booking status:', booking.status);
+                
                 // Scroll to booking overview for editing
                 const bookingOverview = document.querySelector('[data-testid="booking-overview"]');
+                console.log('BookingOverview element found:', bookingOverview);
+                
                 if (bookingOverview) {
                   bookingOverview.scrollIntoView({ behavior: 'smooth' });
+                  console.log('✅ Scrolled to booking overview');
                 } else {
+                  console.log('❌ BookingOverview not found, trying fallback');
                   // Fallback: scroll to the main content
                   const mainContent = document.querySelector('[data-testid="booking-details"]');
+                  console.log('Main content element found:', mainContent);
                   if (mainContent) {
                     mainContent.scrollIntoView({ behavior: 'smooth' });
+                    console.log('✅ Scrolled to main content');
+                  } else {
+                    console.log('❌ No scroll target found');
                   }
                 }
               }}

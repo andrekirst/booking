@@ -180,7 +180,7 @@ export default function BookingOverview({
   const isEditing = editState.isEditingDateRange || editState.isEditingAccommodations || editState.isEditingNotes;
 
   return (
-    <div className="mb-8">
+    <div className="mb-8" data-testid="booking-overview">
       {AlertComponent}
       
       {/* Edit Mode Components */}
