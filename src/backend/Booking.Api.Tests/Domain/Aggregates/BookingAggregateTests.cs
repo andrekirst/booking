@@ -121,7 +121,7 @@ public class BookingAggregateTests
         var newNotes = "Updated notes";
 
         // Act
-        aggregate.Update(newStartDate, newEndDate, newBookingItems, newNotes);
+        aggregate.UpdateBooking(newStartDate, newEndDate, newBookingItems, newNotes);
 
         // Assert
         aggregate.StartDate.Should().Be(newStartDate);
@@ -129,11 +129,27 @@ public class BookingAggregateTests
         aggregate.BookingItems.Should().BeEquivalentTo(newBookingItems);
         aggregate.Notes.Should().Be(newNotes);
 
-        aggregate.DomainEvents.Should().HaveCount(1);
-        var domainEvent = aggregate.DomainEvents.First();
-        domainEvent.Should().BeOfType<BookingUpdatedEvent>();
+        // The new implementation generates granular events plus the legacy event
+        aggregate.DomainEvents.Should().HaveCount(4);
         
-        var updatedEvent = (BookingUpdatedEvent)domainEvent;
+        // Verify DateRangeChanged event
+        var dateRangeEvent = aggregate.DomainEvents.OfType<BookingDateRangeChangedEvent>().Should().ContainSingle().Subject;
+        dateRangeEvent.BookingId.Should().Be(aggregate.Id);
+        dateRangeEvent.NewStartDate.Should().Be(newStartDate);
+        dateRangeEvent.NewEndDate.Should().Be(newEndDate);
+        
+        // Verify AccommodationsChanged event
+        var accommodationsEvent = aggregate.DomainEvents.OfType<BookingAccommodationsChangedEvent>().Should().ContainSingle().Subject;
+        accommodationsEvent.BookingId.Should().Be(aggregate.Id);
+        accommodationsEvent.NewTotalPersons.Should().Be(3);
+        
+        // Verify NotesChanged event
+        var notesEvent = aggregate.DomainEvents.OfType<BookingNotesChangedEvent>().Should().ContainSingle().Subject;
+        notesEvent.BookingId.Should().Be(aggregate.Id);
+        notesEvent.NewNotes.Should().Be(newNotes);
+        
+        // Verify legacy UpdatedEvent for backward compatibility
+        var updatedEvent = aggregate.DomainEvents.OfType<BookingUpdatedEvent>().Should().ContainSingle().Subject;
         updatedEvent.BookingId.Should().Be(aggregate.Id);
         updatedEvent.StartDate.Should().Be(newStartDate);
         updatedEvent.EndDate.Should().Be(newEndDate);

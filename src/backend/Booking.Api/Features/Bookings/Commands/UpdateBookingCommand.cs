@@ -28,7 +28,7 @@ public class UpdateBookingCommandHandler(
             .Select(dto => new BookingItem(dto.SleepingAccommodationId, dto.PersonCount))
             .ToList();
 
-        aggregate.Update(
+        aggregate.UpdateBooking(
             request.BookingDto.StartDate,
             request.BookingDto.EndDate,
             bookingItems,

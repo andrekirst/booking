@@ -56,25 +56,102 @@ public class BookingAggregate : AggregateRoot
         return aggregate;
     }
 
-    public void Update(DateTime startDate, DateTime endDate, List<BookingItem> bookingItems, string? notes = null)
+    public void ChangeDateRange(DateTime newStartDate, DateTime newEndDate, string? changeReason = null)
     {
-        if (Status == BookingStatus.Cancelled)
-        {
-            throw new InvalidOperationException("Cannot update a cancelled booking");
-        }
+        ValidateBookingCanBeModified();
 
         // Use centralized validation logic consistent with API validation
-        var validationResult = DateRangeValidationAttribute.ValidateDateRange(startDate, endDate, allowSameDay: false, allowToday: true);
+        var validationResult = DateRangeValidationAttribute.ValidateDateRange(newStartDate, newEndDate, allowSameDay: false, allowToday: true);
         if (!validationResult.IsValid)
         {
             throw new ArgumentException(validationResult.ErrorMessage);
         }
 
-        if (bookingItems == null || bookingItems.Count == 0)
+        // Only emit event if dates actually changed
+        if (StartDate == newStartDate && EndDate == newEndDate)
+        {
+            return;
+        }
+
+        var previousNights = (EndDate - StartDate).Days;
+        var newNights = (newEndDate - newStartDate).Days;
+
+        var dateRangeChangedEvent = new BookingDateRangeChangedEvent
+        {
+            BookingId = Id,
+            PreviousStartDate = StartDate,
+            PreviousEndDate = EndDate,
+            NewStartDate = newStartDate,
+            NewEndDate = newEndDate,
+            PreviousNights = previousNights,
+            NewNights = newNights,
+            ChangeReason = changeReason
+        };
+
+        ApplyEvent(dateRangeChangedEvent);
+    }
+
+    public void ChangeAccommodations(List<BookingItem> newBookingItems)
+    {
+        ValidateBookingCanBeModified();
+
+        if (newBookingItems == null || newBookingItems.Count == 0)
         {
             throw new ArgumentException("At least one booking item is required");
         }
 
+        var accommodationChanges = CalculateAccommodationChanges(BookingItems, newBookingItems);
+        
+        // Only emit event if accommodations actually changed
+        if (accommodationChanges.Count == 0)
+        {
+            return;
+        }
+
+        var previousTotalPersons = BookingItems.Sum(item => item.PersonCount);
+        var newTotalPersons = newBookingItems.Sum(item => item.PersonCount);
+
+        var accommodationsChangedEvent = new BookingAccommodationsChangedEvent
+        {
+            BookingId = Id,
+            AccommodationChanges = accommodationChanges,
+            PreviousTotalPersons = previousTotalPersons,
+            NewTotalPersons = newTotalPersons
+        };
+
+        ApplyEvent(accommodationsChangedEvent);
+    }
+
+    public void ChangeNotes(string? newNotes)
+    {
+        ValidateBookingCanBeModified();
+
+        // Only emit event if notes actually changed
+        if (string.Equals(Notes, newNotes, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var notesChangedEvent = new BookingNotesChangedEvent
+        {
+            BookingId = Id,
+            PreviousNotes = Notes,
+            NewNotes = newNotes
+        };
+
+        ApplyEvent(notesChangedEvent);
+    }
+
+    public void UpdateBooking(DateTime startDate, DateTime endDate, List<BookingItem> bookingItems, string? notes = null, string? changeReason = null)
+    {
+        ValidateBookingCanBeModified();
+
+        // Use individual methods for proper change tracking
+        ChangeDateRange(startDate, endDate, changeReason);
+        ChangeAccommodations(bookingItems);
+        ChangeNotes(notes);
+
+        // Only emit legacy event if needed for backward compatibility
         var updatedEvent = new BookingUpdatedEvent
         {
             BookingId = Id,
@@ -152,6 +229,63 @@ public class BookingAggregate : AggregateRoot
         ApplyEvent(rejectedEvent);
     }
 
+    // Helper Methods
+    private void ValidateBookingCanBeModified()
+    {
+        if (Status == BookingStatus.Cancelled)
+        {
+            throw new InvalidOperationException("Cannot modify a cancelled booking");
+        }
+
+        if (Status == BookingStatus.Completed)
+        {
+            throw new InvalidOperationException("Cannot modify a completed booking");
+        }
+    }
+
+    private List<AccommodationChange> CalculateAccommodationChanges(List<BookingItem> previousItems, List<BookingItem> newItems)
+    {
+        var changes = new List<AccommodationChange>();
+        var previousDict = previousItems.ToDictionary(item => item.SleepingAccommodationId, item => item.PersonCount);
+        var newDict = newItems.ToDictionary(item => item.SleepingAccommodationId, item => item.PersonCount);
+
+        // Check for removed accommodations
+        foreach (var previous in previousDict)
+        {
+            if (!newDict.ContainsKey(previous.Key))
+            {
+                changes.Add(new AccommodationChange(previous.Key, previous.Value, 0, ChangeType.Removed));
+            }
+        }
+
+        // Check for added or modified accommodations
+        foreach (var newItem in newDict)
+        {
+            if (previousDict.TryGetValue(newItem.Key, out var previousCount))
+            {
+                // Modified accommodation
+                if (previousCount != newItem.Value)
+                {
+                    changes.Add(new AccommodationChange(newItem.Key, previousCount, newItem.Value, ChangeType.Modified));
+                }
+            }
+            else
+            {
+                // Added accommodation
+                changes.Add(new AccommodationChange(newItem.Key, 0, newItem.Value, ChangeType.Added));
+            }
+        }
+
+        return changes;
+    }
+
+    private string GetAccommodationName(Guid accommodationId)
+    {
+        // This would typically be resolved through a domain service or repository
+        // For now, return a placeholder or the ID itself
+        return $"Accommodation-{accommodationId.ToString()[..8]}";
+    }
+
     protected override void Apply(DomainEvent domainEvent)
     {
         switch (domainEvent)
@@ -171,6 +305,59 @@ public class BookingAggregate : AggregateRoot
                 EndDate = e.EndDate;
                 Notes = e.Notes;
                 BookingItems = e.BookingItems.ToList();
+                break;
+
+            case BookingDateRangeChangedEvent e:
+                StartDate = e.NewStartDate;
+                EndDate = e.NewEndDate;
+                break;
+
+            case BookingAccommodationsChangedEvent e:
+                // Apply accommodation changes - the event contains the full picture
+                // We need to reconstruct the final state based on the changes
+                var updatedItems = new List<BookingItem>();
+                var currentDict = BookingItems.ToDictionary(item => item.SleepingAccommodationId, item => item.PersonCount);
+
+                // Start with all current items
+                foreach (var item in BookingItems)
+                {
+                    updatedItems.Add(new BookingItem(item.SleepingAccommodationId, item.PersonCount));
+                }
+
+                // Apply each change
+                foreach (var change in e.AccommodationChanges)
+                {
+                    var existingItem = updatedItems.FirstOrDefault(item => item.SleepingAccommodationId == change.SleepingAccommodationId);
+                    
+                    switch (change.ChangeType)
+                    {
+                        case ChangeType.Added:
+                            if (existingItem == null)
+                            {
+                                updatedItems.Add(new BookingItem(change.SleepingAccommodationId, change.NewPersonCount));
+                            }
+                            break;
+                        case ChangeType.Modified:
+                            if (existingItem != null)
+                            {
+                                updatedItems.Remove(existingItem);
+                                updatedItems.Add(new BookingItem(change.SleepingAccommodationId, change.NewPersonCount));
+                            }
+                            break;
+                        case ChangeType.Removed:
+                            if (existingItem != null)
+                            {
+                                updatedItems.Remove(existingItem);
+                            }
+                            break;
+                    }
+                }
+
+                BookingItems = updatedItems;
+                break;
+
+            case BookingNotesChangedEvent e:
+                Notes = e.NewNotes;
                 break;
 
             case BookingConfirmedEvent:
