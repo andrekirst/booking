@@ -29,6 +29,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=booking_dev;Username=booking_user;Password=booking_password"
       JwtSettings__Secret: "super-secret-key-for-development-only-min-256-bits-long-jwt-token-generation"
+      # Seeding Configuration - Override default values via environment variables
+      SeedingSettings__EnableSeeding: "true"
+      SeedingSettings__EnableBasicSeeding: "true"
+      SeedingSettings__EnableComprehensiveSeeding: "true"
+      SeedingSettings__ForceComprehensiveSeeding: "false"
+      SeedingSettings__EnableSeedingLogs: "true"
     ports:
       - "5000:80"
     depends_on:

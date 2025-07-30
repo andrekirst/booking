@@ -1,0 +1,62 @@
+# Production Docker Compose Override
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+version: '3.8'
+
+services:
+  api:
+    environment:
+      # Production environment settings
+      ASPNETCORE_ENVIRONMENT: Production
+      
+      # Production seeding configuration - more restrictive
+      SeedingSettings__EnableSeeding: "true"
+      SeedingSettings__EnableBasicSeeding: "true"
+      SeedingSettings__EnableComprehensiveSeeding: "false"  # No test data in production
+      SeedingSettings__ForceComprehensiveSeeding: "false"   # Safety first
+      SeedingSettings__EnableSeedingLogs: "false"           # Reduce log noise in production
+      
+      # Override development database connection
+      # ConnectionStrings__DefaultConnection: "Host=prod-postgres;Database=booking_prod;Username=booking_user;Password=secure_password"
+      
+      # Production JWT settings (use secure secrets management in real production)
+      # JwtSettings__Secret: "production-jwt-secret-from-secure-vault"
+      
+    # Production-specific configurations
+    restart: unless-stopped
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  postgres:
+    environment:
+      # Production database settings
+      POSTGRES_DB: booking_prod
+      # POSTGRES_PASSWORD: "secure_production_password"  # Use secrets management
+    
+    # Production volume mounting
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  postgres_prod_data:
+    # Use external volume in production
+    external: true
+    name: booking_postgres_prod_data

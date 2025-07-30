@@ -473,3 +473,12 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Keep example environment files
+!.env.example

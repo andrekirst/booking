@@ -48,6 +48,12 @@ services:
       JwtSettings__Issuer: "BookingApi-Agent2"
       JwtSettings__Audience: "BookingApp-Agent2"
       JwtSettings__ExpirationMinutes: "480"
+      # Seeding Configuration - Full seeding enabled for agent development
+      SeedingSettings__EnableSeeding: "true"
+      SeedingSettings__EnableBasicSeeding: "true"
+      SeedingSettings__EnableComprehensiveSeeding: "true"
+      SeedingSettings__ForceComprehensiveSeeding: "false"
+      SeedingSettings__EnableSeedingLogs: "true"
     ports:
       - "60202:80"  # Agent 2 Backend Port
     depends_on:
