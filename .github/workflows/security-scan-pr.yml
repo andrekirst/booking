@@ -121,6 +121,38 @@ jobs:
       with:
         args: --severity-threshold=high --sarif-file-output=snyk.sarif --file=src/backend/BookingSystem.sln
 
+    - name: Process Snyk SARIF for unique categories
+      if: always() && hashFiles('snyk.sarif') != ''
+      run: |
+        # Install jq for JSON processing
+        sudo apt-get update && sudo apt-get install -y jq
+        
+        # Check if snyk.sarif exists and is valid JSON
+        if [ -f "snyk.sarif" ] && jq empty snyk.sarif 2>/dev/null; then
+          echo "Processing snyk.sarif to ensure unique run categories..."
+          
+          # Create processed SARIF with unique run IDs
+          jq '
+            if .runs then
+              .runs |= to_entries | 
+              .runs |= map(.value + {"automationDetails": {"id": ("snyk-run-" + (.key | tostring))}}) |
+              .runs = [.runs[]]
+            else
+              .
+            end
+          ' snyk.sarif > snyk-processed.sarif
+          
+          # Verify processed file is valid
+          if jq empty snyk-processed.sarif 2>/dev/null; then
+            mv snyk-processed.sarif snyk.sarif
+            echo "✅ Successfully processed Snyk SARIF file"
+          else
+            echo "❌ Failed to process SARIF file, using original"
+          fi
+        else
+          echo "❌ snyk.sarif not found or invalid JSON"
+        fi
+
     - name: Upload Snyk results to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3
       if: always() && hashFiles('snyk.sarif') != ''
