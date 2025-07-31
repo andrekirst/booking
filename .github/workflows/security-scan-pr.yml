@@ -119,11 +119,11 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high --file=src/backend/BookingSystem.sln
+        args: --severity-threshold=high --sarif-file-output=snyk.sarif --file=src/backend/BookingSystem.sln
 
     - name: Upload Snyk results to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && hashFiles('snyk.sarif') != ''
       with:
         sarif_file: snyk.sarif
 
