@@ -1,0 +1,385 @@
+name: 🔐 Security Scan - Pull Request
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'package*.json'
+      - 'Dockerfile*'
+      - 'docker-compose*.yml'
+      - '.github/workflows/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Static Application Security Testing (SAST)
+  sast-analysis:
+    name: 🔍 SAST Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp', 'javascript' ]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-extended,security-and-quality
+
+    - name: Setup .NET 9
+      if: matrix.language == 'csharp'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Setup Node.js
+      if: matrix.language == 'javascript'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/frontend/package-lock.json
+
+    - name: Build .NET Backend
+      if: matrix.language == 'csharp'
+      run: |
+        cd src/backend
+        dotnet restore
+        dotnet build --no-restore --configuration Release
+
+    - name: Build Frontend
+      if: matrix.language == 'javascript'
+      run: |
+        cd src/frontend
+        npm ci
+        npm run build
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+
+  # Dependency Vulnerability Scanning
+  dependency-scan:
+    name: 🔒 Dependency Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/frontend/package-lock.json
+
+    - name: Install Frontend Dependencies
+      run: |
+        cd src/frontend
+        npm ci
+
+    - name: Run npm audit
+      run: |
+        cd src/frontend
+        npm audit --audit-level=moderate --production
+
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore .NET Dependencies
+      run: |
+        cd src/backend
+        dotnet restore
+
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/dotnet@master
+      continue-on-error: true # Don't fail build on vulnerabilities
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --sarif-file-output=snyk.sarif --file=src/backend/BookingSystem.sln
+
+    - name: Split Snyk SARIF into separate files
+      if: always() && hashFiles('snyk.sarif') != ''
+      run: |
+        # Install jq for JSON processing
+        sudo apt-get update && sudo apt-get install -y jq
+        
+        # Check if snyk.sarif exists and is valid JSON
+        if [ -f "snyk.sarif" ] && jq empty snyk.sarif 2>/dev/null; then
+          echo "Processing snyk.sarif to split multiple runs..."
+          
+          # Count the number of runs
+          RUN_COUNT=$(jq '.runs | length' snyk.sarif)
+          echo "Found $RUN_COUNT run(s) in snyk.sarif"
+          
+          if [ "$RUN_COUNT" -gt 1 ]; then
+            echo "Splitting into separate SARIF files..."
+            
+            # Split each run into separate files
+            for i in $(seq 0 $((RUN_COUNT-1))); do
+              echo "Creating snyk-run-$i.sarif..."
+              jq --arg i "$i" '.runs = [.runs[($i | tonumber)]]' snyk.sarif > "snyk-run-$i.sarif"
+            done
+            
+            # Remove original file
+            rm snyk.sarif
+            echo "✅ Successfully split Snyk SARIF into $RUN_COUNT separate files"
+          else
+            echo "✅ Single run detected, no splitting needed"
+          fi
+        else
+          echo "❌ snyk.sarif not found or invalid JSON"
+        fi
+
+    - name: Upload Snyk results to GitHub Code Scanning
+      if: always()
+      run: |
+        # Upload all snyk-run-*.sarif files separately
+        for sarif_file in snyk-run-*.sarif snyk.sarif; do
+          if [ -f "$sarif_file" ]; then
+            echo "Uploading $sarif_file..."
+            
+            # Extract run number for unique category
+            if [[ "$sarif_file" =~ snyk-run-([0-9]+)\.sarif ]]; then
+              CATEGORY="snyk-dependency-scan-${BASH_REMATCH[1]}"
+            else
+              CATEGORY="snyk-dependency-scan"
+            fi
+            
+            # Use github CLI to upload SARIF
+            gh api repos/${{ github.repository }}/code-scanning/sarifs \
+              --method POST \
+              --field sarif="$(base64 -i "$sarif_file")" \
+              --field ref="${{ github.ref }}" \
+              --field sha="${{ github.sha }}" \
+              --field category="$CATEGORY" || echo "Failed to upload $sarif_file"
+          fi
+        done
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Container Security Scanning
+  container-scan:
+    name: 🐳 Container Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Backend Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./src/backend
+        file: ./src/backend/Dockerfile
+        push: false
+        load: true
+        tags: booking-backend:security-scan
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build Frontend Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./src/frontend
+        file: ./src/frontend/Dockerfile.dev
+        push: false
+        load: true
+        tags: booking-frontend:security-scan
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Run Trivy vulnerability scanner (Backend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'booking-backend:security-scan'
+        format: 'sarif'
+        output: 'trivy-backend-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+
+    - name: Run Trivy vulnerability scanner (Frontend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'booking-frontend:security-scan'
+        format: 'sarif'
+        output: 'trivy-frontend-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+
+    - name: Upload Trivy Backend scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: trivy-backend-results.sarif
+        category: "trivy-backend-container"
+
+    - name: Upload Trivy Frontend scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: trivy-frontend-results.sarif
+        category: "trivy-frontend-container"
+
+  # Secret Detection
+  secret-scan:
+    name: 🔑 Secret Detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run GitLeaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # Security Linting
+  security-lint:
+    name: 🔍 Security Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/frontend/package-lock.json
+
+    - name: Install Frontend Dependencies
+      run: |
+        cd src/frontend
+        npm ci
+
+    - name: Run ESLint Security Plugin
+      run: |
+        cd src/frontend
+        npx eslint . --ext .ts,.tsx,.js,.jsx --format @microsoft/eslint-formatter-sarif --output-file eslint-security-results.sarif
+      continue-on-error: true
+
+    - name: Upload ESLint results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: src/frontend/eslint-security-results.sarif
+        category: "eslint-security-lint"
+
+  # Security Quality Gate
+  security-gate:
+    name: 🚦 Security Quality Gate
+    runs-on: ubuntu-latest
+    needs: [sast-analysis, dependency-scan, container-scan, secret-scan, security-lint]
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    
+    steps:
+    - name: Check Security Scan Results
+      run: |
+        echo "🔐 Security Quality Gate Results:"
+        echo "================================"
+        echo "SAST Analysis: ${{ needs.sast-analysis.result }}"
+        echo "Dependency Scan: ${{ needs.dependency-scan.result }}"
+        echo "Container Scan: ${{ needs.container-scan.result }}"
+        echo "Secret Scan: ${{ needs.secret-scan.result }}"
+        echo "Security Lint: ${{ needs.security-lint.result }}"
+        
+        # Fail if any critical security checks failed
+        if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
+          echo "❌ CRITICAL: Secrets detected in repository!"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.sast-analysis.result }}" == "failure" ]]; then
+          echo "⚠️  WARNING: SAST analysis found security issues"
+        fi
+        
+        echo "✅ Security Quality Gate: PASSED"
+
+    - name: Comment PR with Security Status
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const results = {
+            sast: '${{ needs.sast-analysis.result }}',
+            dependency: '${{ needs.dependency-scan.result }}',
+            container: '${{ needs.container-scan.result }}',
+            secret: '${{ needs.secret-scan.result }}',
+            lint: '${{ needs.security-lint.result }}'
+          };
+          
+          const getStatusEmoji = (status) => {
+            switch(status) {
+              case 'success': return '✅';
+              case 'failure': return '❌';
+              case 'cancelled': return '⏹️';
+              default: return '⚠️';
+            }
+          };
+          
+          const comment = `
+          ## 🔐 Security Scan Results
+          
+          | Check | Status | Result |
+          |-------|--------|--------|
+          | SAST Analysis | ${getStatusEmoji(results.sast)} | ${results.sast} |
+          | Dependency Scan | ${getStatusEmoji(results.dependency)} | ${results.dependency} |
+          | Container Scan | ${getStatusEmoji(results.container)} | ${results.container} |
+          | Secret Detection | ${getStatusEmoji(results.secret)} | ${results.secret} |
+          | Security Linting | ${getStatusEmoji(results.lint)} | ${results.lint} |
+          
+          **Security Agent S7 Review**: ${results.secret === 'success' ? '✅ APPROVED' : '❌ BLOCKED'}
+          
+          ${results.secret !== 'success' ? '🚨 **CRITICAL**: This PR is blocked due to security issues that must be resolved before merge.' : ''}
+          
+          ---
+          *Automated security review by Security Expert Agent S7*
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

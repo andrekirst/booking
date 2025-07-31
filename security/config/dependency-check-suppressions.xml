@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+    OWASP Dependency Check Suppressions für Security Expert Agent S7
+    
+    Diese Datei enthält Unterdrückungen für bekannte False Positives
+    und akzeptierte Risiken in Dependencies.
+    
+    WICHTIG: Jede Suppression muss dokumentiert und regelmäßig überprüft werden!
+    -->
+    
+    <!-- Beispiel: Development-only Dependencies -->
+    <!--
+    <suppress>
+        <notes>Jest ist nur ein Development-Dependency und wird nicht in Production verwendet</notes>
+        <packageUrl regex="true">^pkg:npm/jest@.*$</packageUrl>
+        <cve>CVE-2021-44906</cve>
+    </suppress>
+    -->
+    
+    <!-- Beispiel: Bekannte False Positives -->
+    <!--
+    <suppress>
+        <notes>Falsch-positive Warnung für spezifische .NET Version</notes>
+        <packageUrl regex="true">^pkg:nuget/Microsoft\.AspNetCore\.App@.*$</packageUrl>
+        <vulnerabilityName>CVE-2023-XXXXX</vulnerabilityName>
+    </suppress>
+    -->
+    
+    <!-- 
+    Template für neue Suppressions:
+    
+    <suppress>
+        <notes>[PFLICHTFELD] Ausführliche Begründung warum diese Vulnerability unterdrückt wird</notes>
+        <packageUrl regex="true">^pkg:[ecosystem]/[package]@[version]$</packageUrl>
+        <cve>CVE-YYYY-NNNNN</cve>
+        <until>YYYY-MM-DD</until> [OPTIONAL] Ablaufdatum für temporäre Suppressions
+    </suppress>
+    -->
+    
+</suppressions>

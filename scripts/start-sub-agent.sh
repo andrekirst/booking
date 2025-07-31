@@ -18,6 +18,7 @@ if [ $# -lt 3 ]; then
     echo "  S4 - Test Expert Agent"
     echo "  S5 - Architecture Expert Agent"
     echo "  S6 - DevOps Expert Agent"
+    echo "  S7 - Security Expert Agent"
     echo ""
     echo "Beispiele:"
     echo "  $0 S1 feat/70-architecture-review senior-developer 70"
@@ -33,14 +34,14 @@ AGENT_ROLE=$3
 ISSUE_NUMBER=${4:-""}
 
 # Validierung Sub-Agent-ID
-if [[ ! $SUB_AGENT_ID =~ ^S[1-6]$ ]]; then
-    echo "❌ Fehler: SUB_AGENT_ID muss S1-S6 sein"
-    echo "   Verfügbare Sub-Agents: S1, S2, S3, S4, S5, S6"
+if [[ ! $SUB_AGENT_ID =~ ^S[1-7]$ ]]; then
+    echo "❌ Fehler: SUB_AGENT_ID muss S1-S7 sein"
+    echo "   Verfügbare Sub-Agents: S1, S2, S3, S4, S5, S6, S7"
     exit 1
 fi
 
 # Agent-Rolle Validierung
-VALID_ROLES=("senior-developer" "ui-developer" "ux-expert" "test-expert" "architecture-expert" "devops-expert")
+VALID_ROLES=("senior-developer" "ui-developer" "ux-expert" "test-expert" "architecture-expert" "devops-expert" "security-expert")
 if [[ ! " ${VALID_ROLES[@]} " =~ " ${AGENT_ROLE} " ]]; then
     echo "❌ Fehler: Ungültige AGENT_ROLE '$AGENT_ROLE'"
     echo "   Gültige Rollen: ${VALID_ROLES[*]}"
@@ -48,12 +49,14 @@ if [[ ! " ${VALID_ROLES[@]} " =~ " ${AGENT_ROLE} " ]]; then
 fi
 
 # Port-Berechnung für Sub-Agents (60500+)
-AGENT_NUMBER=${SUB_AGENT_ID:1}  # Extract number from S1-S6
+AGENT_NUMBER=${SUB_AGENT_ID:1}  # Extract number from S1-S7
 BASE_PORT=$((60500 + ((AGENT_NUMBER - 1) * 100)))
 FRONTEND_PORT=$((BASE_PORT + 1))
 BACKEND_PORT=$((BASE_PORT + 2))
 DB_PORT=$((BASE_PORT + 3))
 CLAUDE_PORT=$((BASE_PORT + 4))
+SONARQUBE_PORT=$((BASE_PORT + 5))
+ZAP_PORT=$((BASE_PORT + 6))
 
 WORKTREE_DIR="../booking-sub-agent$SUB_AGENT_ID"
 COMPOSE_FILE="docker-compose.sub-agent$SUB_AGENT_ID.yml"
@@ -66,6 +69,7 @@ AGENT_INFO[S3]="UX Expert - User Experience, Usability, Accessibility"
 AGENT_INFO[S4]="Test Expert - Test-Strategien, Unit/Integration/E2E Tests"
 AGENT_INFO[S5]="Architecture Expert - System-Design, Performance, Skalierbarkeit"
 AGENT_INFO[S6]="DevOps Expert - CI/CD, Deployment, Infrastructure"
+AGENT_INFO[S7]="Security Expert - SAST/DAST, Vulnerability Management, DevSecOps"
 
 echo "🤖 Claude Code Sub-Agent Setup für $SUB_AGENT_ID"
 echo "=================================================="
@@ -73,7 +77,11 @@ echo "Agent: ${AGENT_INFO[$SUB_AGENT_ID]}"
 echo "Rolle: $AGENT_ROLE"
 echo "Branch: $BRANCH_NAME"
 echo "Worktree: $WORKTREE_DIR"
-echo "Ports: Frontend=$FRONTEND_PORT, Backend=$BACKEND_PORT, DB=$DB_PORT, Claude=$CLAUDE_PORT"
+if [[ "$SUB_AGENT_ID" == "S7" ]]; then
+    echo "Ports: Frontend=$FRONTEND_PORT, Backend=$BACKEND_PORT, DB=$DB_PORT, Claude=$CLAUDE_PORT, SonarQube=$SONARQUBE_PORT, ZAP=$ZAP_PORT"
+else
+    echo "Ports: Frontend=$FRONTEND_PORT, Backend=$BACKEND_PORT, DB=$DB_PORT, Claude=$CLAUDE_PORT"
+fi
 echo ""
 
 # Prüfe ob Docker läuft
@@ -92,6 +100,15 @@ if [ ! -f "$COMPOSE_FILE" ]; then
         exit 1
     fi
     
+    # Wähle Template basierend auf Agent-Typ
+    if [[ "$SUB_AGENT_ID" == "S7" ]] && [[ -f "docker-compose.security-agent-template.yml" ]]; then
+        TEMPLATE_FILE="docker-compose.security-agent-template.yml"
+        echo "   Verwende Security-Agent Template für $SUB_AGENT_ID"
+    else
+        TEMPLATE_FILE="docker-compose.sub-agent-template.yml"
+        echo "   Verwende Standard-Template für $SUB_AGENT_ID"
+    fi
+    
     # Template-Substitution
     sed -e "s/{SUB_AGENT_ID}/$SUB_AGENT_ID/g" \
         -e "s/{AGENT_ROLE}/$AGENT_ROLE/g" \
@@ -100,7 +117,9 @@ if [ ! -f "$COMPOSE_FILE" ]; then
         -e "s/{BACKEND_PORT}/$BACKEND_PORT/g" \
         -e "s/{DB_PORT}/$DB_PORT/g" \
         -e "s/{CLAUDE_PORT}/$CLAUDE_PORT/g" \
-        docker-compose.sub-agent-template.yml > "$COMPOSE_FILE"
+        -e "s/{SONARQUBE_PORT}/$SONARQUBE_PORT/g" \
+        -e "s/{ZAP_PORT}/$ZAP_PORT/g" \
+        "$TEMPLATE_FILE" > "$COMPOSE_FILE"
     
     echo "✅ Docker Compose File generiert: $COMPOSE_FILE"
 fi
@@ -111,7 +130,12 @@ docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
 
 # Prüfe Port-Verfügbarkeit
 echo "🔍 Prüfe Port-Verfügbarkeit..."
-for port in $FRONTEND_PORT $BACKEND_PORT $DB_PORT $CLAUDE_PORT; do
+PORTS_TO_CHECK="$FRONTEND_PORT $BACKEND_PORT $DB_PORT $CLAUDE_PORT"
+if [[ "$SUB_AGENT_ID" == "S7" ]]; then
+    PORTS_TO_CHECK="$PORTS_TO_CHECK $SONARQUBE_PORT $ZAP_PORT"
+fi
+
+for port in $PORTS_TO_CHECK; do
     if netstat -tuln 2>/dev/null | grep -q ":$port "; then
         echo "⚠️  Warning: Port $port ist bereits belegt"
         echo "   Dies könnte zu Konflikten führen"
@@ -276,6 +300,9 @@ get_agent_specializations() {
             ;;
         "devops-expert")
             echo '["ci-cd", "docker", "infrastructure", "monitoring"]'
+            ;;
+        "security-expert")
+            echo '["sast", "dast", "vulnerability-management", "devsecops", "compliance"]'
             ;;
         *)
             echo '["general-development"]'

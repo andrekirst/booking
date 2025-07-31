@@ -1,0 +1,233 @@
+{
+  "sub_agent": {
+    "id": "S7",
+    "role": "security-expert",
+    "specializations": ["sast", "dast", "vulnerability-management", "devsecops", "compliance"],
+    "version": "1.0.0",
+    "created": "2025-07-30"
+  },
+  "security_tools": {
+    "sast": {
+      "sonarqube": {
+        "enabled": true,
+        "url": "http://localhost:60705",
+        "project_key": "booking-system-s7",
+        "quality_gate": "Security Expert S7 Quality Gate",
+        "scan_on_pr": true,
+        "fail_on_quality_gate": true
+      },
+      "codeql": {
+        "enabled": true,
+        "languages": ["csharp", "javascript"],
+        "queries": ["security-extended", "security-and-quality"],
+        "scan_on_pr": true
+      },
+      "semgrep": {
+        "enabled": true,
+        "config": "auto",
+        "severity_threshold": "WARNING",
+        "scan_on_pr": true,
+        "custom_rules": "/security/config/semgrep-rules.yml"
+      }
+    },
+    "dast": {
+      "owasp_zap": {
+        "enabled": true,
+        "url": "http://localhost:60706",
+        "scan_types": ["baseline", "full"],
+        "target_urls": [
+          "http://localhost:60701",
+          "http://localhost:60702"
+        ],
+        "scan_on_deploy": true
+      },
+      "burp_suite": {
+        "enabled": false,
+        "reason": "Manual tool, not automated"
+      }
+    },
+    "sca": {
+      "snyk": {
+        "enabled": true,
+        "scan_on_pr": true,
+        "severity_threshold": "high",
+        "auto_fix": true,
+        "monitor": true
+      },
+      "npm_audit": {
+        "enabled": true,
+        "audit_level": "moderate",
+        "production_only": true,
+        "scan_on_pr": true
+      },
+      "dependabot": {
+        "enabled": true,
+        "auto_merge_patch": true,
+        "auto_merge_minor": false,
+        "schedule": "weekly"
+      }
+    },
+    "secret_detection": {
+      "gitleaks": {
+        "enabled": true,
+        "config": "/security/config/gitleaks.toml",
+        "scan_on_pr": true,
+        "fail_on_secrets": true
+      },
+      "truffleHog": {
+        "enabled": false,
+        "reason": "GitLeaks is sufficient"
+      }
+    },
+    "container_security": {
+      "trivy": {
+        "enabled": true,
+        "severity_threshold": "HIGH",
+        "scan_on_build": true,
+        "fail_on_critical": true
+      },
+      "docker_scout": {
+        "enabled": true,
+        "scan_on_push": true,
+        "policy_file": "/security/config/docker-scout-policy.yml"
+      }
+    }
+  },
+  "security_policies": {
+    "vulnerability_management": {
+      "sla": {
+        "critical": "24h",
+        "high": "7d",
+        "medium": "30d",
+        "low": "90d"
+      },
+      "auto_create_issues": true,
+      "assign_to": "security-expert-s7",
+      "notification_channels": ["slack", "email"]
+    },
+    "code_quality": {
+      "security_rating": "A",
+      "min_coverage": 80,
+      "max_duplications": 3,
+      "block_on_security_issues": true
+    },
+    "dependency_policy": {
+      "max_age_days": 365,
+      "allow_dev_only_vulnerabilities": true,
+      "auto_update_patches": true,
+      "require_license_approval": true,
+      "allowed_licenses": [
+        "MIT", "BSD-2-Clause", "BSD-3-Clause", 
+        "Apache-2.0", "ISC", "0BSD"
+      ]
+    },
+    "secret_policy": {
+      "zero_tolerance": true,
+      "scan_history": true,
+      "block_commits_with_secrets": true,
+      "educate_developers": true
+    }
+  },
+  "compliance_frameworks": {
+    "owasp_top_10": {
+      "enabled": true,
+      "version": "2021",
+      "enforce_all": true,
+      "generate_reports": true
+    },
+    "sans_top_25": {
+      "enabled": true,
+      "version": "2023",
+      "enforce_critical": true,
+      "monitor_all": true
+    },
+    "cwe": {
+      "enabled": true,
+      "blocked_categories": [
+        "CWE-79", "CWE-89", "CWE-22", "CWE-352", "CWE-434",
+        "CWE-611", "CWE-798", "CWE-918", "CWE-94", "CWE-502"
+      ]
+    },
+    "gdpr": {
+      "enabled": true,
+      "privacy_by_design": true,
+      "data_minimization": true,
+      "purpose_limitation": true
+    }
+  },
+  "automation": {
+    "pr_security_checks": {
+      "enabled": true,
+      "required_checks": [
+        "sast", "sca", "secret_detection", "container_scan"
+      ],
+      "block_on_failure": true,
+      "comment_results": true
+    },
+    "daily_security_scan": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "comprehensive": true,
+      "create_dashboard": true
+    },
+    "security_monitoring": {
+      "enabled": true,
+      "metrics_collection": true,
+      "trend_analysis": true,
+      "alerting": true
+    }
+  },
+  "notifications": {
+    "channels": {
+      "slack": {
+        "webhook_url": "${SLACK_SECURITY_WEBHOOK}",
+        "channel": "#security-alerts",
+        "severity_threshold": "medium"
+      },
+      "email": {
+        "recipients": ["security-team@company.com"],
+        "severity_threshold": "high"
+      },
+      "github_issues": {
+        "enabled": true,
+        "labels": ["security", "security-agent-s7"],
+        "assign_to": "security-expert"
+      }
+    },
+    "escalation": {
+      "critical_timeout": "1h",
+      "high_timeout": "4h",
+      "escalation_recipients": ["security-lead@company.com"]
+    }
+  },
+  "development": {
+    "frontend_url": "http://localhost:60701",
+    "backend_url": "http://localhost:60702",
+    "database_url": "localhost:60703",
+    "security_dashboard_url": "http://localhost:60704",
+    "sonarqube_url": "http://localhost:60705",
+    "zap_url": "http://localhost:60706"
+  },
+  "reporting": {
+    "formats": ["json", "html", "sarif", "junit"],
+    "retention_days": 90,
+    "archive_location": "/security/reports/archive",
+    "dashboard_update_frequency": "hourly"
+  },
+  "integration": {
+    "ci_cd": {
+      "github_actions": true,
+      "gitlab_ci": false,
+      "jenkins": false
+    },
+    "issue_tracking": {
+      "github_issues": true,
+      "jira": false
+    },
+    "communication": {
+      "slack": true,
+      "teams": false,
+      "discord": false
+    }
+  }
+}

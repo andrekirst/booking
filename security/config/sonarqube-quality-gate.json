@@ -1,0 +1,126 @@
+{
+  "name": "Security Expert S7 Quality Gate",
+  "description": "Security-focused quality gate für Booking System mit strikten Security-Standards",
+  "conditions": [
+    {
+      "metric": "security_rating",
+      "operator": "GREATER_THAN",
+      "threshold": "1",
+      "description": "Security Rating muss A sein (keine Security Hotspots oder Vulnerabilities)"
+    },
+    {
+      "metric": "reliability_rating", 
+      "operator": "GREATER_THAN",
+      "threshold": "1",
+      "description": "Reliability Rating muss A sein (keine Bugs)"
+    },
+    {
+      "metric": "maintainability_rating",
+      "operator": "GREATER_THAN", 
+      "threshold": "2",
+      "description": "Maintainability Rating darf maximal B sein"
+    },
+    {
+      "metric": "coverage",
+      "operator": "LESS_THAN",
+      "threshold": "80",
+      "description": "Code Coverage muss mindestens 80% betragen"
+    },
+    {
+      "metric": "duplicated_lines_density",
+      "operator": "GREATER_THAN",
+      "threshold": "3",
+      "description": "Duplicated Lines Density darf maximal 3% betragen"
+    },
+    {
+      "metric": "vulnerabilities",
+      "operator": "GREATER_THAN",
+      "threshold": "0",
+      "description": "Keine Vulnerabilities erlaubt"
+    },
+    {
+      "metric": "security_hotspots",
+      "operator": "GREATER_THAN", 
+      "threshold": "0",
+      "description": "Keine Security Hotspots erlaubt"
+    },
+    {
+      "metric": "blocker_violations",
+      "operator": "GREATER_THAN",
+      "threshold": "0", 
+      "description": "Keine Blocker-Violations erlaubt"
+    },
+    {
+      "metric": "critical_violations",
+      "operator": "GREATER_THAN",
+      "threshold": "0",
+      "description": "Keine Critical-Violations erlaubt"
+    },
+    {
+      "metric": "major_violations",
+      "operator": "GREATER_THAN",
+      "threshold": "5",
+      "description": "Maximal 5 Major-Violations erlaubt"
+    }
+  ],
+  "security_standards": {
+    "owasp_top_10": {
+      "enabled": true,
+      "enforce_all": true,
+      "description": "Vollständige OWASP Top 10 Compliance erforderlich"
+    },
+    "sans_top_25": {
+      "enabled": true,
+      "enforce_critical": true,
+      "description": "SANS Top 25 CWE Critical Issues müssen behoben werden"
+    },
+    "cwe": {
+      "enabled": true,
+      "blocked_categories": [
+        "CWE-79",  "CWE-89",  "CWE-22",  "CWE-352", "CWE-434",
+        "CWE-611", "CWE-798", "CWE-918", "CWE-94",  "CWE-502"
+      ],
+      "description": "Kritische CWE-Kategorien sind blockiert"
+    }
+  },
+  "custom_rules": {
+    "password_security": {
+      "min_length": 12,
+      "require_complexity": true,
+      "no_hardcoded_passwords": true
+    },
+    "jwt_security": {
+      "strong_secret": true,
+      "short_expiration": true,
+      "secure_algorithms_only": true
+    },
+    "input_validation": {
+      "validate_all_inputs": true,
+      "sanitize_outputs": true,
+      "prevent_injection": true
+    },
+    "error_handling": {
+      "no_sensitive_info_in_errors": true,
+      "proper_exception_handling": true,
+      "secure_logging": true
+    }
+  },
+  "notifications": {
+    "quality_gate_failed": {
+      "enabled": true,
+      "recipients": ["security-team", "development-team"],
+      "severity": "critical"
+    },
+    "security_issues_found": {
+      "enabled": true,
+      "recipients": ["security-expert-s7"],
+      "severity": "high"
+    }
+  },
+  "automation": {
+    "block_deployment_on_failure": true,
+    "create_security_issues": true,
+    "assign_to_security_expert": true,
+    "generate_security_report": true
+  }
+}
