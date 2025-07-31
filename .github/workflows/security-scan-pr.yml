@@ -126,6 +126,7 @@ jobs:
       if: always() && hashFiles('snyk.sarif') != ''
       with:
         sarif_file: snyk.sarif
+        category: "snyk-dependency-scan"
 
   # Container Security Scanning
   container-scan:
@@ -185,12 +186,14 @@ jobs:
       if: always()
       with:
         sarif_file: trivy-backend-results.sarif
+        category: "trivy-backend-container"
 
     - name: Upload Trivy Frontend scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: trivy-frontend-results.sarif
+        category: "trivy-frontend-container"
 
   # Secret Detection
   secret-scan:
@@ -244,6 +247,7 @@ jobs:
       if: always()
       with:
         sarif_file: src/frontend/eslint-security-results.sarif
+        category: "eslint-security-lint"
 
   # Security Quality Gate
   security-gate:
