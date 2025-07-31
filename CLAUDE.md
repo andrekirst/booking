@@ -903,7 +903,57 @@ docker compose -f docker-compose.agent2.yml down --volumes
 
 **REGEL**: Ab sofort wird AUSSCHLIESSLICH `docker compose` (v2) verwendet!
 
-## 16. Kommunikation
+## 16. Docker Multi-Agent-Umgebung - OBLIGATORISCHE ERINNERUNG
+
+### 16.1 KRITISCHE REGEL für alle Issue-Bearbeitungen
+**⚠️ IMMER VOR JEDER ISSUE-BEARBEITUNG:**
+
+```bash
+# SCHRITT 1: Agent-Status prüfen
+./scripts/status-agents.sh
+
+# SCHRITT 2: Entsprechenden Agenten starten
+./scripts/start-agent.sh <AGENT_NUMBER> <BRANCH_NAME>
+
+# SCHRITT 3: URLs bereitstellen
+echo "Test-Umgebung bereit:"
+echo "- Frontend: http://localhost:60{AGENT}01"
+echo "- Backend:  http://localhost:60{AGENT}02" 
+echo "- Database: localhost:60{AGENT}03"
+```
+
+### 16.2 Warum Docker Multi-Agent-Umgebung?
+- ✅ **Isolierte Test-Umgebung** für jeden Agenten
+- ✅ **Parallele Entwicklung** ohne Konflikte
+- ✅ **Sofortige Testbarkeit** für den User
+- ✅ **Konsistente Umgebung** zwischen Development und Production
+- ✅ **Automatische Database-Setup** mit Migrationen
+
+### 16.3 NIEMALS lokales `npm run dev` als Ersatz!
+**❌ FALSCH**: `cd src/frontend && npm run dev`
+**✅ RICHTIG**: `./scripts/start-agent.sh 4 feat/issue-branch`
+
+**Gründe:**
+- Lokales Development hat andere API-URLs
+- Keine Datenbank-Integration
+- Keine Backend-Services
+- User kann nicht vollständig testen
+
+### 16.4 User-Erwartung
+**Der User erwartet IMMER:**
+1. Komplette Docker-Umgebung mit allen Services
+2. Sofort testbare URLs (Frontend + Backend + Database)
+3. Keine lokalen Development-Server als Workaround
+
+### 16.5 Erinnerungs-Checkliste
+**Bei JEDER Issue-Bearbeitung MUSS Claude:**
+- [ ] Agent-Status prüfen (`./scripts/status-agents.sh`)
+- [ ] Entsprechenden Agent starten (`./scripts/start-agent.sh`)
+- [ ] Test-URLs bereitstellen und dem User mitteilen
+- [ ] Status bestätigen (alle Services healthy)
+- [ ] NIEMALS lokales `npm run dev` als Ersatz anbieten
+
+## 17. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)

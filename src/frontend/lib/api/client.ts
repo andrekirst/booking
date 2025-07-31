@@ -164,7 +164,7 @@ export class HttpApiClient implements ApiClient {
           // Token expired or invalid
           this.logout();
           if (typeof window !== "undefined") {
-            window.location.href = "/login";
+            window.location.href = "/";
           }
         }
 
@@ -421,11 +421,24 @@ export class HttpApiClient implements ApiClient {
   }
 
   getToken(): string | null {
-    return this.token;
+    // Prüfe zuerst Memory, dann localStorage
+    if (this.token) {
+      return this.token;
+    }
+    
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("auth_token");
+      if (storedToken) {
+        this.token = storedToken; // Synchronisiere Memory
+        return storedToken;
+      }
+    }
+    
+    return null;
   }
 
   isAuthenticated(): boolean {
-    return !!this.token;
+    return !!this.getToken();
   }
 }
 

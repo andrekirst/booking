@@ -3,17 +3,6 @@
 # Template: docker-compose.agent-template.yml
 # Agent: 2 | Ports: 60201/60202/60203/60204
 
-# Multi-Agent Docker Compose Template
-# Dieses Template wird von generate-agent-configs.sh verwendet, um 
-# spezifische Agent-Konfigurationen zu generieren
-#
-# Platzhalter:
-# 2 - wird durch die Agent-Nummer (2-4) ersetzt
-# 60200 - wird durch den Basis-Port (60200, 60300, 60400) ersetzt
-# 60201 - wird durch Frontend-Port (60200+1) ersetzt
-# 60202 - wird durch Backend-Port (60200+2) ersetzt
-# 60203 - wird durch DB-Port (60200+3) ersetzt
-
 services:
   postgres-agent2:
     image: postgres:16-alpine
@@ -27,7 +16,6 @@ services:
       - "60203:5432"  # Agent 2 PostgreSQL Port
     volumes:
       - postgres_agent2_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_agent2"]
       interval: 10s
@@ -59,8 +47,7 @@ services:
         condition: service_healthy
         restart: true
     volumes:
-      # Worktree-spezifisches Volume für Agent 2
-      - ../booking-agent2/src/backend:/app/src:ro
+      - ./src/backend:/app/src:ro
     networks:
       - booking-agent2-network
     restart: unless-stopped
@@ -84,8 +71,7 @@ services:
     ports:
       - "60201:3000"  # Agent 2 Frontend Port
     volumes:
-      # Worktree-spezifisches Volume für Agent 2
-      - ../booking-agent2/src/frontend:/app:cached
+      - ./src/frontend:/app:cached
       - /app/node_modules
       - /app/.next
     networks:

@@ -21,14 +21,14 @@ export default function AdminLayout({
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
 
       // Decode JWT to check role
       const tokenParts = token.split('.');
       if (tokenParts.length !== 3) {
-        router.push('/login');
+        router.push('/');
         return;
       }
 
@@ -43,7 +43,7 @@ export default function AdminLayout({
       setIsAuthorized(true);
     } catch (error) {
       console.error('Error checking admin access:', error);
-      router.push('/login');
+      router.push('/');
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +102,7 @@ export default function AdminLayout({
                 type="button"
                 onClick={() => {
                   localStorage.removeItem('auth_token');
-                  router.push('/login');
+                  router.push('/');
                 }}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >

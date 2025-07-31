@@ -54,7 +54,7 @@ export default function BookingDetailPage() {
       
       // Handle authentication errors
       if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
-        router.push('/login');
+        router.push('/');
       }
     } finally {
       setBookingLoading(false);

@@ -108,7 +108,7 @@ export default function BookingsPage() {
       
       // Handle authentication errors
       if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
-        router.push('/login');
+        router.push('/');
       }
     } finally {
       if (isInitialLoad) {
@@ -159,7 +159,7 @@ export default function BookingsPage() {
 
   const handleLogout = () => {
     apiClient.logout();
-    router.push('/login');
+    router.push('/');
   };
 
   const handleCreateBooking = () => {
