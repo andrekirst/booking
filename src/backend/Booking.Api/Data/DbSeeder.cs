@@ -153,37 +153,34 @@ public static class DbSeeder
         // Sample bookings with different statuses
         var sampleBookings = new[]
         {
-            new CreateBookingDto
-            {
-                StartDate = DateTime.UtcNow.AddDays(30),
-                EndDate = DateTime.UtcNow.AddDays(33),
-                Notes = "Familienwochenende im Garten",
-                BookingItems = new List<CreateBookingItemDto>
+            new CreateBookingDto(
+                StartDate: DateTime.UtcNow.AddDays(30),
+                EndDate: DateTime.UtcNow.AddDays(33),
+                Notes: "Familienwochenende im Garten",
+                BookingItems: new List<CreateBookingItemDto>
                 {
-                    new() { SleepingAccommodationId = accommodations[0].Id, PersonCount = 2 },
-                    new() { SleepingAccommodationId = accommodations[2].Id, PersonCount = 1 }
+                    new(accommodations[0].Id, 2),
+                    new(accommodations[2].Id, 1)
                 }
-            },
-            new CreateBookingDto
-            {
-                StartDate = DateTime.UtcNow.AddDays(45),
-                EndDate = DateTime.UtcNow.AddDays(47),
-                Notes = "Kurzurlaub mit den Kindern",
-                BookingItems = new List<CreateBookingItemDto>
+            ),
+            new CreateBookingDto(
+                StartDate: DateTime.UtcNow.AddDays(45),
+                EndDate: DateTime.UtcNow.AddDays(47),
+                Notes: "Kurzurlaub mit den Kindern",
+                BookingItems: new List<CreateBookingItemDto>
                 {
-                    new() { SleepingAccommodationId = accommodations[1].Id, PersonCount = 2 }
+                    new(accommodations[1].Id, 2)
                 }
-            },
-            new CreateBookingDto
-            {
-                StartDate = DateTime.UtcNow.AddDays(60),
-                EndDate = DateTime.UtcNow.AddDays(62),
-                Notes = "Entspannung im Grünen",
-                BookingItems = new List<CreateBookingItemDto>
+            ),
+            new CreateBookingDto(
+                StartDate: DateTime.UtcNow.AddDays(60),
+                EndDate: DateTime.UtcNow.AddDays(62),
+                Notes: "Entspannung im Grünen",
+                BookingItems: new List<CreateBookingItemDto>
                 {
-                    new() { SleepingAccommodationId = accommodations[0].Id, PersonCount = 1 }
+                    new(accommodations[0].Id, 1)
                 }
-            }
+            )
         };
 
         try
