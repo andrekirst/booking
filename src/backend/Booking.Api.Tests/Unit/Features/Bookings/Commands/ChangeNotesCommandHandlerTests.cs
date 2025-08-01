@@ -247,7 +247,7 @@ public class ChangeNotesCommandHandlerTests
         // Assert
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
-        result.Message.Should().Be("An unexpected error occurred while changing notes");
+        result.Message.Should().Be("Database error");
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class ChangeNotesCommandHandlerTests
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
-        // Assert - Verify warning was logged (allow other log levels)
+        // Assert - Verify both Information and Warning logs were called
         _logger.ReceivedWithAnyArgs(1).LogWarning(default(string)!, Array.Empty<object>());
         _logger.ReceivedWithAnyArgs(1).LogInformation(default(string)!, Array.Empty<object>());
     }

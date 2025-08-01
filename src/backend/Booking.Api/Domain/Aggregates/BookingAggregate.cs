@@ -56,7 +56,7 @@ public class BookingAggregate : AggregateRoot
         return aggregate;
     }
 
-    public void ChangeDateRange(DateTime newStartDate, DateTime newEndDate, string? changeReason = null)
+    public virtual void ChangeDateRange(DateTime newStartDate, DateTime newEndDate, string? changeReason = null)
     {
         ValidateBookingCanBeModified();
 
@@ -91,7 +91,7 @@ public class BookingAggregate : AggregateRoot
         ApplyEvent(dateRangeChangedEvent);
     }
 
-    public void ChangeAccommodations(List<BookingItem> newBookingItems)
+    public virtual void ChangeAccommodations(List<BookingItem> newBookingItems)
     {
         ValidateBookingCanBeModified();
 
@@ -122,7 +122,7 @@ public class BookingAggregate : AggregateRoot
         ApplyEvent(accommodationsChangedEvent);
     }
 
-    public void ChangeNotes(string? newNotes)
+    public virtual void ChangeNotes(string? newNotes)
     {
         ValidateBookingCanBeModified();
 
