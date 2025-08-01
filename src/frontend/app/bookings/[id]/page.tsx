@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Booking, BookingStatus, SleepingAccommodation } from '../../../lib/types/api';
-import { apiClient } from '../../../lib/api/client';
+import { Booking, BookingHistoryEntry, BookingStatus, SleepingAccommodation } from '../../../lib/types/api';
+import { useApi } from '../../../contexts/ApiContext';
 import BookingOverview from '../../components/booking/BookingOverview';
 import BookingAccommodations from '../../components/booking/BookingAccommodations';
 import BookingNotes from '../../components/booking/BookingNotes';
@@ -12,21 +12,54 @@ import BookingOverviewSkeleton from '../../components/booking/skeletons/BookingO
 import BookingAccommodationsSkeleton from '../../components/booking/skeletons/BookingAccommodationsSkeleton';
 import BookingHistorySkeleton from '../../components/booking/skeletons/BookingHistorySkeleton';
 import BookingActionMenuSkeleton from '../../components/booking/skeletons/BookingActionMenuSkeleton';
+import BookingHistoryTimeline from '../../components/ui/BookingHistoryTimeline';
 import Tabs from '../../components/ui/Tabs';
 
 
 export default function BookingDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { apiClient } = useApi();
   const bookingId = params?.id as string;
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [accommodations, setAccommodations] = useState<SleepingAccommodation[]>([]);
+  const [bookingHistory, setBookingHistory] = useState<BookingHistoryEntry[]>([]);
   const [bookingLoading, setBookingLoading] = useState(true);
   const [accommodationsLoading, setAccommodationsLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [accommodationsError, setAccommodationsError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [, setActionLoading] = useState(false);
+
+  const fetchBookingHistory = async () => {
+    if (!bookingId) {
+      setHistoryError('Ungültige Buchungs-ID');
+      return;
+    }
+
+    setHistoryLoading(true);
+    setHistoryError(null);
+
+    try {
+      const historyData = await apiClient.getBookingHistory(bookingId);
+      setBookingHistory(historyData);
+    } catch (err: unknown) {
+      console.error('Fehler beim Laden der Buchungshistorie:', err);
+      const errorMessage = err && typeof err === 'object' && 'message' in err 
+        ? String((err as { message: string }).message) 
+        : 'Fehler beim Laden der Buchungshistorie';
+      setHistoryError(errorMessage);
+      
+      // Handle authentication errors
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
+        router.push('/login');
+      }
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const fetchBooking = async () => {
     if (!bookingId) {
@@ -338,17 +371,14 @@ export default function BookingDetailPage() {
                     id: 'historie',
                     label: 'Historie',
                     content: (
-                      <div className="py-12 text-center">
-                        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Historie wird implementiert</h3>
-                        <p className="text-gray-500">
-                          Die Verlaufshistorie der Buchung wird in einer zukünftigen Version verfügbar sein.
-                        </p>
-                      </div>
+                      <BookingHistoryTimeline
+                        history={bookingHistory}
+                        isLoading={historyLoading}
+                        error={historyError}
+                      />
                     ),
-                    disabled: true
+                    disabled: false,
+                    onActivate: fetchBookingHistory
                   }
                 ]}
                 defaultTab="details"

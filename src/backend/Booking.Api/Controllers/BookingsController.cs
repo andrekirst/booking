@@ -58,6 +58,57 @@ public class BookingsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:guid}/history")]
+    public async Task<ActionResult<BookingHistoryDto>> GetBookingHistory(
+        Guid id,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        // Validate pagination parameters
+        if (page < 1)
+        {
+            return BadRequest(ValidationExtensions.CreateValidationProblem("Page", "Page must be greater than 0", "Pagination Error"));
+        }
+        
+        if (pageSize < 1 || pageSize > 100)
+        {
+            return BadRequest(ValidationExtensions.CreateValidationProblem("PageSize", "PageSize must be between 1 and 100", "Pagination Error"));
+        }
+
+        try
+        {
+            // First check if booking exists and user has permission
+            var existingBooking = await mediator.Send(new GetBookingByIdQuery(id));
+            if (existingBooking == null)
+            {
+                return NotFound();
+            }
+
+            var userId = GetCurrentUserId();
+            var isAdmin = User.IsInRole("Administrator");
+            
+            // Users can only see history of their own bookings, admins can see all
+            if (!isAdmin && existingBooking.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            var query = new GetBookingHistoryQuery(id, page, pageSize);
+            var result = await mediator.Send(query);
+            
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            // Log the error (in a real application, use proper logging)
+            return StatusCode(500, new { Message = "Failed to retrieve booking history", Error = ex.Message });
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto createDto)
     {

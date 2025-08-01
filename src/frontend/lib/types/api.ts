@@ -109,6 +109,35 @@ export interface BookingItem {
   personCount: number;
 }
 
+// Booking History Types
+export interface BookingHistoryEntry {
+  id: string;
+  eventType: BookingHistoryEventType;
+  timestamp: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  description: string;
+  details?: Record<string, unknown>;
+  previousValue?: unknown;
+  newValue?: unknown;
+}
+
+export enum BookingHistoryEventType {
+  Created = 'Created',
+  Updated = 'Updated',
+  StatusChanged = 'StatusChanged',
+  Confirmed = 'Confirmed',
+  Cancelled = 'Cancelled',
+  Accepted = 'Accepted',
+  Rejected = 'Rejected',
+  NotesUpdated = 'NotesUpdated',
+  AccommodationsChanged = 'AccommodationsChanged',
+  DatesChanged = 'DatesChanged'
+}
+
 export interface CreateBookingRequest {
   startDate: string;
   endDate: string;

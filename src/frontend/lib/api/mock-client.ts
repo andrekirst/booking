@@ -6,6 +6,8 @@ import {
   UserRole, 
   Booking,
   BookingAvailability,
+  BookingHistoryEntry,
+  BookingHistoryEventType,
   BookingStatus,
   CreateBookingRequest,
   EmailSettings,
@@ -194,6 +196,150 @@ export class MockApiClient implements ApiClient {
     },
   ];
 
+  // Mock booking history data
+  private mockBookingHistory: { [bookingId: string]: BookingHistoryEntry[] } = {
+    '123e4567-e89b-12d3-a456-426614174000': [
+      {
+        id: 'hist-1',
+        eventType: BookingHistoryEventType.Created,
+        timestamp: '2025-01-09T10:00:00Z',
+        user: {
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@booking.com'
+        },
+        description: 'Buchung wurde erstellt',
+        details: {
+          startDate: '2025-01-15',
+          endDate: '2025-01-17',
+          totalPersons: 2,
+          accommodations: ['Main Bedroom']
+        }
+      },
+      {
+        id: 'hist-2',
+        eventType: BookingHistoryEventType.StatusChanged,
+        timestamp: '2025-01-09T11:30:00Z',
+        user: {
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@booking.com'
+        },
+        description: 'Status geändert von Ausstehend zu Bestätigt',
+        details: {
+          reason: 'Automatische Bestätigung durch Administrator'
+        },
+        previousValue: BookingStatus.Pending,
+        newValue: BookingStatus.Confirmed
+      }
+    ],
+    '987fcdeb-51d2-43a1-b321-654987321098': [
+      {
+        id: 'hist-3',
+        eventType: BookingHistoryEventType.Created,
+        timestamp: '2025-01-08T15:30:00Z',
+        user: {
+          id: '2',
+          name: 'Test User',
+          email: 'test@example.com'
+        },
+        description: 'Buchung wurde erstellt',
+        details: {
+          startDate: '2025-01-20',
+          endDate: '2025-01-22',
+          totalPersons: 4,
+          accommodations: ['Guest Room']
+        }
+      },
+      {
+        id: 'hist-4',
+        eventType: BookingHistoryEventType.NotesUpdated,
+        timestamp: '2025-01-08T16:15:00Z',
+        user: {
+          id: '2',
+          name: 'Test User',
+          email: 'test@example.com'
+        },
+        description: 'Notizen wurden hinzugefügt',
+        details: {
+          notes: 'Family gathering'
+        },
+        previousValue: null,
+        newValue: 'Family gathering'
+      }
+    ],
+    'aaa11111-2222-3333-4444-555555555555': [
+      {
+        id: 'hist-5',
+        eventType: BookingHistoryEventType.Created,
+        timestamp: '2025-01-07T12:00:00Z',
+        user: {
+          id: '3',
+          name: 'Member User',
+          email: 'member@booking.com'
+        },
+        description: 'Buchung wurde erstellt',
+        details: {
+          startDate: '2025-01-25',
+          endDate: '2025-01-27',
+          totalPersons: 2,
+          accommodations: ['Main Bedroom']
+        }
+      },
+      {
+        id: 'hist-6',
+        eventType: BookingHistoryEventType.Accepted,
+        timestamp: '2025-01-07T14:00:00Z',
+        user: {
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@booking.com'
+        },
+        description: 'Buchung wurde angenommen',
+        details: {
+          reason: 'Alle Kriterien erfüllt'
+        },
+        previousValue: BookingStatus.Pending,
+        newValue: BookingStatus.Accepted
+      }
+    ],
+    'bbb22222-3333-4444-5555-666666666666': [
+      {
+        id: 'hist-7',
+        eventType: BookingHistoryEventType.Created,
+        timestamp: '2025-01-06T09:00:00Z',
+        user: {
+          id: '4',
+          name: 'Another User',
+          email: 'another@example.com'
+        },
+        description: 'Buchung wurde erstellt',
+        details: {
+          startDate: '2025-01-30',
+          endDate: '2025-02-01',
+          totalPersons: 1,
+          accommodations: ['Small Room']
+        }
+      },
+      {
+        id: 'hist-8',
+        eventType: BookingHistoryEventType.Rejected,
+        timestamp: '2025-01-06T16:00:00Z',
+        user: {
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@booking.com'
+        },
+        description: 'Buchung wurde abgelehnt',
+        details: {
+          reason: 'Terminkonflikt mit anderen Buchungen'
+        },
+        previousValue: BookingStatus.Pending,
+        newValue: BookingStatus.Rejected
+      }
+    ]
+  };
+
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     // Simulate network delay
     await this.delay(500);
@@ -365,6 +511,23 @@ export class MockApiClient implements ApiClient {
       throw new ApiError('Booking not found', 404);
     }
     return booking;
+  }
+
+  async getBookingHistory(id: string): Promise<BookingHistoryEntry[]> {
+    await this.delay(300);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    // Check if booking exists first
+    const booking = this.mockBookings.find(b => b.id === id);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    // Return history for this booking, sorted by timestamp (newest first)
+    const history = this.mockBookingHistory[id] || [];
+    return history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
   async createBooking(booking: CreateBookingRequest): Promise<Booking> {

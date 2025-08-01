@@ -7,6 +7,7 @@ export interface Tab {
   label: string;
   content: ReactNode;
   disabled?: boolean;
+  onActivate?: () => void;
 }
 
 interface TabsProps {
@@ -37,7 +38,15 @@ export default function Tabs({ tabs, defaultTab }: TabsProps) {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => !tab.disabled && setActiveTab(tab.id)}
+              onClick={() => {
+                if (!tab.disabled) {
+                  setActiveTab(tab.id);
+                  // Call onActivate callback when tab is activated
+                  if (tab.onActivate && activeTab !== tab.id) {
+                    tab.onActivate();
+                  }
+                }
+              }}
               disabled={tab.disabled}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm

@@ -1,6 +1,6 @@
 # Application Status Report
 
-> 🤖 Automatisch generiert am 2025-07-30 13:54:43
+> 🤖 Automatisch generiert am 2025-07-31 16:48:18
 > 
 > Dieses Dokument bietet eine vollständige Übersicht über den aktuellen Stand der Booking-Anwendung.
 
@@ -47,6 +47,7 @@ booking/
 - **UserAvatar** - `src/frontend/app/components/ui/UserAvatar.tsx`
 - **function** - `src/frontend/app/components/ui/Tabs.tsx`
 - **function** - `src/frontend/app/components/ui/NumberSpinner.tsx`
+- **function** - `src/frontend/app/components/ui/BookingHistoryTimeline.tsx`
 - **function** - `src/frontend/app/components/BookingStatusFilter.tsx`
 - **function** - `src/frontend/app/components/CalendarToolbar.tsx`
 - **function** - `src/frontend/app/components/DayPickerBookingCalendarView.tsx`
@@ -222,4 +223,4 @@ _Datei: `src/backend/Booking.Api/Controllers/AdminController.cs`_
 - **Multi-Agent Development** - Parallele Entwicklung mit Git Worktrees
 
 
-_Letztes Update: 2025-07-30 13:54:44_
+_Letztes Update: 2025-07-31 16:48:19_
