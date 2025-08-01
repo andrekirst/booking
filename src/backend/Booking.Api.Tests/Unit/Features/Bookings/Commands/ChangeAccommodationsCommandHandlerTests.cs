@@ -48,7 +48,7 @@ public class ChangeAccommodationsCommandHandlerTests
         };
 
         var command = new ChangeAccommodationsCommand(bookingId, bookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -80,7 +80,7 @@ public class ChangeAccommodationsCommandHandlerTests
         var emptyBookingItems = new List<BookingItemDto>();
 
         var command = new ChangeAccommodationsCommand(bookingId, emptyBookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -108,7 +108,7 @@ public class ChangeAccommodationsCommandHandlerTests
         };
 
         var command = new ChangeAccommodationsCommand(bookingId, bookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -168,7 +168,7 @@ public class ChangeAccommodationsCommandHandlerTests
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
-        var exceptionMessage = "Person count must be greater than 0";
+        var exceptionMessage = "Person count must be greater than zero (Parameter 'personCount')";
         aggregate.When(x => x.ChangeAccommodations(Arg.Any<List<BookingItem>>()))
             .Do(x => throw new ArgumentException(exceptionMessage));
 
@@ -226,7 +226,7 @@ public class ChangeAccommodationsCommandHandlerTests
         };
 
         var command = new ChangeAccommodationsCommand(bookingId, bookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
         _repository.SaveAsync(aggregate).ThrowsAsync(new InvalidOperationException("Database error"));
@@ -275,7 +275,7 @@ public class ChangeAccommodationsCommandHandlerTests
         };
 
         var command = new ChangeAccommodationsCommand(bookingId, bookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -327,7 +327,7 @@ public class ChangeAccommodationsCommandHandlerTests
         }
 
         var command = new ChangeAccommodationsCommand(bookingId, bookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -357,7 +357,7 @@ public class ChangeAccommodationsCommandHandlerTests
         };
 
         var command = new ChangeAccommodationsCommand(bookingId, bookingItems);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 

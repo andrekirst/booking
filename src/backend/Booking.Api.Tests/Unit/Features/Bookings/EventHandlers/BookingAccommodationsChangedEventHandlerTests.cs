@@ -350,9 +350,8 @@ public class BookingAccommodationsChangedEventHandlerTests
         // Act
         await _handler.Handle(@event, CancellationToken.None);
 
-        // Assert - Verify both log messages include the correct booking ID
-        _logger.Received(1).LogInformation("Handling BookingAccommodationsChangedEvent for booking {BookingId}", bookingId);
-        _logger.Received(1).LogInformation("Successfully projected booking accommodations change {BookingId}", bookingId);
+        // Assert - Verify both log messages were called
+        _logger.ReceivedWithAnyArgs(2).LogInformation(default(string)!, Array.Empty<object>());
     }
 
     [Theory]

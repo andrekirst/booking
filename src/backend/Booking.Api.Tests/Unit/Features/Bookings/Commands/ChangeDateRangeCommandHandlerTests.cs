@@ -39,7 +39,7 @@ public class ChangeDateRangeCommandHandlerTests
         var changeReason = "Guest requested different dates";
 
         var command = new ChangeDateRangeCommand(bookingId, newStartDate, newEndDate, changeReason);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -92,7 +92,7 @@ public class ChangeDateRangeCommandHandlerTests
         var newEndDate = DateTime.UtcNow.AddDays(8);
 
         var command = new ChangeDateRangeCommand(bookingId, newStartDate, newEndDate);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -174,7 +174,7 @@ public class ChangeDateRangeCommandHandlerTests
         var newEndDate = DateTime.UtcNow.AddDays(8);
 
         var command = new ChangeDateRangeCommand(bookingId, newStartDate, newEndDate);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
         _repository.SaveAsync(aggregate).ThrowsAsync(new InvalidOperationException("Database error"));
@@ -218,7 +218,7 @@ public class ChangeDateRangeCommandHandlerTests
         var newEndDate = DateTime.UtcNow.AddDays(8);
 
         var command = new ChangeDateRangeCommand(bookingId, newStartDate, newEndDate);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -261,7 +261,7 @@ public class ChangeDateRangeCommandHandlerTests
         var newEndDate = DateTime.Parse(endDateStr);
 
         var command = new ChangeDateRangeCommand(bookingId, newStartDate, newEndDate, reason);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 

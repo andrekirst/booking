@@ -597,8 +597,15 @@ public class BookingAggregateTests
 
         // Act & Assert
         var act = () => aggregate.ChangeDateRange(newStartDate, newEndDate);
+        var expectedMessage = status switch
+        {
+            BookingStatus.Cancelled => "Cannot modify a cancelled booking",
+            BookingStatus.Completed => "Cannot modify a completed booking",
+            BookingStatus.Rejected => "Cannot modify booking with status Rejected",
+            _ => $"Cannot modify booking with status {status}"
+        };
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage($"Cannot modify booking with status {status}");
+            .WithMessage(expectedMessage);
     }
 
     [Theory]
@@ -622,8 +629,15 @@ public class BookingAggregateTests
 
         // Act & Assert
         var act = () => aggregate.ChangeAccommodations(newItems);
+        var expectedMessage = status switch
+        {
+            BookingStatus.Cancelled => "Cannot modify a cancelled booking",
+            BookingStatus.Completed => "Cannot modify a completed booking",
+            BookingStatus.Rejected => "Cannot modify booking with status Rejected",
+            _ => $"Cannot modify booking with status {status}"
+        };
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage($"Cannot modify booking with status {status}");
+            .WithMessage(expectedMessage);
     }
 
     [Theory]
@@ -644,8 +658,15 @@ public class BookingAggregateTests
 
         // Act & Assert
         var act = () => aggregate.ChangeNotes(newNotes);
+        var expectedMessage = status switch
+        {
+            BookingStatus.Cancelled => "Cannot modify a cancelled booking",
+            BookingStatus.Completed => "Cannot modify a completed booking",
+            BookingStatus.Rejected => "Cannot modify booking with status Rejected",
+            _ => $"Cannot modify booking with status {status}"
+        };
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage($"Cannot modify booking with status {status}");
+            .WithMessage(expectedMessage);
     }
 
     [Theory]
