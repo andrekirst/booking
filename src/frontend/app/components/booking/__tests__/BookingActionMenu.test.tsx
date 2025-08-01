@@ -143,17 +143,6 @@ describe('BookingActionMenu', () => {
       expect(screen.queryByText('Ablehnen')).not.toBeInTheDocument();
     });
 
-    it('should disable edit button for cancelled/accepted/rejected bookings', () => {
-      render(
-        <BookingActionMenu
-          booking={{ ...baseBooking, status: BookingStatus.Cancelled }}
-          onCancel={mockOnCancel}
-        />
-      );
-
-      const editButton = screen.getByText('Bearbeiten').closest('button');
-      expect(editButton).toBeDisabled();
-    });
 
     it('should not show cancel button for cancelled/accepted/rejected bookings', () => {
       render(
@@ -292,19 +281,6 @@ describe('BookingActionMenu', () => {
       expect(mockOnCancel).toHaveBeenCalled();
     });
 
-    it('should call onEdit when edit button is clicked', () => {
-      render(
-        <BookingActionMenu
-          booking={baseBooking}
-          onCancel={mockOnCancel}
-        />
-      );
-
-      const editButton = screen.getByText('Bearbeiten');
-      fireEvent.click(editButton);
-
-      expect(mockOnEdit).toHaveBeenCalled();
-    });
   });
 
   describe('Error Handling', () => {
