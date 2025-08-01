@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using MediatR;
 using Booking.Api.Configuration;
 using Booking.Api.Controllers;
 using Booking.Api.Data;
@@ -158,9 +159,10 @@ public class Program
             using var scope = app.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
             var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             
             await context.Database.MigrateAsync();
-            await DbSeeder.SeedAsync(context, passwordService);
+            await DbSeeder.SeedAsync(context, passwordService, mediator);
         }
 
         // Configure the HTTP request pipeline.
