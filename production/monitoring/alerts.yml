@@ -1,0 +1,314 @@
+# Prometheus Alert Rules für Booking System auf Raspberry Pi Zero 2 W
+# Speziell angepasst für die Constraints und kritischen Metriken des Pi Zero
+
+groups:
+  # =============================================================================
+  # CRITICAL SYSTEM ALERTS - Pi Zero 2 W Constraints
+  # =============================================================================
+  - name: pi-zero-critical
+    rules:
+      # Memory Usage Critical (Pi Zero hat nur 512MB)
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical memory usage on Pi Zero"
+          description: "Memory usage is {{ $value | humanizePercentage }} on Pi Zero ({{ $labels.instance }}). Only {{ with query \"node_memory_MemAvailable_bytes{instance='\" .Labels.instance \"'}\" }}{{ . | first | value | humanize1024 }}B{{ end }} available of 512MB total."
+
+      # CPU Usage Critical (ARM Cortex-A53 Quad-Core)
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 3m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical CPU usage on Pi Zero"
+          description: "CPU usage is {{ $value | humanizePercentage }} on Pi Zero ({{ $labels.instance }}). ARM Cortex-A53 cores are overloaded."
+
+      # Load Average Critical (4 cores @ 1GHz)
+      - alert: HighLoadAverage
+        expr: node_load5 > 6  # 1.5x cores für Pi Zero
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "High load average on Pi Zero"
+          description: "5-minute load average is {{ $value }} on Pi Zero ({{ $labels.instance }}). Normal range for Pi Zero is 0-4."
+
+      # Disk Space Critical (SD-Card)
+      - alert: DiskSpaceCritical
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) > 0.90
+        for: 1m
+        labels:
+          severity: critical
+          component: storage
+        annotations:
+          summary: "Critical disk space on Pi Zero"
+          description: "Filesystem {{ $labels.mountpoint }} usage is {{ $value | humanizePercentage }} on Pi Zero. Only {{ with query \"node_filesystem_avail_bytes{instance='\" .Labels.instance \"', mountpoint='\" .Labels.mountpoint \"'}\" }}{{ . | first | value | humanize1024 }}B{{ end }} available."
+
+      # Temperature Critical (Pi Zero Thermal Throttling)
+      - alert: HighTemperature
+        expr: node_hwmon_temp_celsius > 70
+        for: 2m
+        labels:
+          severity: critical
+          component: hardware
+        annotations:
+          summary: "High temperature on Pi Zero"
+          description: "Pi Zero temperature is {{ $value }}°C ({{ $labels.instance }}). Risk of thermal throttling at 80°C."
+
+  # =============================================================================
+  # APPLICATION ALERTS - Booking System Specific
+  # =============================================================================
+  - name: booking-application
+    rules:
+      # Backend Service Down
+      - alert: BookingBackendDown
+        expr: up{job="booking-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "Booking backend service is down"
+          description: "The booking backend service has been down for more than 1 minute."
+
+      # Frontend Service Down
+      - alert: BookingFrontendDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical  
+          component: frontend
+        annotations:
+          summary: "Booking frontend service is down"
+          description: "The booking frontend/nginx service has been down for more than 1 minute."
+
+      # Database Connection Issues
+      - alert: DatabaseConnectionFailure
+        expr: booking_database_connection_errors_total > 0
+        for: 30s
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection failures detected"
+          description: "{{ $value }} database connection errors in the last 30 seconds."
+
+      # High API Response Time
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="booking-backend"}[5m])) > 2.0
+        for: 3m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile API response time is {{ $value }}s, exceeding 2s threshold."
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+  # =============================================================================
+  # CONTAINER ALERTS - Docker Resource Management
+  # =============================================================================
+  - name: container-resources
+    rules:
+      # Container Memory Usage (critical für Pi Zero)
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "High memory usage in container"
+          description: "Container {{ $labels.name }} memory usage is {{ $value | humanizePercentage }} of limit on Pi Zero."
+
+      # Container Restart Loops
+      - alert: ContainerRestartLoop
+        expr: increase(container_start_time_seconds[10m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container restart loop detected"
+          description: "Container {{ $labels.name }} has restarted {{ $value }} times in the last 10 minutes."
+
+      # Container OOM Kills (kritisch auf Pi Zero)
+      - alert: ContainerOOMKilled
+        expr: increase(container_oom_kills_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: container
+        annotations:
+          summary: "Container killed by OOM"
+          description: "Container {{ $labels.name }} was killed by OOM killer on Pi Zero."
+
+  # =============================================================================
+  # NETWORK ALERTS - Connectivity and Performance
+  # =============================================================================
+  - name: network-monitoring
+    rules:
+      # High Network Usage (SD-Card bottleneck berücksichtigen)
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m]) > 10485760  # 10MB/s
+        for: 5m
+        labels:
+          severity: warning
+          component: network
+        annotations:
+          summary: "High network traffic on Pi Zero"
+          description: "Network traffic is {{ $value | humanize1024 }}B/s on interface {{ $labels.device }}. Pi Zero network limit consideration."
+
+      # SSL Certificate Expiry (wichtig für HTTPS)
+      - alert: SSLCertificateExpiry
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7  # 7 days
+        for: 0m
+        labels:
+          severity: warning
+          component: ssl
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}."
+
+  # =============================================================================
+  # BUSINESS LOGIC ALERTS - Booking System Specific
+  # =============================================================================
+  - name: booking-business
+    rules:
+      # Failed Bookings Rate
+      - alert: HighBookingFailureRate
+        expr: rate(booking_creation_failures_total[10m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "High booking failure rate"
+          description: "Booking failure rate is {{ $value }} per second over the last 10 minutes."
+
+      # Database Connection Pool Exhaustion
+      - alert: DatabasePoolExhaustion
+        expr: booking_database_pool_active_connections / booking_database_pool_max_connections > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection pool usage is {{ $value | humanizePercentage }}."
+
+      # Long Running Transactions (performance impact auf Pi Zero)
+      - alert: LongRunningTransactions
+        expr: booking_database_transaction_duration_seconds > 30
+        for: 1m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Long running database transaction"
+          description: "Database transaction running for {{ $value }}s, impacting Pi Zero performance."
+
+  # =============================================================================
+  # SECURITY ALERTS - Intrusion Detection
+  # =============================================================================
+  - name: security-monitoring
+    rules:
+      # Too Many Failed Login Attempts
+      - alert: BruteForceAttack
+        expr: rate(booking_failed_login_attempts_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Potential brute force attack"
+          description: "{{ $value }} failed login attempts per second detected over 5 minutes."
+
+      # Suspicious Request Patterns
+      - alert: HighErrorRequestRate
+        expr: rate(nginx_http_requests_total{status=~"4.."}[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High rate of 4xx errors"
+          description: "{{ $value }} 4xx errors per second, potential scanning/attack activity."
+
+  # =============================================================================
+  # MAINTENANCE ALERTS - Proactive Monitoring
+  # =============================================================================
+  - name: maintenance
+    rules:
+      # Backup Failure
+      - alert: BackupFailure
+        expr: booking_last_backup_success_timestamp < (time() - 86400 * 2)  # 2 days
+        for: 0m
+        labels:
+          severity: warning
+          component: backup
+        annotations:
+          summary: "Backup system failure"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago."
+
+      # Log Volume Growth (SD-Card Schutz)
+      - alert: LogVolumeGrowth
+        expr: increase(node_filesystem_size_bytes{mountpoint="/var/log"}[1h]) > 104857600  # 100MB/hour
+        for: 0m
+        labels:
+          severity: warning
+          component: logging
+        annotations:
+          summary: "Rapid log volume growth"
+          description: "Log volume grew by {{ $value | humanize1024 }}B in the last hour on Pi Zero."
+
+      # Service Discovery Issues
+      - alert: ServiceDiscoveryFailure
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+          component: monitoring
+        annotations:
+          summary: "Service discovery failure"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been unreachable for 5 minutes."
+
+# =============================================================================
+# ALERT SEVERITY LEVELS für Pi Zero 2 W:
+# =============================================================================
+# CRITICAL: Immediate action required, system at risk
+#   - Memory > 85% (Pi Zero only has 512MB)
+#   - CPU > 90% (Limited processing power)
+#   - Disk > 90% (SD-Card wear protection)
+#   - Temperature > 70°C (Thermal throttling risk)
+#   - Core services down
+#
+# WARNING: Attention needed, performance degradation
+#   - Memory > 70%
+#   - CPU > 75%
+#   - High API response times
+#   - Failed login attempts
+#   - Certificate expiry
+#
+# INFO: Informational, trend monitoring
+#   - Backup completion
+#   - Periodic health checks
+#   - Usage statistics
+# =============================================================================

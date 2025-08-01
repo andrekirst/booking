@@ -1,0 +1,106 @@
+# Pi Zero 2 W optimierte Docker-Konfiguration (512MB RAM Constraint)
+version: '3.8'
+
+services:
+  postgres-agent2:
+    image: postgres:16-alpine
+    container_name: booking-postgres-agent2
+    environment:
+      POSTGRES_DB: booking_agent2
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "60203:5432"
+    volumes:
+      - postgres_data_agent2:/var/lib/postgresql/data
+      - ./config/postgresql-pi-zero.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    # KRITISCHE Memory-Limits für Pi Zero 2 W
+    deploy:
+      resources:
+        limits:
+          memory: 80M        # Reduziert von 150M (-47%)
+          cpus: '0.5'        # 50% CPU-Limit
+        reservations:
+          memory: 60M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_agent2"]
+      interval: 15s          # Weniger häufige Health Checks
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - booking-network-agent2
+
+  backend-agent2:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.pi-zero
+    container_name: booking-backend-agent2
+    ports:
+      - "60202:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres-agent2;Database=booking_agent2;Username=booking_user;Password=booking_password
+      - ASPNETCORE_URLS=http://+:8080
+      # Pi Zero Memory-Optimierung
+      - DOTNET_GCHeapCount=1            # Single GC Heap
+      - DOTNET_GCConcurrent=0           # Concurrent GC deaktiviert
+      - DOTNET_GCServer=0               # Workstation GC für weniger Memory
+      - DOTNET_GCRetainVM=0             # VM-Memory sofort freigeben
+      - COMPlus_GCHeapHardLimit=70000000 # 70MB Hard Limit
+    deploy:
+      resources:
+        limits:
+          memory: 90M        # Konservativ für Standard .NET (später 75M mit AOT)
+          cpus: '0.7'
+        reservations:
+          memory: 60M
+    depends_on:
+      postgres-agent2:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - booking-network-agent2
+
+  frontend-agent2:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.pi-zero
+    container_name: booking-frontend-agent2
+    ports:
+      - "60201:80"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:60202
+      - NODE_ENV=production
+      - NODE_OPTIONS=--max-old-space-size=128  # 128MB Node.js Heap Limit
+    deploy:
+      resources:
+        limits:
+          memory: 70M        # Reduziert von 100M (-30%)
+          cpus: '0.3'
+        reservations:
+          memory: 50M
+    depends_on:
+      - backend-agent2
+    restart: unless-stopped
+    networks:
+      - booking-network-agent2
+
+volumes:
+  postgres_data_agent2:
+
+networks:
+  booking-network-agent2:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450  # Kleinere MTU für Pi Zero
+
+# Globale Memory-Optimierung
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "1m"      # Sehr kleine Log-Files für Pi Zero
+    max-file: "2"
