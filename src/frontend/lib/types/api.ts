@@ -256,12 +256,10 @@ export interface ChangeDateRangeRequest {
 
 export interface ChangeAccommodationsRequest {
   bookingItems: CreateBookingItem[];
-  reason?: string;
 }
 
 export interface ChangeNotesRequest {
   notes?: string;
-  reason?: string;
 }
 
 export interface BookingEditState {

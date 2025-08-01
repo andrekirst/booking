@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Booking, BookingStatus, SleepingAccommodation } from '../../../lib/types/api';
 import { apiClient } from '../../../lib/api/client';
 import BookingOverview from '../../components/booking/BookingOverview';
+import BookingDateRange from '../../components/booking/BookingDateRange';
 import BookingAccommodations from '../../components/booking/BookingAccommodations';
 import BookingNotes from '../../components/booking/BookingNotes';
 import BookingActionMenu from '../../components/booking/BookingActionMenu';
@@ -270,16 +271,9 @@ export default function BookingDetailPage() {
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
                   Buchungsdetails
                 </h1>
-                {bookingLoading ? (
-                  <div className="h-7 bg-gray-200 rounded w-96 animate-pulse"></div>
-                ) : booking && (
-                  <p className="text-lg text-gray-600">
-                    {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
-                  </p>
-                )}
               </div>
               <div className="mt-4 sm:mt-0">
                 {bookingLoading ? (
@@ -300,30 +294,6 @@ export default function BookingDetailPage() {
               onCancel={() => {
                 // TODO: Implement cancel booking functionality
                 console.log('Cancel booking:', booking.id);
-              }}
-              onEdit={() => {
-                console.log('🔧 Edit button clicked!');
-                console.log('Booking status:', booking.status);
-                
-                // Scroll to booking overview for editing
-                const bookingOverview = document.querySelector('[data-testid="booking-overview"]');
-                console.log('BookingOverview element found:', bookingOverview);
-                
-                if (bookingOverview) {
-                  bookingOverview.scrollIntoView({ behavior: 'smooth' });
-                  console.log('✅ Scrolled to booking overview');
-                } else {
-                  console.log('❌ BookingOverview not found, trying fallback');
-                  // Fallback: scroll to the main content
-                  const mainContent = document.querySelector('[data-testid="booking-details"]');
-                  console.log('Main content element found:', mainContent);
-                  if (mainContent) {
-                    mainContent.scrollIntoView({ behavior: 'smooth' });
-                    console.log('✅ Scrolled to main content');
-                  } else {
-                    console.log('❌ No scroll target found');
-                  }
-                }
               }}
               onAccept={handleAcceptBooking}
               onReject={handleRejectBooking}
@@ -346,6 +316,15 @@ export default function BookingDetailPage() {
                     label: 'Details',
                     content: (
                       <div className="space-y-6">
+                        <BookingDateRange 
+                          booking={booking} 
+                          onBookingUpdate={(updatedBooking) => {
+                            console.log('🔄 Page: Received date range update:', updatedBooking);
+                            setBooking(updatedBooking);
+                            console.log('🔄 Page: Booking state updated');
+                          }}
+                          allowEditing={booking.status === BookingStatus.Pending}
+                        />
                         <BookingOverview 
                           booking={booking} 
                           onBookingUpdate={(updatedBooking) => {
@@ -358,8 +337,22 @@ export default function BookingDetailPage() {
                           accommodations={accommodations}
                           accommodationsError={accommodationsError}
                           getAccommodationName={getAccommodationName}
+                          onBookingUpdate={(updatedBooking) => {
+                            console.log('🔄 Page: Received accommodation update:', updatedBooking);
+                            setBooking(updatedBooking);
+                            console.log('🔄 Page: Booking state updated');
+                          }}
+                          allowEditing={booking.status === BookingStatus.Pending}
                         />
-                        {booking.notes && <BookingNotes notes={booking.notes} />}
+                        <BookingNotes 
+                          booking={booking}
+                          onBookingUpdate={(updatedBooking) => {
+                            console.log('🔄 Page: Received notes update:', updatedBooking);
+                            setBooking(updatedBooking);
+                            console.log('🔄 Page: Booking state updated');
+                          }}
+                          allowEditing={booking.status === BookingStatus.Pending}
+                        />
                       </div>
                     )
                   },

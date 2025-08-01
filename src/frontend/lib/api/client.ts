@@ -92,7 +92,7 @@ export class HttpApiClient implements ApiClient {
   private token: string | null = null;
 
   constructor(
-    baseUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7000"
+    baseUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:60302/api"
   ) {
     this.baseUrl = baseUrl;
 
@@ -275,7 +275,10 @@ export class HttpApiClient implements ApiClient {
   }
 
   async getBookingById(id: string): Promise<Booking> {
-    return this.request<Booking>(`/bookings/${id}`);
+    console.log('🔍 API: Loading booking by ID:', id);
+    const result = await this.request<Booking>(`/bookings/${id}`);
+    console.log('🔍 API: Booking loaded:', result);
+    return result;
   }
 
   async createBooking(booking: CreateBookingRequest): Promise<Booking> {
@@ -340,24 +343,42 @@ export class HttpApiClient implements ApiClient {
 
   // Granular booking edit methods
   async changeDateRange(bookingId: string, request: ChangeDateRangeRequest): Promise<Booking> {
-    return this.request<Booking>(`/bookings/${bookingId}/change-date-range`, {
-      method: "POST",
+    await this.request(`/bookings/${bookingId}/date-range`, {
+      method: "PATCH",
       body: JSON.stringify(request),
     });
+    
+    // Kurze Verzögerung für Event-Verarbeitung im Backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Nach der Änderung das aktualisierte Booking laden
+    return this.getBookingById(bookingId);
   }
 
   async changeAccommodations(bookingId: string, request: ChangeAccommodationsRequest): Promise<Booking> {
-    return this.request<Booking>(`/bookings/${bookingId}/change-accommodations`, {
-      method: "POST",
+    await this.request(`/bookings/${bookingId}/accommodations`, {
+      method: "PATCH",
       body: JSON.stringify(request),
     });
+    
+    // Kurze Verzögerung für Event-Verarbeitung im Backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Nach der Änderung das aktualisierte Booking laden
+    return this.getBookingById(bookingId);
   }
 
   async changeNotes(bookingId: string, request: ChangeNotesRequest): Promise<Booking> {
-    return this.request<Booking>(`/bookings/${bookingId}/change-notes`, {
-      method: "POST",
+    await this.request(`/bookings/${bookingId}/notes`, {
+      method: "PATCH",
       body: JSON.stringify(request),
     });
+    
+    // Kurze Verzögerung für Event-Verarbeitung im Backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Nach der Änderung das aktualisierte Booking laden
+    return this.getBookingById(bookingId);
   }
 
   async getSleepingAccommodations(includeInactive: boolean = false): Promise<SleepingAccommodation[]> {
