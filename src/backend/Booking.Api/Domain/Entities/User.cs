@@ -1,4 +1,5 @@
 using Booking.Api.Domain.Common;
+using Booking.Api.Domain.Enums;
 
 namespace Booking.Api.Domain.Entities;
 
@@ -27,10 +28,4 @@ public class User : IAuditableEntity, ISoftDeletable
     public DateTime? ApprovedForBookingAt { get; set; }
     public int? ApprovedById { get; set; }
     public User? ApprovedBy { get; set; }
-}
-
-public enum UserRole
-{
-    Member,
-    Administrator
 }

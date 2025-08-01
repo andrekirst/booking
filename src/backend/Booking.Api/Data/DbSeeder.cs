@@ -1,4 +1,5 @@
 using Booking.Api.Domain.Entities;
+using Booking.Api.Domain.Enums;
 using Booking.Api.Services;
 using Microsoft.EntityFrameworkCore;
 

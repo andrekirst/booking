@@ -1,0 +1,18 @@
+{
+  "agents": {
+    "enabled": true,
+    "directory": ".claude/agents",
+    "auto_load": true,
+    "coordination": {
+      "enable_multi_agent": true,
+      "conflict_resolution": "priority_based",
+      "communication_protocol": "claude_md"
+    }
+  },
+  "project": {
+    "name": "booking-agent4",
+    "tech_stack": [".NET 9", "Next.js", "PostgreSQL", "Docker"],
+    "platform": "Raspberry Pi Zero 2 W",
+    "language": "deutsch"
+  }
+}

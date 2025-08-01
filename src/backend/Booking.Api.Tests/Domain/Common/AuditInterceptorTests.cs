@@ -1,6 +1,7 @@
 using Booking.Api.Data;
 using Booking.Api.Data.Interceptors;
 using Booking.Api.Domain.Entities;
+using Booking.Api.Domain.Enums;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
