@@ -41,7 +41,7 @@ public class GetBookingHistoryQueryHandlerTests : IDisposable
             Email = "test@example.com",
             FirstName = "Test",
             LastName = "User",
-            Role = Domain.Enums.UserRole.Member,
+            Role = Booking.Api.Domain.Enums.UserRole.Member,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             EmailVerified = true,
@@ -78,7 +78,7 @@ public class GetBookingHistoryQueryHandlerTests : IDisposable
             StartDate = DateTime.Parse("2025-02-01"),
             EndDate = DateTime.Parse("2025-02-03"),
             Notes = "Test notes",
-            BookingItems = new List<Domain.ValueObjects.BookingItem>
+            BookingItems = new List<Booking.Api.Domain.ValueObjects.BookingItem>
             {
                 new(Guid.NewGuid(), 2)
             }
