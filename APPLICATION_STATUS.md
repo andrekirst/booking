@@ -1,6 +1,6 @@
 # Application Status Report
 
-> 🤖 Automatisch generiert am 2025-07-30 13:54:43
+> 🤖 Automatisch generiert am 2025-08-01 09:00:09
 > 
 > Dieses Dokument bietet eine vollständige Übersicht über den aktuellen Stand der Booking-Anwendung.
 
@@ -35,6 +35,7 @@ booking/
 - **function** - `src/frontend/app/components/BookingTooltip.tsx`
 - **function** - `src/frontend/app/components/admin/SleepingAccommodationsTable.tsx`
 - **function** - `src/frontend/app/components/admin/SleepingAccommodationForm.tsx`
+- **function** - `src/frontend/app/components/LandingPage.tsx`
 - **function** - `src/frontend/app/components/CalendarView.tsx`
 - **function** - `src/frontend/app/components/CreateBookingButton.tsx`
 - **function** - `src/frontend/app/components/CalendarLegend.tsx`
@@ -75,7 +76,6 @@ booking/
 - **function** - `src/frontend/app/admin/page.tsx`
 - **function** - `src/frontend/app/admin/users/page.tsx`
 - **function** - `src/frontend/app/page.tsx`
-- **function** - `src/frontend/app/login/page.tsx`
 - **function** - `src/frontend/app/bookings/page.tsx`
 - **function** - `src/frontend/app/bookings/[id]/page.tsx`
 - **function** - `src/frontend/app/bookings/new/page.tsx`
@@ -92,7 +92,6 @@ booking/
 - **/admin** - `src/frontend/app/admin/page.tsx`
 - **/admin/users** - `src/frontend/app/admin/users/page.tsx`
 - **/** - `src/frontend/app/page.tsx`
-- **/login** - `src/frontend/app/login/page.tsx`
 - **/bookings** - `src/frontend/app/bookings/page.tsx`
 - **/bookings/:id** - `src/frontend/app/bookings/[id]/page.tsx`
 - **/bookings/new** - `src/frontend/app/bookings/new/page.tsx`
@@ -222,4 +221,4 @@ _Datei: `src/backend/Booking.Api/Controllers/AdminController.cs`_
 - **Multi-Agent Development** - Parallele Entwicklung mit Git Worktrees
 
 
-_Letztes Update: 2025-07-30 13:54:44_
+_Letztes Update: 2025-08-01 09:00:10_

@@ -1,0 +1,355 @@
+# Lightweight Monitoring Stack für Raspberry Pi Zero 2 W
+# Optimiert für minimalen Ressourcenverbrauch und ARM64 Performance
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Prometheus (Metrics Collection) - ARM64 optimiert
+  # =============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: booking-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'     # 7 Tage Retention (Pi Zero Storage)
+      - '--storage.tsdb.retention.size=500MB'  # Max 500MB Storage
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.route-prefix=/'
+      - '--web.listen-address=0.0.0.0:9090'
+      - '--storage.tsdb.wal-compression'       # WAL Compression für weniger I/O
+      - '--query.max-concurrency=2'            # Limit für Pi Zero CPU
+      - '--query.max-samples=1000000'          # Sample Limit
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 64M        # Reduziert für Pi Zero
+          cpus: '0.4'
+        reservations:
+          memory: 32M
+    restart: unless-stopped
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging: *default-logging
+
+  # =============================================================================
+  # Grafana (Visualization) - ARM64 optimiert
+  # =============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: booking-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      # Performance Settings für Pi Zero
+      - GF_DEFAULT_INSTANCE_NAME=BookingSystem-PiZero
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_USERS_ALLOW_ORG_CREATE=false
+      - GF_USERS_AUTO_ASSIGN_ORG=true
+      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Viewer
+      # Security
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
+      - GF_SECURITY_SECRET_KEY_FILE=/run/secrets/grafana_secret_key
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      # Performance Optimization
+      - GF_RENDERING_SERVER_URL=
+      - GF_RENDERING_CALLBACK_URL=
+      - GF_LOG_LEVEL=warn
+      - GF_DATABASE_WAL=true
+      # Memory Settings
+      - GF_DATAPROXY_TIMEOUT=30
+      - GF_DATAPROXY_DIAL_TIMEOUT=10
+      - GF_DATAPROXY_KEEP_ALIVE_SECONDS=30
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+    deploy:
+      resources:
+        limits:
+          memory: 48M
+          cpus: '0.3'
+        reservations:
+          memory: 32M
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+    secrets:
+      - grafana_admin_password
+      - grafana_secret_key
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    logging: *default-logging
+
+  # =============================================================================
+  # Node Exporter (System Metrics) - Pi Zero optimiert
+  # =============================================================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: booking-node-exporter
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/var/lib/node_exporter/textfile_collector'
+      - '--web.listen-address=0.0.0.0:9100'
+      - '--collector.cpu'
+      - '--collector.diskstats'
+      - '--collector.filesystem'
+      - '--collector.loadavg'
+      - '--collector.meminfo'
+      - '--collector.netdev'
+      - '--collector.stat'
+      - '--collector.time'
+      - '--collector.uname'
+      - '--collector.vmstat'
+      - '--no-collector.arp'           # Disable unused collectors
+      - '--no-collector.bcache'
+      - '--no-collector.bonding'
+      - '--no-collector.conntrack'
+      - '--no-collector.entropy'
+      - '--no-collector.edac'
+      - '--no-collector.hwmon'
+      - '--no-collector.infiniband'
+      - '--no-collector.ipvs'
+      - '--no-collector.mdadm'
+      - '--no-collector.netclass'
+      - '--no-collector.netstat'
+      - '--no-collector.nfs'
+      - '--no-collector.nfsd'
+      - '--no-collector.pressure'
+      - '--no-collector.rapl'
+      - '--no-collector.schedstat'
+      - '--no-collector.sockstat'
+      - '--no-collector.thermal_zone'
+      - '--no-collector.timex'
+      - '--no-collector.udp_queues'
+      - '--no-collector.xfs'
+      - '--no-collector.zfs'
+    ports:
+      - "9100:9100"
+    volumes:
+      - /:/host:ro,rslave
+      - ./monitoring/textfile_collector:/var/lib/node_exporter/textfile_collector:ro
+    deploy:
+      resources:
+        limits:
+          memory: 16M
+          cpus: '0.1'
+        reservations:
+          memory: 8M
+    restart: unless-stopped
+    networks:
+      - monitoring
+    pid: host
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  # =============================================================================
+  # cAdvisor (Container Metrics) - Lightweight für Pi Zero
+  # =============================================================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: booking-cadvisor
+    command:
+      - '--port=8080'
+      - '--housekeeping_interval=30s'          # Reduziert für Pi Zero
+      - '--max_housekeeping_interval=60s'
+      - '--event_storage_event_limit=default'
+      - '--event_storage_age_limit=default'
+      - '--disable_metrics=disk,network'       # Disable heavy metrics
+      - '--docker_only=true'                   # Nur Docker Container
+      - '--store_container_labels=false'       # Weniger Labels
+      - '--whitelisted_container_labels=name,image'
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+          cpus: '0.2'
+        reservations:
+          memory: 16M
+    restart: unless-stopped
+    networks:
+      - monitoring
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    logging: *default-logging
+
+  # =============================================================================
+  # Alertmanager (Lightweight Alerting)
+  # =============================================================================
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: booking-alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--web.route-prefix=/'
+      - '--web.listen-address=0.0.0.0:9093'
+      - '--log.level=warn'                     # Weniger Logs
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    deploy:
+      resources:
+        limits:
+          memory: 24M
+          cpus: '0.1'
+        reservations:
+          memory: 16M
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+    logging: *default-logging
+
+  # =============================================================================
+  # Custom Booking Metrics Exporter
+  # =============================================================================
+  booking-exporter:
+    build:
+      context: ./monitoring/booking-exporter
+      dockerfile: Dockerfile
+    container_name: booking-metrics-exporter
+    environment:
+      - DATABASE_URL=postgresql://booking_user:password@postgres:5432/booking_production
+      - METRICS_PORT=9091
+      - SCRAPE_INTERVAL=30s
+      - LOG_LEVEL=INFO
+    ports:
+      - "9091:9091"
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+          cpus: '0.1'
+        reservations:
+          memory: 12M
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+      - booking-internal
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/metrics"]
+      interval: 60s
+      timeout: 10s
+      retries: 2
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  monitoring:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450
+  booking-internal:
+    external: true
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/booking/monitoring/prometheus
+  
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/booking/monitoring/grafana
+  
+  alertmanager_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/booking/monitoring/alertmanager
+
+# =============================================================================
+# Secrets
+# =============================================================================
+secrets:
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
+  grafana_secret_key:
+    file: ./secrets/grafana_secret_key.txt
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "1m"
+    max-file: "2"
+    compress: "true"
+
+# =============================================================================
+# RESOURCE SUMMARY für Pi Zero 2 W (512MB RAM)
+# =============================================================================
+# Service           | Memory | CPU   | Purpose
+# ------------------|--------|-------|----------------------------------
+# Prometheus        | 64MB   | 0.4   | Metrics Storage & Querying
+# Grafana           | 48MB   | 0.3   | Visualization & Dashboards  
+# Node Exporter     | 16MB   | 0.1   | System Metrics
+# cAdvisor          | 32MB   | 0.2   | Container Metrics
+# Alertmanager      | 24MB   | 0.1   | Alert Management
+# Booking Exporter  | 20MB   | 0.1   | Custom App Metrics
+# ------------------|--------|-------|----------------------------------
+# TOTAL             | 204MB  | 1.2   | 40% RAM, 1.2 CPU cores
+# 
+# Remaining für Main App: 308MB RAM (60%)
+# 
+# Key Optimizations:
+# - 7-day retention instead of 15
+# - Disabled unnecessary collectors
+# - Compressed logging
+# - Reduced scrape intervals
+# - Memory limits on all services
+# =============================================================================

@@ -1,0 +1,226 @@
+# Prometheus Configuration für Booking System auf Pi Zero 2 W
+# Optimiert für minimalen Ressourcenverbrauch und ARM64 Performance
+
+global:
+  scrape_interval: 30s              # Reduziert für Pi Zero (vs. 15s)
+  evaluation_interval: 30s          # Alert evaluation interval
+  scrape_timeout: 10s               # Timeout für scrapes
+  external_labels:
+    monitor: 'booking-system-pi-zero'
+    environment: 'production'
+    cluster: 'raspberry-pi'
+
+# Alertmanager Configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+# Rules Configuration
+rule_files:
+  - "alerts.yml"
+
+# Scrape Configurations - Optimiert für Pi Zero
+scrape_configs:
+  # =============================================================================
+  # Prometheus Self-Monitoring
+  # =============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 60s            # Weniger häufig für Self-Monitoring
+    metrics_path: /metrics
+    
+  # =============================================================================
+  # System Metrics (Node Exporter)
+  # =============================================================================
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'pi-zero-booking'
+    # Metric filtering für Pi Zero Performance
+    metric_relabel_configs:
+      # Keep essential CPU metrics
+      - source_labels: [__name__]
+        regex: 'node_cpu_seconds_total|node_load1|node_load5|node_load15'
+        action: keep
+      # Keep memory metrics
+      - source_labels: [__name__]
+        regex: 'node_memory_MemTotal_bytes|node_memory_MemFree_bytes|node_memory_MemAvailable_bytes|node_memory_Buffers_bytes|node_memory_Cached_bytes|node_memory_SwapTotal_bytes|node_memory_SwapFree_bytes'
+        action: keep
+      # Keep disk metrics
+      - source_labels: [__name__]
+        regex: 'node_filesystem_size_bytes|node_filesystem_free_bytes|node_filesystem_avail_bytes'
+        action: keep
+      # Keep network metrics
+      - source_labels: [__name__]
+        regex: 'node_network_receive_bytes_total|node_network_transmit_bytes_total|node_network_receive_packets_total|node_network_transmit_packets_total'
+        action: keep
+      # Keep system uptime
+      - source_labels: [__name__]
+        regex: 'node_boot_time_seconds|node_time_seconds'
+        action: keep
+      # Drop everything else to save memory
+      - source_labels: [__name__]
+        regex: 'node_.*'
+        action: drop
+
+  # =============================================================================
+  # Container Metrics (cAdvisor)
+  # =============================================================================
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    # Memory optimization - nur wichtige Container-Metriken
+    metric_relabel_configs:
+      # Keep essential container metrics
+      - source_labels: [__name__]
+        regex: 'container_cpu_usage_seconds_total|container_memory_usage_bytes|container_memory_rss|container_memory_cache|container_spec_memory_limit_bytes'
+        action: keep
+      # Keep network metrics
+      - source_labels: [__name__]
+        regex: 'container_network_receive_bytes_total|container_network_transmit_bytes_total'
+        action: keep
+      # Keep filesystem metrics
+      - source_labels: [__name__]
+        regex: 'container_fs_usage_bytes|container_fs_limit_bytes'
+        action: keep
+      # Only monitor booking system containers
+      - source_labels: [name]
+        regex: '(booking-.*|postgres.*|nginx.*)'
+        action: keep
+      # Drop non-booking containers
+      - source_labels: [name]
+        regex: '(.*monitoring.*|.*exporter.*)'
+        action: drop
+
+  # =============================================================================
+  # Application Metrics (Booking System Backend)
+  # =============================================================================
+  - job_name: 'booking-backend'
+    static_configs:
+      - targets: ['backend:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scheme: http
+    timeout: 10s
+    # Custom labels
+    relabel_configs:
+      - target_label: service
+        replacement: 'booking-backend'
+      - target_label: component
+        replacement: 'api'
+
+  # =============================================================================
+  # Custom Booking Metrics Exporter
+  # =============================================================================
+  - job_name: 'booking-exporter'
+    static_configs:
+      - targets: ['booking-exporter:9091']  
+    scrape_interval: 60s            # Weniger häufig für Custom Metrics
+    metrics_path: /metrics
+    timeout: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'booking-app'
+
+  # =============================================================================
+  # Nginx Metrics (wenn nginx-prometheus-exporter verwendet wird)
+  # =============================================================================
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:8080']      # nginx status endpoint
+    scrape_interval: 45s            # Nginx Metriken weniger kritisch
+    metrics_path: /nginx-status
+    params:
+      format: ['prometheus']
+    timeout: 5s
+
+  # =============================================================================
+  # PostgreSQL Metrics (postgres_exporter - optional)
+  # =============================================================================
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #   scrape_interval: 60s          # DB Metriken weniger häufig
+  #   metrics_path: /metrics
+  #   timeout: 10s
+
+  # =============================================================================
+  # Blackbox Monitoring (Health Checks)
+  # =============================================================================
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://yourdomain.com/health        # External health check
+        - http://backend:8080/health           # Internal backend health
+        - http://frontend:80/health            # Internal frontend health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+    scrape_interval: 60s            # Health checks weniger häufig
+    scrape_timeout: 15s
+
+# =============================================================================
+# Storage Configuration - Optimiert für Pi Zero Storage
+# =============================================================================
+storage:
+  tsdb:
+    # Retention policy für begrenzte SD-Card
+    retention.time: 7d              # 7 Tage statt default 15d
+    retention.size: 500MB           # Maximum 500MB für TSDB
+    
+    # Compression und Performance
+    wal-compression: true           # WAL Kompression
+    
+    # Block size optimization für SD-Card
+    min-block-duration: 2h          # Kleinere Blöcke
+    max-block-duration: 24h         # Maximale Block-Größe
+
+# =============================================================================
+# Remote Write Configuration (Optional - für externe Monitoring)
+# =============================================================================
+# remote_write:
+#   - url: "https://prometheus-remote-write-endpoint.com/api/v1/write"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"
+#     queue_config:
+#       max_samples_per_send: 1000      # Batch size reduziert
+#       max_shards: 2                   # Weniger Shards für Pi Zero
+#       capacity: 500                   # Queue capacity reduziert
+
+# =============================================================================
+# Performance Tuning für Pi Zero 2 W
+# =============================================================================
+# Diese Konfiguration ist speziell optimiert für:
+# - ARM64 Cortex-A53 Quad-Core @ 1GHz
+# - 512MB RAM
+# - MicroSD Storage (begrenzte I/O)
+# - Minimaler Netzwerk-Traffic
+# 
+# Key Optimizations:
+# - Längere Scrape-Intervalle (30s statt 15s)
+# - Aggressive Metric-Filterung
+# - Kurze Retention (7 Tage)
+# - WAL-Kompression aktiviert
+# - Reduzierte Timeout-Werte
+# - Nur essentielle Metriken erfassen
+# =============================================================================

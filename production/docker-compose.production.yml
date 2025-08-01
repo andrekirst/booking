@@ -1,0 +1,385 @@
+# Production Docker Compose for Raspberry Pi Zero 2 W
+# Memory-optimized configuration: Total 225MB usage (vs 512MB available)
+# Performance target: <200ms response time, 10-50 concurrent users
+
+version: '3.8'
+
+#################################################################################
+# Docker Secrets for Production Security
+#################################################################################
+secrets:
+  postgres_password:
+    external: true
+  jwt_secret:
+    external: true
+  smtp_password:
+    external: true
+
+#################################################################################
+# Named Volumes for Data Persistence
+#################################################################################
+volumes:
+  postgres_data_prod:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/booking/data/postgres
+  grafana_data_prod:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/booking/data/grafana
+  prometheus_data_prod:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/booking/data/prometheus
+  nginx_cache:
+    driver: local
+  backup_storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/booking/backups
+
+#################################################################################
+# Production Network with Isolation
+#################################################################################
+networks:
+  booking_frontend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+  booking_backend:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+  monitoring:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.3.0/24
+
+#################################################################################
+# Production Services - ARM64 Optimized
+#################################################################################
+services:
+
+  #############################################################################
+  # PostgreSQL Database - ARM64 Optimized (80MB target)
+  #############################################################################
+  postgres:
+    image: postgres:16-alpine
+    container_name: booking-postgres-prod
+    restart: unless-stopped
+    secrets:
+      - postgres_password
+    environment:
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: booking_prod
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      # ARM64 Performance Optimizations
+      POSTGRES_SHARED_PRELOAD_LIBRARIES: ""
+      POSTGRES_MAX_CONNECTIONS: "10"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./scripts/init-prod-db.sql:/docker-entrypoint-initdb.d/init-prod-db.sql:ro
+    networks:
+      - booking_backend
+    # Aggressive memory constraints for Pi Zero
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+          cpus: '0.6'
+        reservations:
+          memory: 64M
+          cpus: '0.3'
+    # ARM64-optimized PostgreSQL configuration
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c shared_buffers=32MB
+      -c effective_cache_size=80MB
+      -c work_mem=2MB
+      -c maintenance_work_mem=8MB
+      -c max_connections=10
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=2
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  #############################################################################
+  # Backend API - Native AOT ARM64 (75MB target)
+  #############################################################################
+  backend:
+    build:
+      context: ../
+      dockerfile: production/Dockerfile.production
+      args:
+        BUILD_DATE: ${BUILD_DATE:-now}
+        VCS_REF: ${VCS_REF:-dev}
+    container_name: booking-backend-prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    secrets:
+      - jwt_secret
+      - smtp_password
+    environment:
+      # Database Connection (production)
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=booking_prod;Username=booking_user;Password_File=/run/secrets/postgres_password;Pooling=true;MinPoolSize=1;MaxPoolSize=5;CommandTimeout=30"
+      
+      # JWT Configuration
+      JwtSettings__SecretFile: "/run/secrets/jwt_secret"
+      JwtSettings__Issuer: "BookingSystem"
+      JwtSettings__Audience: "BookingApp"
+      JwtSettings__ExpirationMinutes: "60"
+      
+      # Email Configuration
+      EmailSettings__BaseUrl: "${PUBLIC_URL:-https://booking.yourdomain.com}"
+      EmailSettings__SmtpHost: "${SMTP_HOST}"
+      EmailSettings__SmtpPort: "${SMTP_PORT:-587}"
+      EmailSettings__SmtpUser: "${SMTP_USER}"
+      EmailSettings__SmtpPasswordFile: "/run/secrets/smtp_password"
+      EmailSettings__FromEmail: "${FROM_EMAIL:-noreply@yourdomain.com}"
+      EmailSettings__FromName: "Booking System"
+      
+      # CORS Production Settings
+      CorsSettings__AllowedOrigins: "${ALLOWED_ORIGINS:-https://booking.yourdomain.com}"
+      CorsSettings__AllowCredentials: "true"
+      CorsSettings__PolicyName: "Production"
+      
+      # Performance Optimizations for Pi Zero
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "http://+:80"
+      DOTNET_SYSTEM_GC_SERVER: "false"
+      DOTNET_SYSTEM_GC_CONCURRENT: "true"
+      DOTNET_SYSTEM_GC_RETAINVM: "false"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - booking_backend
+      - booking_frontend
+    # Memory constraints for Native AOT backend
+    deploy:
+      resources:
+        limits:
+          memory: 75M
+          cpus: '0.8'
+        reservations:
+          memory: 64M
+          cpus: '0.4'
+    # Comprehensive health checks
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  #############################################################################
+  # Nginx Reverse Proxy with SSL Termination (30MB target)
+  #############################################################################
+  nginx:
+    image: nginx:alpine
+    container_name: booking-nginx-prod
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx configuration
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx-sites.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./config/nginx-security.conf:/etc/nginx/conf.d/security.conf:ro
+      
+      # SSL certificates (Let's Encrypt or custom)
+      - ./ssl:/etc/nginx/ssl:ro
+      
+      # Static assets (Next.js build output)
+      - ../src/frontend/out:/var/www/html:ro
+      
+      # Nginx cache and logs
+      - nginx_cache:/var/cache/nginx
+      - ./logs:/var/log/nginx
+    networks:
+      - booking_frontend
+    # Memory constraints for Nginx
+    deploy:
+      resources:
+        limits:
+          memory: 30M
+          cpus: '0.3'
+        reservations:
+          memory: 24M
+          cpus: '0.1'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  #############################################################################
+  # Prometheus Monitoring - ARM64 Optimized (30MB target)
+  #############################################################################
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: booking-prometheus-prod
+    restart: unless-stopped
+    user: "65534:65534"  # nobody user
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data_prod:/prometheus
+    networks:
+      - monitoring
+      - booking_backend
+    # Aggressive memory limits for Pi Zero
+    deploy:
+      resources:
+        limits:
+          memory: 30M
+          cpus: '0.2'
+        reservations:
+          memory: 24M
+          cpus: '0.1'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'      # Reduced retention for Pi Zero
+      - '--storage.tsdb.retention.size=200MB'   # Limit disk usage
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--query.max-samples=1000000'           # Limit query complexity
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  #############################################################################
+  # Grafana Dashboard - ARM64 Optimized (30MB target)
+  #############################################################################
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: booking-grafana-prod
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      # Security settings
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin123}"
+      GF_SECURITY_SECRET_KEY: "${GRAFANA_SECRET_KEY}"
+      
+      # Performance settings for Pi Zero
+      GF_MEMORY_INIT_SIZE: "20MB"
+      GF_MEMORY_MAX_SIZE: "30MB"
+      GF_DATABASE_TYPE: "sqlite3"
+      
+      # Disable features to save memory
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/etc/grafana/provisioning/dashboards/pi-zero-overview.json"
+    volumes:
+      - grafana_data_prod:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    networks:
+      - monitoring
+    # Memory constraints for Grafana
+    deploy:
+      resources:
+        limits:
+          memory: 30M
+          cpus: '0.3'
+        reservations:
+          memory: 24M
+          cpus: '0.1'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  #############################################################################
+  # Backup Service - Automated Database & Volume Backups
+  #############################################################################
+  backup:
+    image: alpine:3.18
+    container_name: booking-backup-prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: "postgres"
+      POSTGRES_DB: "booking_prod"
+      POSTGRES_USER: "booking_user"
+      BACKUP_RETENTION_DAYS: "30"
+      BACKUP_SCHEDULE: "0 2 * * *"  # Daily at 2 AM
+    volumes:
+      - backup_storage:/backups
+      - ./scripts/backup-system.sh:/usr/local/bin/backup-system.sh:ro
+      - postgres_data_prod:/var/lib/postgresql/data:ro
+    networks:
+      - booking_backend
+    # Minimal resources for backup service
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+          cpus: '0.2'
+        reservations:
+          memory: 16M
+          cpus: '0.1'
+    command: >
+      sh -c "
+        apk add --no-cache postgresql-client curl &&
+        echo '${BACKUP_SCHEDULE} /usr/local/bin/backup-system.sh' | crontab - &&
+        crond -f -l 2
+      "
+
+#################################################################################
+# Production Environment Configuration
+#################################################################################
+# Total Resource Allocation Summary:
+# - PostgreSQL:    80MB (36%)
+# - Backend:       75MB (33%) 
+# - Nginx:         30MB (13%)
+# - Prometheus:    30MB (13%)
+# - Grafana:       30MB (13%)
+# - Backup:        20MB (9%)
+# TOTAL:          265MB (52% of 512MB Pi Zero RAM)
+# Available:      247MB (48% for OS cache and buffers)
+#################################################################################
