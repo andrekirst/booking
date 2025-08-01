@@ -37,7 +37,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = "Updated booking notes with additional information";
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -65,7 +65,7 @@ public class ChangeNotesCommandHandlerTests
         string? newNotes = null;
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -88,7 +88,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = string.Empty;
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -111,7 +111,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = new string('A', 2000); // Long notes
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -134,7 +134,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = "Notes with émojis 🏠 and spëcial charâcters: @#$%^&*()";
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -236,7 +236,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = "Valid notes";
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
         _repository.SaveAsync(aggregate).ThrowsAsync(new InvalidOperationException("Database error"));
@@ -278,7 +278,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = "Test notes for logging";
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -303,8 +303,9 @@ public class ChangeNotesCommandHandlerTests
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
-        // Assert - Verify warning was logged
+        // Assert - Verify warning was logged (allow other log levels)
         _logger.ReceivedWithAnyArgs(1).LogWarning(default(string)!, Array.Empty<object>());
+        _logger.ReceivedWithAnyArgs(1).LogInformation(default(string)!, Array.Empty<object>());
     }
 
     [Theory]
@@ -317,7 +318,7 @@ public class ChangeNotesCommandHandlerTests
         // Arrange
         var bookingId = _fixture.Create<Guid>();
         var command = new ChangeNotesCommand(bookingId, notes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 
@@ -340,7 +341,7 @@ public class ChangeNotesCommandHandlerTests
         var newNotes = "   \t\n   "; // Only whitespace
 
         var command = new ChangeNotesCommand(bookingId, newNotes);
-        var aggregate = _fixture.Create<BookingAggregate>();
+        var aggregate = Substitute.For<BookingAggregate>();
 
         _repository.GetByIdAsync(bookingId).Returns(aggregate);
 

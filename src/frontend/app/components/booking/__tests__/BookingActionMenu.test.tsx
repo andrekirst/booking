@@ -15,7 +15,6 @@ Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
 describe('BookingActionMenu', () => {
   const mockOnCancel = jest.fn();
-  const mockOnEdit = jest.fn();
   const mockOnAccept = jest.fn();
   const mockOnReject = jest.fn();
 
@@ -54,7 +53,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -78,7 +76,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -97,7 +94,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -122,7 +118,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -139,7 +134,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={{ ...baseBooking, status: BookingStatus.Accepted }}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -154,7 +148,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={{ ...baseBooking, status: BookingStatus.Cancelled }}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
         />
       );
 
@@ -167,7 +160,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={{ ...baseBooking, status: BookingStatus.Cancelled }}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
         />
       );
 
@@ -191,7 +183,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -226,7 +217,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -263,7 +253,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -282,7 +271,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
         />
       );
 
@@ -309,7 +297,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
         />
       );
 
@@ -331,7 +318,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />

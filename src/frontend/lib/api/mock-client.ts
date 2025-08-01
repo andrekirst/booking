@@ -804,6 +804,68 @@ export class MockApiClient implements ApiClient {
       success: true
     };
   }
+
+  // Granular booking change methods
+  async changeDateRange(bookingId: string, request: { startDate: string; endDate: string; reason?: string }): Promise<Booking> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const booking = this.mockBookings.find(b => b.id === bookingId);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    // Update booking with new date range
+    booking.startDate = request.startDate;
+    booking.endDate = request.endDate;
+    booking.numberOfNights = Math.ceil((new Date(request.endDate).getTime() - new Date(request.startDate).getTime()) / (1000 * 60 * 60 * 24));
+    booking.changedAt = new Date().toISOString();
+
+    return { ...booking };
+  }
+
+  async changeAccommodations(bookingId: string, request: { bookingItems: { sleepingAccommodationId: string; personCount: number }[] }): Promise<Booking> {
+    await this.delay(500);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const booking = this.mockBookings.find(b => b.id === bookingId);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    // Update booking with new accommodations
+    booking.bookingItems = request.bookingItems.map(item => ({
+      sleepingAccommodationId: item.sleepingAccommodationId,
+      sleepingAccommodationName: `Mock Room ${item.sleepingAccommodationId}`,
+      personCount: item.personCount,
+    }));
+    booking.totalPersons = request.bookingItems.reduce((sum, item) => sum + item.personCount, 0);
+    booking.changedAt = new Date().toISOString();
+
+    return { ...booking };
+  }
+
+  async changeNotes(bookingId: string, request: { notes?: string }): Promise<Booking> {
+    await this.delay(300);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const booking = this.mockBookings.find(b => b.id === bookingId);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    // Update booking with new notes
+    booking.notes = request.notes;
+    booking.changedAt = new Date().toISOString();
+
+    return { ...booking };
+  }
 }
 
 export const mockApiClient = new MockApiClient();

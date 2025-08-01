@@ -127,8 +127,7 @@ export default function BookingOverview({
 
     try {
       const result = await apiClient.changeAccommodations(booking.id, {
-        bookingItems,
-        reason
+        bookingItems
       });
       
       setOptimisticBooking(result);
@@ -158,8 +157,7 @@ export default function BookingOverview({
 
     try {
       const result = await apiClient.changeNotes(booking.id, {
-        notes,
-        reason
+        notes
       });
       
       setOptimisticBooking(result);
