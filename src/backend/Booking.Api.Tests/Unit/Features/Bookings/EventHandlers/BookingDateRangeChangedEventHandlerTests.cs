@@ -87,8 +87,20 @@ public class BookingDateRangeChangedEventHandlerTests
 
         thrownException.Should().Be(exception);
         
-        // Verify error was logged
-        _logger.ReceivedWithAnyArgs(1).LogError(default(Exception)!, default(string)!, Array.Empty<object>());
+        // Verify information log was called once
+        _logger.Received(1).Log(
+            LogLevel.Information,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains($"Handling BookingDateRangeChangedEvent for booking {bookingId}")),
+            null,
+            Arg.Any<Func<object, Exception?, string>>());
+        // Verify error log was called once
+        _logger.Received(1).Log(
+            LogLevel.Error,
+            Arg.Any<EventId>(),
+            Arg.Any<object>(),
+            exception,
+            Arg.Any<Func<object, Exception?, string>>());
     }
 
     [Fact]
@@ -158,8 +170,20 @@ public class BookingDateRangeChangedEventHandlerTests
 
         thrownException.Should().Be(exception);
         
-        // Verify error was logged
-        _logger.ReceivedWithAnyArgs(1).LogError(default(Exception)!, default(string)!, Array.Empty<object>());
+        // Verify information log was called once
+        _logger.Received(1).Log(
+            LogLevel.Information,
+            Arg.Any<EventId>(),
+            Arg.Is<object>(o => o.ToString()!.Contains($"Handling BookingDateRangeChangedEvent for booking {bookingId}")),
+            null,
+            Arg.Any<Func<object, Exception?, string>>());
+        // Verify error log was called once
+        _logger.Received(1).Log(
+            LogLevel.Error,
+            Arg.Any<EventId>(),
+            Arg.Any<object>(),
+            exception,
+            Arg.Any<Func<object, Exception?, string>>());
     }
 
     [Fact]
