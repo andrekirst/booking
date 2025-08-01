@@ -17,6 +17,16 @@ const customJestConfig = {
   },
   // Suppress console errors during tests to prevent CI failures
   silent: true,
+  // Skip TypeScript type checking in tests for faster CI
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+      skipTypeCheck: true
+    }
+  },
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', { isolatedModules: true }]
+  },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

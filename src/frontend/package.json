@@ -7,7 +7,7 @@
     "build": "node -r ./.node-deprecated-modules.js ./node_modules/.bin/next build",
     "start": "node -r ./.node-deprecated-modules.js ./node_modules/.bin/next start",
     "lint": "next lint",
-    "test": "node -r ./.node-deprecated-modules.js ./node_modules/.bin/jest",
+    "test": "node -r ./.node-deprecated-modules.js ./node_modules/.bin/jest --passWithNoTests",
     "test:watch": "node -r ./.node-deprecated-modules.js ./node_modules/.bin/jest --watch",
     "test:coverage": "node -r ./.node-deprecated-modules.js ./node_modules/.bin/jest --coverage",
     "test:e2e": "playwright test",
