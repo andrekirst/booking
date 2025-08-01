@@ -26,7 +26,7 @@ public class GetBookingHistoryQueryHandler(
                 BookingCreatedEvent createdEvent => new BookingActivityDto(
                     ActivityType: "BookingCreated",
                     Description: "Buchung wurde erstellt",
-                    Timestamp: createdEvent.OccurredOn,
+                    Timestamp: createdEvent.OccurredAt,
                     UserName: await GetUserNameAsync(createdEvent.UserId, userCache, cancellationToken),
                     Metadata: new Dictionary<string, object>
                     {
@@ -39,8 +39,8 @@ public class GetBookingHistoryQueryHandler(
                 BookingUpdatedEvent updatedEvent => new BookingActivityDto(
                     ActivityType: "BookingUpdated",
                     Description: "Buchung wurde geändert",
-                    Timestamp: updatedEvent.OccurredOn,
-                    UserName: await GetUserNameAsync(updatedEvent.UserId, userCache, cancellationToken),
+                    Timestamp: updatedEvent.OccurredAt,
+                    UserName: "System", // BookingUpdatedEvent hat keine UserId
                     Metadata: new Dictionary<string, object>
                     {
                         ["StartDate"] = updatedEvent.StartDate,
@@ -52,28 +52,28 @@ public class GetBookingHistoryQueryHandler(
                 BookingAcceptedEvent acceptedEvent => new BookingActivityDto(
                     ActivityType: "BookingAccepted",
                     Description: "Buchung wurde angenommen",
-                    Timestamp: acceptedEvent.OccurredOn,
+                    Timestamp: acceptedEvent.OccurredAt,
                     UserName: "Administrator",
                     Metadata: null
                 ),
                 BookingRejectedEvent rejectedEvent => new BookingActivityDto(
                     ActivityType: "BookingRejected",
                     Description: "Buchung wurde abgelehnt",
-                    Timestamp: rejectedEvent.OccurredOn,
+                    Timestamp: rejectedEvent.OccurredAt,
                     UserName: "Administrator",
                     Metadata: null
                 ),
                 BookingConfirmedEvent confirmedEvent => new BookingActivityDto(
                     ActivityType: "BookingConfirmed",
                     Description: "Buchung wurde bestätigt",
-                    Timestamp: confirmedEvent.OccurredOn,
+                    Timestamp: confirmedEvent.OccurredAt,
                     UserName: "Administrator",
                     Metadata: null
                 ),
                 BookingCancelledEvent cancelledEvent => new BookingActivityDto(
                     ActivityType: "BookingCancelled",
                     Description: "Buchung wurde storniert",
-                    Timestamp: cancelledEvent.OccurredOn,
+                    Timestamp: cancelledEvent.OccurredAt,
                     UserName: "System",
                     Metadata: null
                 ),
