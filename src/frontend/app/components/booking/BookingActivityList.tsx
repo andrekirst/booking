@@ -96,6 +96,14 @@ export default function BookingActivityList({ bookingId }: BookingActivityListPr
             </svg>
           </div>
         );
+      case 'BookingCompleted':
+        return (
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+            <svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        );
       default:
         return (
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
