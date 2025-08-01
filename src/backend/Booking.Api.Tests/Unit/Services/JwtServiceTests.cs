@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Booking.Api.Configuration;
 using Booking.Api.Domain.Entities;
+using Booking.Api.Domain.Enums;
 using Booking.Api.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Options;

@@ -4,7 +4,7 @@ using Booking.Api.Domain.Entities;
 using Booking.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using System.Text;
+using Booking.Api.Domain.Enums;
 
 namespace Booking.Api.Application.Auth.Commands;
 

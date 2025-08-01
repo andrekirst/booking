@@ -953,7 +953,115 @@ echo "- Database: localhost:60{AGENT}03"
 - [ ] Status bestätigen (alle Services healthy)
 - [ ] NIEMALS lokales `npm run dev` als Ersatz anbieten
 
-## 17. Kommunikation
+## 17. Sub-Agents Integration
+
+### 17.1 Übersicht
+Das Projekt integriert spezialisierte Sub-Agents basierend auf https://github.com/wshobson/agents für erhöhte Entwicklungseffizienz und Code-Qualität.
+
+### 17.2 Verfügbare Sub-Agents
+
+#### Priority 1 - Core Development
+- **backend-architect** (sonnet): .NET 9 Native AOT APIs, Event Sourcing, PostgreSQL Schema
+- **frontend-developer** (sonnet): Next.js 15 Komponenten, TypeScript, Tailwind CSS, Responsive Design
+- **sql-pro** (sonnet): PostgreSQL Query-Optimierung, Event Store Schema, Entity Framework Core
+- **security-auditor** (opus): Security Reviews, JWT Auth, OWASP Compliance, GDPR
+- **deployment-engineer** (sonnet): Docker Multi-Agent, CI/CD, ARM64 Optimierung, Raspberry Pi
+
+#### Priority 2 - Quality & Performance
+- **code-reviewer** (sonnet): Code-Qualität, C# 12 Konventionen, Performance Reviews
+- **test-automator** (sonnet): xUnit, Jest, Playwright, Testcontainers, CI/CD Tests
+- **performance-engineer** (opus): Native AOT Optimierung, Bundle Size, Raspberry Pi Performance
+
+#### Priority 3 - Operations
+- **devops-troubleshooter** (sonnet): Incident Response, Docker Debugging, System Monitoring
+- **api-documenter** (haiku): OpenAPI Specs, TypeScript SDK Generation, Developer Docs
+
+### 17.3 Agent-Verwendung
+
+#### Direkte Agent-Ansprache
+```
+Als backend-architect: Entwerfe API für Buchungs-Verfügbarkeit mit Event Sourcing
+Als frontend-developer: Erstelle responsive Kalender-Komponente mit Touch-Support
+Als security-auditor: Überprüfe JWT-Implementation für GDPR-Compliance
+```
+
+#### Multi-Agent Workflows
+```
+Verwende feature-development Workflow für neue Booking-Timeline-Funktion
+Starte security-review Workflow für Admin-Approval-System
+Führe performance-optimization Workflow für Raspberry Pi Deployment aus
+```
+
+### 17.4 Agent-Koordination
+
+#### Workflow-Sequences
+1. **Feature Development**: backend-architect → frontend-developer → sql-pro → test-automator → security-auditor → code-reviewer → deployment-engineer
+2. **Bug Fixing**: devops-troubleshooter → performance-engineer → code-reviewer → test-automator → deployment-engineer
+3. **Security Review**: security-auditor → code-reviewer → test-automator → deployment-engineer
+4. **Performance Optimization**: performance-engineer → sql-pro → frontend-developer → deployment-engineer
+
+#### Koordinations-Matrix
+- **backend-architect** koordiniert mit: frontend-developer, sql-pro, security-auditor
+- **frontend-developer** koordiniert mit: backend-architect, test-automator, performance-engineer
+- **security-auditor** koordiniert mit: code-reviewer, deployment-engineer
+- **deployment-engineer** koordiniert mit: devops-troubleshooter, performance-engineer
+
+### 17.5 Agent-Setup
+
+#### Installation
+```bash
+# Sub-Agents installieren und konfigurieren
+./scripts/setup-agents.sh
+
+# Agent-Status prüfen
+ls -la .claude/agents/
+```
+
+#### Konfiguration
+- **Verzeichnis**: `.claude/agents/`
+- **Konfiguration**: `.claude/agents/agents.json`
+- **Settings**: `.claude/settings.json` mit agent-enabled
+
+### 17.6 Projektspezifische Anpassungen
+
+#### Alle Agents
+- Deutsche Kommunikation, englische Fachbegriffe
+- Booking-Domain Kontext (Familien-Buchungssystem)
+- Raspberry Pi Hardware-Bewusstsein
+- Multi-Agent Koordination über CLAUDE.md
+
+#### Backend-specific
+- .NET 9 Native AOT Performance-Constraints
+- Entity Framework Core Event Sourcing Patterns
+- PostgreSQL ARM64 Optimierungen
+
+#### Frontend-specific
+- Next.js 15 App Router Best Practices
+- TypeScript Strict Mode mit Domain Types
+- Tailwind v4 Touch-optimierte UI
+
+### 17.7 Erwartete Verbesserungen
+- **25-40%** Entwicklungsgeschwindigkeit durch Spezialisierung
+- **Parallelisierung** von Frontend/Backend Development
+- **Konsistente Architektur** durch backend-architect
+- **Security by Design** durch security-auditor
+- **Performance-Optimiert** für Raspberry Pi Hardware
+
+### 17.8 Troubleshooting
+
+#### Agent nicht gefunden
+```bash
+# Prüfe Agent-Installation
+ls -la .claude/agents/
+./scripts/setup-agents.sh
+```
+
+#### Konflikt zwischen Agents
+- Prioritäts-System: 1 (highest) → 3 (lowest)
+- Eskalation über Senior Developer bei Unklarheit
+- File-Level Assignment zur Konflikt-Vermeidung
+
+## 18. Kommunikation
 - **Sprache**: Antworte in diesem Projekt grundsätzlich auf **Deutsch**
 - Verwende deutsche Begriffe für Erklärungen und Dokumentation
 - Code-Kommentare und technische Begriffe können auf Englisch bleiben (z.B. Variablennamen, Methodennamen)

@@ -1,0 +1,135 @@
+{
+  "version": "1.0.0",
+  "description": "Sub-Agents Konfiguration für Booking-Projekt",
+  "agents": {
+    "backend-architect": {
+      "name": "backend-architect",
+      "model": "sonnet",
+      "priority": 1,
+      "domain": ["backend", "architecture", "api-design", "database-schema"],
+      "technologies": [".NET 9", "Native AOT", "Entity Framework Core", "PostgreSQL", "Event Sourcing"],
+      "coordinates_with": ["frontend-developer", "sql-pro", "security-auditor"]
+    },
+    "frontend-developer": {
+      "name": "frontend-developer", 
+      "model": "sonnet",
+      "priority": 1,
+      "domain": ["frontend", "ui", "components", "responsive-design"],
+      "technologies": ["Next.js 15", "React", "TypeScript", "Tailwind CSS", "App Router"],
+      "coordinates_with": ["backend-architect", "test-automator", "performance-engineer"]
+    },
+    "sql-pro": {
+      "name": "sql-pro",
+      "model": "sonnet", 
+      "priority": 1,
+      "domain": ["database", "query-optimization", "schema-design", "performance"],
+      "technologies": ["PostgreSQL", "Entity Framework Core", "Event Store", "LINQ"],
+      "coordinates_with": ["backend-architect", "performance-engineer"]
+    },
+    "security-auditor": {
+      "name": "security-auditor",
+      "model": "opus",
+      "priority": 1,
+      "domain": ["security", "authentication", "authorization", "compliance"],
+      "technologies": ["JWT", "OAuth2", "OWASP", "GDPR", "CORS"],
+      "coordinates_with": ["code-reviewer", "deployment-engineer"]
+    },
+    "deployment-engineer": {
+      "name": "deployment-engineer",
+      "model": "sonnet",
+      "priority": 1,
+      "domain": ["deployment", "ci-cd", "containers", "infrastructure"],
+      "technologies": ["Docker", "GitHub Actions", "ARM64", "Raspberry Pi"],
+      "coordinates_with": ["devops-troubleshooter", "performance-engineer"]
+    },
+    "code-reviewer": {
+      "name": "code-reviewer",
+      "model": "sonnet",
+      "priority": 2,
+      "domain": ["code-quality", "conventions", "maintainability", "patterns"],
+      "technologies": ["C# 12", "TypeScript", "Code Review", "SOLID"],
+      "coordinates_with": ["security-auditor", "test-automator"]
+    },
+    "test-automator": {
+      "name": "test-automator",
+      "model": "sonnet",
+      "priority": 2,
+      "domain": ["testing", "automation", "quality-assurance", "ci-cd"],
+      "technologies": ["xUnit", "Jest", "Playwright", "Testcontainers"],
+      "coordinates_with": ["frontend-developer", "code-reviewer"]
+    },
+    "performance-engineer": {
+      "name": "performance-engineer",
+      "model": "opus",
+      "priority": 2,
+      "domain": ["performance", "optimization", "profiling", "monitoring"],
+      "technologies": ["Native AOT", "Bundle Optimization", "Caching", "ARM64"],
+      "coordinates_with": ["sql-pro", "deployment-engineer"]
+    },
+    "devops-troubleshooter": {
+      "name": "devops-troubleshooter",
+      "model": "sonnet", 
+      "priority": 3,
+      "domain": ["troubleshooting", "incident-response", "monitoring", "debugging"],
+      "technologies": ["Docker", "System Monitoring", "Log Analysis", "Raspberry Pi"],
+      "coordinates_with": ["deployment-engineer", "performance-engineer"]
+    },
+    "api-documenter": {
+      "name": "api-documenter",
+      "model": "haiku",
+      "priority": 3,
+      "domain": ["documentation", "api-specs", "developer-experience", "sdk-generation"],
+      "technologies": ["OpenAPI", "Swagger", "TypeScript Generation", "Documentation"],
+      "coordinates_with": ["backend-architect", "frontend-developer"]
+    }
+  },
+  "workflows": {
+    "feature-development": {
+      "description": "Vollständige Feature-Entwicklung von Konzept bis Deployment",
+      "sequence": [
+        "backend-architect",
+        "frontend-developer", 
+        "sql-pro",
+        "test-automator",
+        "security-auditor",
+        "code-reviewer",
+        "api-documenter",
+        "deployment-engineer"
+      ]
+    },
+    "bug-fix": {
+      "description": "Bug-Fixing Workflow mit Analyse und Validation",
+      "sequence": [
+        "devops-troubleshooter",
+        "performance-engineer",
+        "code-reviewer",
+        "test-automator",
+        "deployment-engineer"
+      ]
+    },
+    "security-review": {
+      "description": "Sicherheits-focused Review und Hardening",
+      "sequence": [
+        "security-auditor",
+        "code-reviewer",
+        "test-automator",
+        "deployment-engineer"
+      ]
+    },
+    "performance-optimization": {
+      "description": "Performance-Optimierung End-to-End",
+      "sequence": [
+        "performance-engineer",
+        "sql-pro",
+        "frontend-developer",
+        "deployment-engineer"
+      ]
+    }
+  },
+  "coordination": {
+    "communication_protocol": "CLAUDE.md Updates + Issue Comments",
+    "conflict_resolution": "Priority-based (1=highest) mit Senior Developer Escalation",
+    "work_distribution": "Feature-based separation, File-level assignment",
+    "synchronization": "Git branch coordination + Daily standup in Issues"
+  }
+}
