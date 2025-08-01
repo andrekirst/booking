@@ -15,7 +15,6 @@ Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
 describe('BookingActionMenu', () => {
   const mockOnCancel = jest.fn();
-  const mockOnEdit = jest.fn();
   const mockOnAccept = jest.fn();
   const mockOnReject = jest.fn();
 
@@ -54,7 +53,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -78,7 +76,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -97,7 +94,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -122,7 +118,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -139,7 +134,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={{ ...baseBooking, status: BookingStatus.Accepted }}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -149,25 +143,12 @@ describe('BookingActionMenu', () => {
       expect(screen.queryByText('Ablehnen')).not.toBeInTheDocument();
     });
 
-    it('should disable edit button for cancelled/accepted/rejected bookings', () => {
-      render(
-        <BookingActionMenu
-          booking={{ ...baseBooking, status: BookingStatus.Cancelled }}
-          onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
-        />
-      );
-
-      const editButton = screen.getByText('Bearbeiten').closest('button');
-      expect(editButton).toBeDisabled();
-    });
 
     it('should not show cancel button for cancelled/accepted/rejected bookings', () => {
       render(
         <BookingActionMenu
           booking={{ ...baseBooking, status: BookingStatus.Cancelled }}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
         />
       );
 
@@ -191,7 +172,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -226,7 +206,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -263,7 +242,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />
@@ -282,7 +260,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
         />
       );
 
@@ -304,20 +281,6 @@ describe('BookingActionMenu', () => {
       expect(mockOnCancel).toHaveBeenCalled();
     });
 
-    it('should call onEdit when edit button is clicked', () => {
-      render(
-        <BookingActionMenu
-          booking={baseBooking}
-          onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
-        />
-      );
-
-      const editButton = screen.getByText('Bearbeiten');
-      fireEvent.click(editButton);
-
-      expect(mockOnEdit).toHaveBeenCalled();
-    });
   });
 
   describe('Error Handling', () => {
@@ -331,7 +294,6 @@ describe('BookingActionMenu', () => {
         <BookingActionMenu
           booking={baseBooking}
           onCancel={mockOnCancel}
-          onEdit={mockOnEdit}
           onAccept={mockOnAccept}
           onReject={mockOnReject}
         />

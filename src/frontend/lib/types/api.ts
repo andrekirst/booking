@@ -246,3 +246,25 @@ export interface TestEmailResponse {
   message: string;
   success: boolean;
 }
+
+// Granular Booking Edit Types
+export interface ChangeDateRangeRequest {
+  startDate: string;
+  endDate: string;
+  reason?: string;
+}
+
+export interface ChangeAccommodationsRequest {
+  bookingItems: CreateBookingItem[];
+}
+
+export interface ChangeNotesRequest {
+  notes?: string;
+}
+
+export interface BookingEditState {
+  isEditingDateRange: boolean;
+  isEditingAccommodations: boolean;
+  isEditingNotes: boolean;
+  hasUnsavedChanges: boolean;
+}

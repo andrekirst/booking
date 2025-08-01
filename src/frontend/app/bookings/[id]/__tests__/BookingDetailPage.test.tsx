@@ -3,6 +3,8 @@ import { useRouter, useParams } from 'next/navigation';
 import BookingDetailPage from '../page';
 import { apiClient } from '../../../../lib/api/client';
 import { Booking, BookingStatus } from '../../../../lib/types/api';
+import { ApiProvider } from '../../../../contexts/ApiContext';
+import { mockApiClient } from '../../../../lib/api/mock-client';
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -71,6 +73,40 @@ const mockAccommodations = [
   },
 ];
 
+// Helper function to render components with ApiProvider
+const renderWithApiProvider = (component: React.ReactElement) => {
+  return render(
+    <ApiProvider apiClient={mockApiClient}>
+      {component}
+    </ApiProvider>
+  );
+};
+
+// Helper function to configure both apiClient and mockApiClient with the same mock behavior
+const configureApiMocks = (
+  getBookingByIdMock?: any,
+  getSleepingAccommodationsMock?: any,
+  acceptBookingMock?: any,
+  rejectBookingMock?: any
+) => {
+  if (getBookingByIdMock !== undefined) {
+    (apiClient.getBookingById as jest.Mock).mockImplementation(getBookingByIdMock);
+    mockApiClient.getBookingById = jest.fn().mockImplementation(getBookingByIdMock);
+  }
+  if (getSleepingAccommodationsMock !== undefined) {
+    (apiClient.getSleepingAccommodations as jest.Mock).mockImplementation(getSleepingAccommodationsMock);
+    mockApiClient.getSleepingAccommodations = jest.fn().mockImplementation(getSleepingAccommodationsMock);
+  }
+  if (acceptBookingMock !== undefined) {
+    (apiClient.acceptBooking as jest.Mock).mockImplementation(acceptBookingMock);
+    mockApiClient.acceptBooking = jest.fn().mockImplementation(acceptBookingMock);
+  }
+  if (rejectBookingMock !== undefined) {
+    (apiClient.rejectBooking as jest.Mock).mockImplementation(rejectBookingMock);
+    mockApiClient.rejectBooking = jest.fn().mockImplementation(rejectBookingMock);
+  }
+};
+
 describe('BookingDetailPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -78,18 +114,26 @@ describe('BookingDetailPage', () => {
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
     (useParams as jest.Mock).mockReturnValue({ id: mockBooking.id });
     
-    // Default successful mocks
+    // Default successful mocks for the mocked apiClient
     (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
     (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
+    
+    // Configure mockApiClient to match the same behavior for useApi hook
+    mockApiClient.getBookingById = jest.fn().mockResolvedValue(mockBooking);
+    mockApiClient.getSleepingAccommodations = jest.fn().mockResolvedValue(mockAccommodations);
+    mockApiClient.acceptBooking = jest.fn().mockResolvedValue(undefined);
+    mockApiClient.rejectBooking = jest.fn().mockResolvedValue(undefined);
   });
 
   describe('Loading States', () => {
     it('should show skeleton loading states while fetching data', () => {
       (useParams as jest.Mock).mockReturnValue({ id: mockBooking.id });
-      (apiClient.getBookingById as jest.Mock).mockImplementation(() => new Promise(() => {}));
-      (apiClient.getSleepingAccommodations as jest.Mock).mockImplementation(() => new Promise(() => {}));
+      configureApiMocks(
+        () => new Promise(() => {}), // getBookingById - never resolves
+        () => new Promise(() => {})  // getSleepingAccommodations - never resolves
+      );
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       // Check for skeleton loading elements
       expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
@@ -103,7 +147,7 @@ describe('BookingDetailPage', () => {
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
       (apiClient.getSleepingAccommodations as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       // Since accommodations are still loading, the whole content will show skeleton
       // because the tabs are not rendered until both booking and accommodations are loaded
@@ -116,7 +160,7 @@ describe('BookingDetailPage', () => {
       (apiClient.getBookingById as jest.Mock).mockImplementation(() => new Promise(() => {}));
       (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       // Since booking is still loading, the whole page should show skeletons
       // because accommodation display depends on booking data
@@ -132,7 +176,7 @@ describe('BookingDetailPage', () => {
       );
       (apiClient.getSleepingAccommodations as jest.Mock).mockResolvedValue(mockAccommodations);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Fehler beim Laden')).toBeInTheDocument();
@@ -149,7 +193,7 @@ describe('BookingDetailPage', () => {
         new Error('Fehler beim Laden der Schlafmöglichkeiten')
       );
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('4 Personen')).toBeInTheDocument();
@@ -167,7 +211,7 @@ describe('BookingDetailPage', () => {
     it('should show not found message when booking is null', async () => {
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(null);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Buchung nicht gefunden')).toBeInTheDocument();
@@ -180,7 +224,7 @@ describe('BookingDetailPage', () => {
     it('should show error when booking ID is missing', async () => {
       (useParams as jest.Mock).mockReturnValue({ id: undefined });
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Fehler beim Laden')).toBeInTheDocument();
@@ -195,7 +239,7 @@ describe('BookingDetailPage', () => {
         message: 'Unauthorized'
       });
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith('/');
@@ -209,7 +253,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should display booking details correctly', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('4 Personen')).toBeInTheDocument();
@@ -230,7 +274,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should display accommodations correctly', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Schlafmöglichkeiten')).toBeInTheDocument();
@@ -243,7 +287,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should display notes when present', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Notizen')).toBeInTheDocument();
@@ -256,7 +300,7 @@ describe('BookingDetailPage', () => {
       const bookingWithoutNotes = { ...mockBooking, notes: undefined };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(bookingWithoutNotes);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
@@ -266,7 +310,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should not display timestamps in Details tab anymore', async () => {      
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('4 Personen')).toBeInTheDocument();
@@ -282,7 +326,7 @@ describe('BookingDetailPage', () => {
       const bookingWithoutChangedAt = { ...mockBooking, changedAt: undefined };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(bookingWithoutChangedAt);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('4 Personen')).toBeInTheDocument();
@@ -301,7 +345,7 @@ describe('BookingDetailPage', () => {
       const pendingBooking = { ...mockBooking, status: BookingStatus.Pending };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(pendingBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Ausstehend')).toBeInTheDocument();
@@ -311,7 +355,7 @@ describe('BookingDetailPage', () => {
     it('should show correct badge for confirmed status', async () => {
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(mockBooking);
       
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Bestätigt')).toBeInTheDocument();
@@ -322,7 +366,7 @@ describe('BookingDetailPage', () => {
       const cancelledBooking = { ...mockBooking, status: BookingStatus.Cancelled };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(cancelledBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Storniert')).toBeInTheDocument();
@@ -333,7 +377,7 @@ describe('BookingDetailPage', () => {
       const completedBooking = { ...mockBooking, status: BookingStatus.Completed };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(completedBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Abgeschlossen')).toBeInTheDocument();
@@ -344,7 +388,7 @@ describe('BookingDetailPage', () => {
       const acceptedBooking = { ...mockBooking, status: BookingStatus.Accepted };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(acceptedBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Angenommen')).toBeInTheDocument();
@@ -355,7 +399,7 @@ describe('BookingDetailPage', () => {
       const rejectedBooking = { ...mockBooking, status: BookingStatus.Rejected };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(rejectedBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Abgelehnt')).toBeInTheDocument();
@@ -369,7 +413,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should navigate back to bookings list when back button is clicked', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Zurück zur Übersicht')).toBeInTheDocument();
@@ -382,7 +426,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should navigate to edit page when edit button is clicked', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         const editButton = screen.getByRole('button', { name: /bearbeiten/i });
@@ -399,7 +443,7 @@ describe('BookingDetailPage', () => {
       const cancelledBooking = { ...mockBooking, status: BookingStatus.Cancelled };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(cancelledBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         const editButton = screen.getByRole('button', { name: /bearbeiten/i });
@@ -411,7 +455,7 @@ describe('BookingDetailPage', () => {
       const cancelledBooking = { ...mockBooking, status: BookingStatus.Cancelled };
       (apiClient.getBookingById as jest.Mock).mockResolvedValue(cancelledBooking);
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('Buchungsdetails')).toBeInTheDocument();
@@ -421,7 +465,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should show cancel button for non-cancelled bookings', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /stornieren/i })).toBeInTheDocument();
@@ -435,7 +479,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should show Details tab as active by default', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-current', 'page');
@@ -443,7 +487,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should show Historie tab as disabled', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         const historieTab = screen.getByRole('button', { name: 'Historie' });
@@ -452,7 +496,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should not allow clicking on disabled Historie tab', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         const historieTab = screen.getByRole('button', { name: 'Historie' });
@@ -468,7 +512,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should show placeholder content when Historie tab is accessed', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByText('4 Personen')).toBeInTheDocument();
@@ -492,7 +536,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('should show confirmation modal when cancel button is clicked', async () => {
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /stornieren/i })).toBeInTheDocument();
@@ -511,7 +555,7 @@ describe('BookingDetailPage', () => {
     it('should log booking ID when cancel is confirmed', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      render(<BookingDetailPage />);
+      renderWithApiProvider(<BookingDetailPage />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /stornieren/i })).toBeInTheDocument();

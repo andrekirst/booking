@@ -3,6 +3,9 @@ import {
   Booking,
   BookingAvailability,
   BookingStatus,
+  ChangeDateRangeRequest,
+  ChangeAccommodationsRequest,
+  ChangeNotesRequest,
   CreateBookingRequest,
   EmailSettings,
   EmailSettingsResponse,
@@ -50,6 +53,11 @@ export interface ApiClient {
     excludeBookingId?: string
   ): Promise<BookingAvailability>;
 
+  // Granular booking edit endpoints
+  changeDateRange(bookingId: string, request: ChangeDateRangeRequest): Promise<Booking>;
+  changeAccommodations(bookingId: string, request: ChangeAccommodationsRequest): Promise<Booking>;
+  changeNotes(bookingId: string, request: ChangeNotesRequest): Promise<Booking>;
+
   // Sleeping Accommodations endpoints
   getSleepingAccommodations(includeInactive?: boolean): Promise<SleepingAccommodation[]>;
   getSleepingAccommodationById(id: string): Promise<SleepingAccommodation>;
@@ -84,7 +92,7 @@ export class HttpApiClient implements ApiClient {
   private token: string | null = null;
 
   constructor(
-    baseUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7000"
+    baseUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:60302/api"
   ) {
     this.baseUrl = baseUrl;
 
@@ -267,7 +275,10 @@ export class HttpApiClient implements ApiClient {
   }
 
   async getBookingById(id: string): Promise<Booking> {
-    return this.request<Booking>(`/bookings/${id}`);
+    console.log('🔍 API: Loading booking by ID:', id);
+    const result = await this.request<Booking>(`/bookings/${id}`);
+    console.log('🔍 API: Booking loaded:', result);
+    return result;
   }
 
   async createBooking(booking: CreateBookingRequest): Promise<Booking> {
@@ -328,6 +339,46 @@ export class HttpApiClient implements ApiClient {
     return this.request<BookingAvailability>(
       `/bookings/availability?${params.toString()}`
     );
+  }
+
+  // Granular booking edit methods
+  async changeDateRange(bookingId: string, request: ChangeDateRangeRequest): Promise<Booking> {
+    await this.request(`/bookings/${bookingId}/date-range`, {
+      method: "PATCH",
+      body: JSON.stringify(request),
+    });
+    
+    // Kurze Verzögerung für Event-Verarbeitung im Backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Nach der Änderung das aktualisierte Booking laden
+    return this.getBookingById(bookingId);
+  }
+
+  async changeAccommodations(bookingId: string, request: ChangeAccommodationsRequest): Promise<Booking> {
+    await this.request(`/bookings/${bookingId}/accommodations`, {
+      method: "PATCH",
+      body: JSON.stringify(request),
+    });
+    
+    // Kurze Verzögerung für Event-Verarbeitung im Backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Nach der Änderung das aktualisierte Booking laden
+    return this.getBookingById(bookingId);
+  }
+
+  async changeNotes(bookingId: string, request: ChangeNotesRequest): Promise<Booking> {
+    await this.request(`/bookings/${bookingId}/notes`, {
+      method: "PATCH",
+      body: JSON.stringify(request),
+    });
+    
+    // Kurze Verzögerung für Event-Verarbeitung im Backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Nach der Änderung das aktualisierte Booking laden
+    return this.getBookingById(bookingId);
   }
 
   async getSleepingAccommodations(includeInactive: boolean = false): Promise<SleepingAccommodation[]> {

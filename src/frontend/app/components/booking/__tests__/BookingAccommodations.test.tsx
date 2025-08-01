@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import BookingAccommodations from '../BookingAccommodations';
 import { Booking, BookingStatus, SleepingAccommodation, AccommodationType } from '../../../../lib/types/api';
+import { ApiProvider } from '../../../../contexts/ApiContext';
+import { mockApiClient } from '../../../../lib/api/mock-client';
 
 const mockBooking: Booking = {
   id: '123e4567-e89b-12d3-a456-426614174000',
@@ -55,6 +57,15 @@ const mockGetAccommodationName = (accommodationId: string): string => {
   return accommodation?.name || 'Unbekannter Schlafplatz';
 };
 
+// Helper function to render components with ApiProvider
+const renderWithApiProvider = (component: React.ReactElement) => {
+  return render(
+    <ApiProvider apiClient={mockApiClient}>
+      {component}
+    </ApiProvider>
+  );
+};
+
 describe('BookingAccommodations', () => {
   const defaultProps = {
     booking: mockBooking,
@@ -65,20 +76,20 @@ describe('BookingAccommodations', () => {
 
   describe('Rendering', () => {
     it('should display the section title', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       expect(screen.getByText('Schlafmöglichkeiten')).toBeInTheDocument();
     });
 
     it('should display all accommodation items', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       expect(screen.getByText('Hauptschlafzimmer')).toBeInTheDocument();
       expect(screen.getByText('Gästezimmer')).toBeInTheDocument();
     });
 
     it('should display person count for each accommodation', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       expect(screen.getAllByText('2 Personen')).toHaveLength(2);
     });
@@ -93,19 +104,19 @@ describe('BookingAccommodations', () => {
         }],
       };
       
-      render(<BookingAccommodations {...defaultProps} booking={singlePersonBooking} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} booking={singlePersonBooking} />);
       
       expect(screen.getByText('1 Person')).toBeInTheDocument();
     });
 
     it('should not display error message when accommodationsError is null', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       expect(screen.queryByText('Namen konnten nicht geladen werden')).not.toBeInTheDocument();
     });
 
     it('should display error message when accommodationsError is present', () => {
-      render(<BookingAccommodations {...defaultProps} accommodationsError="API Error" />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} accommodationsError="API Error" />);
       
       expect(screen.getByText('Namen konnten nicht geladen werden')).toBeInTheDocument();
     });
@@ -116,7 +127,7 @@ describe('BookingAccommodations', () => {
       const mockGetName = jest.fn().mockImplementation(mockGetAccommodationName);
       
       // Remove accommodations prop to force fallback to getAccommodationName
-      render(<BookingAccommodations {...defaultProps} accommodations={[]} getAccommodationName={mockGetName} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} accommodations={[]} getAccommodationName={mockGetName} />);
       
       expect(mockGetName).toHaveBeenCalledWith('456e7890-e89b-12d3-a456-426614174001');
       expect(mockGetName).toHaveBeenCalledWith('789e1234-e89b-12d3-a456-426614174002');
@@ -133,7 +144,7 @@ describe('BookingAccommodations', () => {
         }],
       };
       
-      render(<BookingAccommodations {...defaultProps} booking={unknownBooking} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} booking={unknownBooking} />);
       
       expect(screen.getByText('Unbekannter Schlafplatz')).toBeInTheDocument();
     });
@@ -141,14 +152,14 @@ describe('BookingAccommodations', () => {
 
   describe('Layout and Styling', () => {
     it('should have proper main container classes', () => {
-      const { container } = render(<BookingAccommodations {...defaultProps} />);
+      const { container } = renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const mainDiv = container.firstChild as HTMLElement;
       expect(mainDiv).toHaveClass('mb-8');
     });
 
     it('should use grid layout for accommodation items', () => {
-      const { container } = render(<BookingAccommodations {...defaultProps} />);
+      const { container } = renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const gridDiv = container.querySelector('.grid');
       expect(gridDiv).toBeInTheDocument();
@@ -156,7 +167,7 @@ describe('BookingAccommodations', () => {
     });
 
     it('should have green background for accommodation cards', () => {
-      const { container } = render(<BookingAccommodations {...defaultProps} />);
+      const { container } = renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const cards = container.querySelectorAll('.border-green-200.bg-green-50');
       expect(cards.length).toBe(2);
@@ -167,7 +178,7 @@ describe('BookingAccommodations', () => {
     });
 
     it('should have rounded corners for accommodation cards', () => {
-      const { container } = render(<BookingAccommodations {...defaultProps} />);
+      const { container } = renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const cards = container.querySelectorAll('.rounded-xl');
       expect(cards.length).toBeGreaterThan(0);
@@ -180,14 +191,14 @@ describe('BookingAccommodations', () => {
 
   describe('Icons and Visual Elements', () => {
     it('should display accommodation icons', () => {
-      const { container } = render(<BookingAccommodations {...defaultProps} />);
+      const { container } = renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const iconContainers = container.querySelectorAll('.bg-green-100.text-green-600');
       expect(iconContainers.length).toBe(2);
     });
 
     it('should display person count icons', () => {
-      const { container } = render(<BookingAccommodations {...defaultProps} />);
+      const { container } = renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       // Check for SVG icons (accommodation icons and person icons)
       const svgIcons = container.querySelectorAll('svg');
@@ -205,14 +216,14 @@ describe('BookingAccommodations', () => {
 
   describe('Error State', () => {
     it('should display error message with proper styling', () => {
-      render(<BookingAccommodations {...defaultProps} accommodationsError="API Error" />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} accommodationsError="API Error" />);
       
       const errorDiv = screen.getByText('Namen konnten nicht geladen werden');
       expect(errorDiv).toHaveClass('text-sm', 'text-red-600', 'bg-red-50');
     });
 
     it('should still display accommodations when error is present', () => {
-      render(<BookingAccommodations {...defaultProps} accommodationsError="API Error" />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} accommodationsError="API Error" />);
       
       expect(screen.getByText('Hauptschlafzimmer')).toBeInTheDocument();
       expect(screen.getByText('Gästezimmer')).toBeInTheDocument();
@@ -223,7 +234,7 @@ describe('BookingAccommodations', () => {
     it('should handle booking with no items gracefully', () => {
       const emptyBooking = { ...mockBooking, bookingItems: [] };
       
-      render(<BookingAccommodations {...defaultProps} booking={emptyBooking} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} booking={emptyBooking} />);
       
       expect(screen.getByText('Schlafmöglichkeiten')).toBeInTheDocument();
       expect(screen.queryByText('Hauptschlafzimmer')).not.toBeInTheDocument();
@@ -232,7 +243,7 @@ describe('BookingAccommodations', () => {
 
   describe('Accessibility', () => {
     it('should use semantic heading for section title', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const heading = screen.getByRole('heading', { name: 'Schlafmöglichkeiten' });
       expect(heading).toBeInTheDocument();
@@ -240,7 +251,7 @@ describe('BookingAccommodations', () => {
     });
 
     it('should have proper text contrast and readability', () => {
-      render(<BookingAccommodations {...defaultProps} />);
+      renderWithApiProvider(<BookingAccommodations {...defaultProps} />);
       
       const accommodationNames = screen.getAllByText(/schlafzimmer/i);
       accommodationNames.forEach(name => {
