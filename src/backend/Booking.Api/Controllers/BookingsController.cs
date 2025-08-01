@@ -58,6 +58,30 @@ public class BookingsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:guid}/history")]
+    public async Task<ActionResult<List<BookingActivityDto>>> GetBookingHistory(Guid id)
+    {
+        // First check if booking exists and user has permission
+        var existingBooking = await mediator.Send(new GetBookingByIdQuery(id));
+        if (existingBooking == null)
+        {
+            return NotFound();
+        }
+
+        var userId = GetCurrentUserId();
+        var isAdmin = User.IsInRole("Administrator");
+        
+        if (!isAdmin && existingBooking.UserId != userId)
+        {
+            return Forbid();
+        }
+
+        var query = new GetBookingHistoryQuery(id);
+        var result = await mediator.Send(query);
+        
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto createDto)
     {
