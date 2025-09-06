@@ -8,6 +8,7 @@ import BookingOverview from '../../components/booking/BookingOverview';
 import BookingAccommodations from '../../components/booking/BookingAccommodations';
 import BookingNotes from '../../components/booking/BookingNotes';
 import BookingActionMenu from '../../components/booking/BookingActionMenu';
+import BookingActivityList from '../../components/booking/BookingActivityList';
 import BookingOverviewSkeleton from '../../components/booking/skeletons/BookingOverviewSkeleton';
 import BookingAccommodationsSkeleton from '../../components/booking/skeletons/BookingAccommodationsSkeleton';
 import BookingHistorySkeleton from '../../components/booking/skeletons/BookingHistorySkeleton';
@@ -338,17 +339,9 @@ export default function BookingDetailPage() {
                     id: 'historie',
                     label: 'Historie',
                     content: (
-                      <div className="py-12 text-center">
-                        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Historie wird implementiert</h3>
-                        <p className="text-gray-500">
-                          Die Verlaufshistorie der Buchung wird in einer zukünftigen Version verfügbar sein.
-                        </p>
-                      </div>
+                      <BookingActivityList bookingId={booking.id} />
                     ),
-                    disabled: true
+                    disabled: false
                   }
                 ]}
                 defaultTab="details"

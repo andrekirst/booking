@@ -5,6 +5,7 @@ import {
   User, 
   UserRole, 
   Booking,
+  BookingActivity,
   BookingAvailability,
   BookingStatus,
   CreateBookingRequest,
@@ -365,6 +366,41 @@ export class MockApiClient implements ApiClient {
       throw new ApiError('Booking not found', 404);
     }
     return booking;
+  }
+
+  async getBookingHistory(id: string): Promise<BookingActivity[]> {
+    await this.delay(300);
+    if (!this.authenticated) {
+      throw new ApiError('Unauthorized', 401);
+    }
+
+    const booking = this.mockBookings.find(b => b.id === id);
+    if (!booking) {
+      throw new ApiError('Booking not found', 404);
+    }
+
+    // Mock booking history activities
+    return [
+      {
+        activityType: 'BookingCreated',
+        description: 'Buchung wurde erstellt',
+        timestamp: booking.createdAt,
+        userName: booking.userName,
+        metadata: {
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          totalPersons: booking.totalPersons,
+          accommodationCount: booking.bookingItems.length
+        }
+      },
+      {
+        activityType: 'BookingAccepted',
+        description: 'Buchung wurde angenommen',
+        timestamp: new Date(new Date(booking.createdAt).getTime() + 60000).toISOString(),
+        userName: 'Administrator',
+        metadata: null
+      }
+    ].filter(Boolean);
   }
 
   async createBooking(booking: CreateBookingRequest): Promise<Booking> {

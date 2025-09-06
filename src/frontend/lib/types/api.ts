@@ -191,6 +191,15 @@ export enum AccommodationType {
   Other = 3
 }
 
+// Booking History Types
+export interface BookingActivity {
+  activityType: string;
+  description: string;
+  timestamp: string;
+  userName?: string;
+  metadata?: Record<string, unknown>;
+}
+
 // Error Types
 export interface ApiError {
   message: string;
